@@ -38,6 +38,7 @@ function typeEq(s,t){
 }
 
 function setxy(x,y){
+  if(x===undefined) throw "e"
   this.x=x
   this.y=y
   this.setAttribute("transform",`translate(${x},${y})`)
@@ -50,46 +51,39 @@ function getClientXY(){
   return [this.x*m.a+this.y*m.c+m.e,this.x*m.b+this.y*m.d+m.f]
 }
 function setClientXY(x,y){
-  console.log(x,y)
   m = this.parentElement.getCTM().inverse()
   this.setxy(x*m.a+y*m.c+m.e,x*m.b+y*m.d+m.f)
 }
 
 function subBox(text,type,cols,altCols){
   var g = document.createElementNS(SVGNS,"g")
-  gg=g
   g.type = type
   g.text = text
+
   g.setxy=setxy // I'm probably meant to use prototype
   g.changexy=changexy
   g.getClientXY=getClientXY
   g.setClientXY=setClientXY
+
   if(g.isHole = cols[1]=="none")
     g.filled = false
 
-  var width = text?getLength(text):0
-  var minh = text?BASEHEIGHT:0
-  g.args=[]
+  //var width = text?getLength(text):0
+  //var minh = text?BASEHEIGHT:0
+  var pth = ""//simplePath(0,0,width,minh,type)
+  g.innerHTML += `<path d="${pth}" fill="${cols[0]}" stroke="${cols[1]}" fill-rule="evenodd"> </path> `
+  if(text) g.innerHTML+=`<text font-size="10"> ${text}</text> `
+  g.floating = []
   while(!isBase(type)){
     assertEq(type.length,2)
     var [arg,type]=type
     ch=subBox("",arg,altCols,cols)
-    //ch.setxy(width+MARX*2,0)
-    //minh=Math.max(minh,MARY*2+ch.h)
-    g.args.push(ch)
+    g.floating.push(ch)
     ch.owner=g
-    ch.ownerIndex=g.args.length-1
-    //width+=MARX*4+ch.w
-  }
-  g.baseType=type
-  pth = ""//simplePath(0,0,width,minh,type)
-  g.innerHTML += `<path d="${pth}" fill="${cols[0]}" stroke="${cols[1]}" fill-rule="evenodd"> </path> `
-  if(text) g.innerHTML+=`<text font-size="10"> ${text}</text> `
-  for(let ch of g.args){
+    ch.ownerIndex=g.floating.length-1
     g.appendChild(ch)
   }
-  g.w=width
-  g.h=minh
+  g.baseType=type
   g.x=0
   g.y=0
   if(!g.isHole) g.addEventListener("mousedown",startDrag(g))
@@ -102,10 +96,9 @@ function makeBox(text,type, x,y,w,h){
   var stroke = `hsl(${c},50%,70%)`
   var g = subBox(text,type,[fill,stroke],["#DDD","none"])
   svg.appendChild(g)
-  svg.args.push(g)
+  svg.floating.push(g)
   g.owner=svg
-  g.ownerIndex=svg.args.length-1
-  return pth
+  g.ownerIndex=svg.floating.length-1
 }
 
 
@@ -119,31 +112,73 @@ function checkScope(g){
   }
   else{
     if(!g.owner.contains(g.parentElement)){//out of scope
+      //TODO: think more carefully about where it should go - should it just go
+        // up to the nearest legal hole (nearest before the move that caused checkscope),
+        // rather than all the way up to its owner?
+      //
       snapback(g)
+      return
     }
   }
-  for (ch of g.args){
+  for (ch of g.floating) if(ch){
     checkScope(ch)
   }
 }
 
-//Assumed to be called by checkScope, revisit if reused
 function snapback(g){
   if(!isArg(g))throw "Expected to have been an argument"
-  unfill(g.parentElement)
-  var owner = g.owner
-  owner.appendChild(g)
-  owner.args[g.ownerIndex] = g
-  /*TODO: something like this, but position the current element correctly
-  for(i=g.ownerIndex;i<owner.args.length;i++){
-    owner.args[i].changexy(g.w+4*MARX,0)
-  }*/
-  redraw(owner)
+  makeFloating(g,g.owner,false)
 }
 
-function snapout(g){
-  g.owner.args[g.ownerIndex]=undefined
-  redraw(g.owner)
+function makeFloating(g,target,savepos){
+  if(g.parentElement!==g.target || isArg(g)){
+    if (savepos===undefined) savepos=true
+    var [x,y] = g.getClientXY()
+    detatch(g)
+    if(target===g.owner){
+      if(target.floating[g.ownerIndex]!==undefined){
+        throw "Should not happen until I've added duplication"
+        remove(g)
+        return
+      }
+      target.floating[g.ownerIndex] = g
+    }
+    else{
+      target.floating.push(g)
+    }
+    target.appendChild(g)
+
+    /*TODO: something like this, but position the current element correctly
+    for(i=g.ownerIndex;i<owner.args.length;i++){
+      owner.args[i].changexy(g.w+4*MARX,0)
+    }*/
+    for (ch of g.floating){
+      checkScope(ch)
+    }
+    redraw(target)
+    if(savepos) g.setClientXY(x,y)
+  }
+}
+
+function detatch(g){
+  if(isArg(g)){
+    unfill(g.parentElement)
+  }else{
+    unfloat(g)
+  }
+}
+
+
+function unfloat(g){
+  var holder=g.parentElement
+  var index = holder.floating.indexOf(g)
+  if(index == -1) throw "expected to be in floating list"
+  if(holder===g.owner && g.ownerIndex==index)// think about duplicates
+    holder.floating[index]=undefined
+  else{
+    holder.floating.splice(index,1)
+  }
+  redraw(holder)
 }
 function unfill(g){
   g.filled = false
@@ -171,8 +206,8 @@ function checkMatch(s,t){
 
 function isArg(g){
   var a = g.parentElement.filled===g
-  var b = g.owner.args[g.ownerIndex]!==g
-  if(a!==b) throw "invariant violated"
+  //var b = g.owner.args[g.ownerIndex]!==g
+  //if(a!==b) throw "invariant violated"
   return a
 }
 
@@ -193,21 +228,31 @@ function isArg(g){
 //
 
 function dragInto(argument,hole){
-  if (!hole.isHole){
+  if(!argument.owner.contains(hole)){
+    if (hole===argument.owner.parentElement){
+      return makeFloatingArg(argument,hole)
+    }
+    console.log("out of scope") // consider snapping argument back to where it came from
     return false
   }
-  if(!argument.owner.contains(hole)){
-    console.log("out of scope")
+  if (!hole.isHole){
     return false
   }
   else if(hole.filled){
     if (hole===argument.owner){
       return makeFloatingArg(argument,hole)
     }
+    else {
+      return makeFloating(argument,hole)
+    }
     console.log("Already filled")
     return false
   }
   if(!checkMatch(argument.type,hole.type)){
+    if (hole===argument.owner && hole!==argument.parentElement){
+      // allow bound variables to be returned to their holes if not already there
+      return makeFloatingArg(argument,hole)
+    }
     console.log("Type mismatch")
     return false
   }
@@ -217,16 +262,23 @@ function dragInto(argument,hole){
 }
 function makeFloatingArg(argument,hole){
   if(isArg(argument)){
+    makeFloating(argument,argument.owner,true)
+    return true
+  }
+  return false //safe, it's already in the right place
+}
+/*function makeFloating(argument,hole){
+  if(isArg(argument)){
     var [x,y] = argument.getClientXY()
     snapback(argument)
-    for (ch of argument.args){
+    for (ch of argument.floating){
       checkScope(ch)
     }
     argument.setClientXY(x,y)
     return true
   }
   return false //safe, it's already in the right place
-}
+}*/
 // future Strategy: If there is an unambiguous ordered bijection between (((a subset of the argument's holes) and (the hole's arguments)) ^or^ ((the argument's holes) and (a subset of the hole's arguments)) then go for it; otherwise, if the final types line up, stick with that.
 //   a bijection is ambiguous if there is another one that does not involve a strict subset of chosen argument set
 
@@ -236,15 +288,10 @@ function fillHole(argument, hole){
   }*/
     //If something moves, need to check hereditarily that everything is still in scope
   oldPar = argument.parentElement
-  if(isArg(argument)){
-    unfill(oldPar)
-  }
-  else{
-    snapout(argument)
-  }
+  detatch(argument)
   hole.filled=argument
   hole.appendChild(argument)
-  if(!oldPar.contains(hole)){
+  if(!oldPar.contains(hole)){//If it doesn't, we don't need to check recursively
     console.log("checking scope")
     checkScope(argument)
   }
@@ -269,7 +316,7 @@ function redraw(g){
     minh=Math.max(minh,g.filled.h)
   }
   var hasch = false
-  for(ch of g.args)if(ch){
+  for(ch of g.floating)if(ch){
     if(ch.parentElement!==g) throw "not parent of child (child probably did not remove themselves correctly)"
     if(g.filled && !hasch){
       width+=MARX
@@ -370,7 +417,7 @@ function getLength(txt){//TODO: sanitize
   testtext.innerHTML=txt
   return testtext.getComputedTextLength()
 }
-svg.args=[]
+svg.floating=[]
 svg.filled=true //Not true, but we don't want anything to think it's the global argument
 svg.isHole=true
 

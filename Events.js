@@ -12,7 +12,8 @@ function startDrag(g){
         dragging=g
         selected=g
         g.classList.add("dragging")
-        // svg2 z-index not yet implemented
+        // svg2 z-index not yet implemented in firefox
+        // If it was, I'd be able to use DOM structure rather than keeping a list of floating terms
         var climb=g
         while(climb!==svg){
           climb.parentElement.appendChild(climb)
@@ -46,9 +47,7 @@ function endDrag(e){
       //TODO: check if the node was occupying a hole and if so,
         //check if it should snap back and if not, redraw the hole it came from
       var slot = over.parentElement
-      if (slot.isHole){
-        moved = dragInto(dragging,slot)
-      }
+      moved = dragInto(dragging,slot)
     }
     if(!moved && isArg(dragging)){
       dragging.setxy(0,0)

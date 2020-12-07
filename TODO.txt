@@ -12,7 +12,8 @@ ctrl-click to copy
 delete key to delete (right click)?
 double click to do something (make floating?) (reset hole after arguments have been deleted?)
 
-allow floating terms
+//allow floating terms
+  make floating terms line up reasonably
 
 make types line up better
  (make exact matches fit; think about which holes to count)
@@ -35,6 +36,7 @@ hide/shrink parts of more complicated types.
   (only when autofilled? (η-reducible))
 
 Longer term:
+undo/redo
 do something with data type declarations
 get polymorphic types working
 integrate with Haskell
