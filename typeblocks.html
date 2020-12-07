@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html>
+<!--Theorem - in simply typed lambda calculus, every term is beta equivalent to one under a certain version of this program (not yet the current version)-->
+<head>
+  <meta charset="utf-8">
+  <title>TypeBlocks</title>
+  <script src="Parser.js">  </script>
+  <script src="Paths.js">  </script>
+  <script type="text/javascript">
+var SVGNS = "http://www.w3.org/2000/svg";
+
+
+// Uses object identity. Should work
+/*Array.prototype.remove=function(e){
+  for(i=0;i<this.length;i++){
+    if (this[i] === e) this[i]=undefined
+  }
+}*/
+
+function hash(str){
+  var n=0
+  for (var i=0;i<str.length;i++){
+    n=(n*31)%1000000007
+    n+=str.charCodeAt(i)
+  }
+  return n
+}
+
+function typeEq(s,t){
+  return JSON.stringify(s) == JSON.stringify(t)
+  /*if (isBase(s)){
+    return s===t
+  }
+  else{
+    if(isBase(t))return false
+    return typeEq(s[0],t[0]) && typeEq(s[1],t[1])
+  }*/
+}
+
+function setxy(x,y){
+  this.x=x
+  this.y=y
+  this.setAttribute("transform",`translate(${x},${y})`)
+}
+function changexy(x,y){
+  this.setxy(this.x+x, this.y+y)
+}
+function getClientXY(){
+  var m = this.parentElement.getCTM()
+  return [this.x*m.a+this.y*m.c+m.e,this.x*m.b+this.y*m.d+m.f]
+}
+function setClientXY(x,y){
+  console.log(x,y)
+  m = this.parentElement.getCTM().inverse()
+  this.setxy(x*m.a+y*m.c+m.e,x*m.b+y*m.d+m.f)
+}
+
+function subBox(text,type,cols,altCols){
+  var g = document.createElementNS(SVGNS,"g")
+  gg=g
+  g.type = type
+  g.text = text
+  g.setxy=setxy // I'm probably meant to use prototype
+  g.changexy=changexy
+  g.getClientXY=getClientXY
+  g.setClientXY=setClientXY
+  if(g.isHole = cols[1]=="none")
+    g.filled = false
+
+  var width = text?getLength(text):0
+  var minh = text?BASEHEIGHT:0
+  g.args=[]
+  while(!isBase(type)){
+    assertEq(type.length,2)
+    var [arg,type]=type
+    ch=subBox("",arg,altCols,cols)
+    //ch.setxy(width+MARX*2,0)
+    //minh=Math.max(minh,MARY*2+ch.h)
+    g.args.push(ch)
+    ch.owner=g
+    ch.ownerIndex=g.args.length-1
+    //width+=MARX*4+ch.w
+  }
+  g.baseType=type
+  pth = ""//simplePath(0,0,width,minh,type)
+  g.innerHTML += `<path d="${pth}" fill="${cols[0]}" stroke="${cols[1]}" fill-rule="evenodd"> </path> `
+  if(text) g.innerHTML+=`<text font-size="10"> ${text}</text> `
+  for(let ch of g.args){
+    g.appendChild(ch)
+  }
+  g.w=width
+  g.h=minh
+  g.x=0
+  g.y=0
+  if(!g.isHole) g.addEventListener("mousedown",startDrag(g))
+  redraw(g)
+  return g
+}
+function makeBox(text,type, x,y,w,h){
+  var c = Math.random()*360
+  var fill = `hsl(${c},100%,50%)`
+  var stroke = `hsl(${c},50%,70%)`
+  var g = subBox(text,type,[fill,stroke],["#DDD","none"])
+  svg.appendChild(g)
+  svg.args.push(g)
+  g.owner=svg
+  g.ownerIndex=svg.args.length-1
+  return pth
+}
+
+
+//The 2 fundamental rearranging operations are putting something in a hole and
+// snapping something back to its original position.
+//Each may cause subterms to become out of scope and recursively need to snap back
+
+function checkScope(g){
+  if(g.isHole){
+    if(g.filled)checkScope(g.filled)
+  }
+  else{
+    if(!g.owner.contains(g.parentElement)){//out of scope
+      snapback(g)
+    }
+  }
+  for (ch of g.args){
+    checkScope(ch)
+  }
+}
+
+//Assumed to be called by checkScope, revisit if reused
+function snapback(g){
+  if(!isArg(g))throw "Expected to have been an argument"
+  unfill(g.parentElement)
+  var owner = g.owner
+  owner.appendChild(g)
+  owner.args[g.ownerIndex] = g
+  /*TODO: something like this, but position the current element correctly
+  for(i=g.ownerIndex;i<owner.args.length;i++){
+    owner.args[i].changexy(g.w+4*MARX,0)
+  }*/
+  redraw(owner)
+}
+
+function snapout(g){
+  g.owner.args[g.ownerIndex]=undefined
+  redraw(g.owner)
+}
+function unfill(g){
+  g.filled = false
+  redraw(g)
+}
+
+//Type stuff
+//Strong match: exact match
+//Weak match: return types match
+
+//given a type, return a pair consisting of a list of arguments and a result
+function decompose(t){
+  var args=[]
+  while(!isBase(t)){
+    var [arg,t] = t
+    args.push(arg)
+  }
+  return [args,t]
+}
+function checkMatch(s,t){
+  var [sargs,sres] = decompose(s)
+  var [targs,tres] = decompose(t)
+  return sres==tres
+}
+
+function isArg(g){
+  var a = g.parentElement.filled===g
+  var b = g.owner.args[g.ownerIndex]!==g
+  if(a!==b) throw "invariant violated"
+  return a
+}
+
+/*function getMatch(s,t){
+  var [sargs,sres] = decompose(s)
+  var [targs,tres] = decompose(s)
+  if (sres!=tres){
+    return false
+  }
+  if(sargs.length==targs.length){
+    sargs.map(function(sarg,i){
+      var targ=targs[i]
+    })
+  }
+}*/
+
+//Check that the types are compatible and do the best you can to jam it in
+//
+
+function dragInto(argument,hole){
+  if (!hole.isHole){
+    return false
+  }
+  if(!argument.owner.contains(hole)){
+    console.log("out of scope")
+    return false
+  }
+  else if(hole.filled){
+    if (hole===argument.owner){
+      return makeFloatingArg(argument,hole)
+    }
+    console.log("Already filled")
+    return false
+  }
+  if(!checkMatch(argument.type,hole.type)){
+    console.log("Type mismatch")
+    return false
+  }
+  else{
+    return fillHole(argument,hole)
+  }
+}
+function makeFloatingArg(argument,hole){
+  if(isArg(argument)){
+    var [x,y] = argument.getClientXY()
+    snapback(argument)
+    for (ch of argument.args){
+      checkScope(ch)
+    }
+    argument.setClientXY(x,y)
+    return true
+  }
+  return false //safe, it's already in the right place
+}
+// future Strategy: If there is an unambiguous ordered bijection between (((a subset of the argument's holes) and (the hole's arguments)) ^or^ ((the argument's holes) and (a subset of the hole's arguments)) then go for it; otherwise, if the final types line up, stick with that.
+//   a bijection is ambiguous if there is another one that does not involve a strict subset of chosen argument set
+
+function fillHole(argument, hole){
+  /*if (typeEq(argtype,holetype)){//TODO: look more carefully at the details of what's already filled in
+    //This case should be easy
+  }*/
+    //If something moves, need to check hereditarily that everything is still in scope
+  oldPar = argument.parentElement
+  if(isArg(argument)){
+    unfill(oldPar)
+  }
+  else{
+    snapout(argument)
+  }
+  hole.filled=argument
+  hole.appendChild(argument)
+  if(!oldPar.contains(hole)){
+    console.log("checking scope")
+    checkScope(argument)
+  }
+  redraw(hole)
+  return true
+}
+
+
+// Puts everything back in its place
+//TODO: don't make it reset everything else - have things remember where they started and adjust them based on the changes to that.
+function redraw(g){
+  if(!g || g===svg)return false
+  var width = 0
+  if(!isInfix(g.text)){
+    if(g.text)width+=getLength(g.text)
+  }
+  var minh = g.text?BASEHEIGHT:0
+
+  if(g.filled){
+    g.filled.setxy(0,0)
+    width+=g.filled.w
+    minh=Math.max(minh,g.filled.h)
+  }
+  var hasch = false
+  for(ch of g.args)if(ch){
+    if(ch.parentElement!==g) throw "not parent of child (child probably did not remove themselves correctly)"
+    if(g.filled && !hasch){
+      width+=MARX
+    }
+    ch.setxy(width+2*MARX,0)
+    width+=ch.w+MARX*4
+    if(!hasch){
+      if(isInfix(g.text)){
+        g.children[1].setAttribute("transform",`translate(${width},0)`)
+        width+=getLength(g.text)
+      }
+    }
+    hasch=true
+    minh=Math.max(minh,MARY*2+ch.h)
+  }
+  g.w=width
+  g.h=minh
+  if(g.filled && g.filled.drawnh!=minh){
+    redrawBox(g.filled,minh)
+  }
+  if (g.filled){
+    var fw=g.filled.w
+    g.children[0].setAttribute("d",
+      hasch?
+        filledHolePath(fw,0,g.w-fw,minh,g.filled.baseType):
+        simplePath(0,0,fw,minh,g.filled.baseType))
+  }
+  else redrawBox(g,minh)
+  redraw(g.parentElement)
+}
+
+function redrawBox(g,h){
+  g.drawnh=h
+  g.children[0].setAttribute("d",simplePath(0,0,g.w,h,g.baseType))
+}
+
+  </script>
+  <style>
+svg{
+  position:fixed;
+
+  width: 100%;
+  height: 100%;
+}
+html,body{
+  margin: 0px;
+  padding:0px;
+  /* overflow:hidden; */
+}
+.hidden{
+  display: none;
+}
+path{
+  stroke-width: 0.6;
+}
+g:hover>path{
+  stroke-width:1;
+}
+/*Awaiting feature support
+g{
+  z-index: 0
+}
+.dragging{
+  z-index: 10
+}*/
+</style>
+</head>
+<body>
+<svg viewBox="-10 -30 220 40" preserveAspectRatio="xMinYMin" zoomAndPan="magnify">
+  <!--<rect x="0" y="0" width="100" height="100" fill="black" /> vb=0 0 200 10
+  <rect x="10" y="10" width="100" height="900" fill="red" />
+  <path d="M 0 0 L 100 100 L 100 10 Z" stroke="green" stroke-width="1" fill="none"/>
+  <rect x="0" y="0" width="3" height="3" fill="red" /> -->
+  <!--"M 0 0 C 25 25  75 -25 100 0 Z"
+  <path d="M 0 0 L 40 0 A 10 10 0 1 1 40 0.001 L 100 0 L 50 50 Z"
+   stroke="green" stroke-width="1" fill-rule="evenodd"/>
+  <path d="M 20 20 L 100 100 L 100 20 Z M 40 30 L 90 80 L 90 30 Z"
+   stroke="green" stroke-width="1" fill="blue" fill-rule="evenodd" />-->
+
+  <text id="testtext" fill="none" font-size="10"> hello </text>
+  <g id="svg" pointer-events="bounding-box">
+    <rect x="-10000" y="-10000" width="20000" height="20000" fill="white" />
+    <!-- If I implement zooming out and this isn't big enough, that might get hard to debug.
+         The only reason I don't just use the svg is that that doesn't support .getCTM()-->
+  </g>
+</svg>
+<script src="Events.js"> </script>
+
+<script type="text/javascript">
+
+// If the line below isn't needed, why does everyone use document.getElementById?
+//svg=document.getElementById("svg")
+
+
+//setup
+textTester=document.getElementById("testtext")
+function getLength(txt){//TODO: sanitize
+  testtext.innerHTML=txt
+  return testtext.getComputedTextLength()
+}
+svg.args=[]
+svg.filled=true //Not true, but we don't want anything to think it's the global argument
+svg.isHole=true
+
+
+
+
+function quick(n,ty){
+  makeBox(n,parseType(partition(ty)[0]))
+}
+
+GAME="Action->Event->GameState->GameState"
+GEGSTO="Action->Event->GameState->"
+RULE=`(${GAME})->${GAME}`
+
+//quick("when",`${GEGSTO}Bool->${RULE}->${RULE}`)
+
+
+quick("map","(Int->Int)->ListInt->ListInt")
+quick("+","Int->Int->Int")
+quick("negate","Int->Int")
+quick("xs","ListInt")
+quick("5","Int")
+
+
+
+</script>
+
+</body>
+</html>

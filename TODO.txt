@@ -1,0 +1,61 @@
+//if something moved is an argument, and it's not moved far enough;  snap back into place
+ (if moved a long enough distance, consider making it a floating term again)
+
+
+//If something is moved onto the background, take it out of the argument slot
+  //put it back safely
+ //(treat the background as a hole?)
+
+//check context properly
+
+ctrl-click to copy
+delete key to delete (right click)?
+double click to do something (make floating?) (reset hole after arguments have been deleted?)
+
+allow floating terms
+
+make types line up better
+ (make exact matches fit; think about which holes to count)
+
+
+let blocks
+  (global background should be a let block?)
+
+zoom/pan
+  This is in the SVG1 spec but removed from SVG2 :(
+
+generate strings corresponding to the terms
+
+show a preview of what happens if you release the mouse (important for UI)
+  implementation thoughts: keep track of a "real" target based on the unmodified structure
+     when that changes, duplicate as much as needed to (including stuff that would move out of scope)
+                        and make the original invisible (but keep it present for hit testing)
+
+hide/shrink parts of more complicated types.
+  (only when autofilled? (η-reducible))
+
+Longer term:
+do something with data type declarations
+get polymorphic types working
+integrate with Haskell
+think about what to do when something changes type
+  Make things that don't fit float?
+
+
+
+features that could be graphically represented:
+Type
+  type itself
+  for polymorphic: whether it's a type variable
+  should type synonyms be different?
+module it came from?
+Implementation?
+
+ways to represent them:
+colour (currently indicates the parent of a bound variable)
+shape of box (4 different edges)
+ ideas: type variables as wavy lines
+  in higher kinded types, eg "List Int", sides represent List and top/bottom represent Int
+text (content, colour, style)
+position
+animation?
