@@ -13,9 +13,9 @@ delete key to delete (right click)?
 double click to do something (make floating?) (reset hole after arguments have been deleted?)
 
 //allow floating terms
-  make floating terms line up reasonably
+  //make floating terms line up reasonably
 
-make types line up better
+make types line up better (autofill)
  (make exact matches fit; think about which holes to count)
 
 

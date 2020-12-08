@@ -9,15 +9,33 @@ function mul([x1,y1],k){
 }
 
 
+//given an initial height and width of a spike,
+//make a path which describes infinitely many spikes
+//scaling down as they get further from the center
+function mkzigzag(h,w,scale){
+  if(scale>=1)throw "will not terminate"
+  let l=50
+  let r=50
+  let p=["L", [l=l-w, 0], "L", [50, h], "L", [r=r+w, 0]]
+  while(w>1){
+    h*=scale
+    w*=scale
+    p=["L", [l=l-w, h]].concat(p).concat( ["L", [r=r+w, h]])
+    p=["L", [l=l-w, 0]].concat(p).concat( ["L", [r=r+w, 0]])
+  }
+  return p.concat(["L", [100, 0]])
+}
+
 // top edges
 caret =["L",[50,-40],"L",[100,0]]
 point =["L",[40,0], "L",[50,-40], "L",[60,0], "L",[100,0]]
+zigzag = mkzigzag(-40,8,0.7)
 square =["L",[30,0], "L",[30,-40], "L",[70,-40], "L",[70,0], "L",[100,0]]
 curve =["C",[25,25],[75,-90],[100,0]]
 curve2 =["C",[25,25],[25,-70],[50,0],"C",[75,25],[75,-70],[100,0]]
 circ = ["L", [40,0], "A", ["scale",10,10], "0 1 0", [40, 0.001], "L", [100, 0]]
 
-shapes=[caret,point,square,curve,curve2] //,circ]
+shapes=[caret,point,square,curve,curve2,zigzag] //,circ]
 
 
 // stretches a path along x and rotates it to flow from start to end.

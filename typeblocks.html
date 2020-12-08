@@ -102,36 +102,89 @@ function makeBox(text,type, x,y,w,h){
 }
 
 
-//The 2 fundamental rearranging operations are putting something in a hole and
-// snapping something back to its original position.
+//The 2 fundamental rearranging operations are putting an argument into a hole (filling it) and
+// making something a floating within a hole.
 //Each may cause subterms to become out of scope and recursively need to snap back
 
-function checkScope(g){
-  if(g.isHole){
-    if(g.filled)checkScope(g.filled)
+
+//Type stuff
+//Strong match: exact match
+//Weak match: return types match
+
+//given a type, return a pair consisting of a list of arguments and a result
+function decompose(t){
+  var args=[]
+  while(!isBase(t)){
+    var [arg,t] = t
+    args.push(arg)
+  }
+  return [args,t]
+}
+function checkMatch(s,t){
+  var [sargs,sres] = decompose(s)
+  var [targs,tres] = decompose(t)
+  return sres==tres
+}
+
+function isArg(g){
+  var a = g.parentElement.filled===g
+  return a
+}
+
+/*function getMatch(s,t){
+  var [sargs,sres] = decompose(s)
+  var [targs,tres] = decompose(s)
+  if (sres!=tres){
+    return false
+  }
+  if(sargs.length==targs.length){
+    sargs.map(function(sarg,i){
+      var targ=targs[i]
+    })
+  }
+}*/
+
+function dragInto(argument,hole){
+  console.log(argument.text,"-->", hole.text)
+  if(!argument.owner.contains(hole)){
+    if (hole===argument.owner.parentElement){
+      //Let something be made floating by dragging it just outside its context
+      return makeFloating(argument,argument.owner)
+    }
+    console.log("out of scope") // consider snapping argument back to where it came from
+    // alternatively, consider putting the new context into this hole (if possible)
+    return false
+  }
+  if (!hole.isHole){
+    if(isArg(argument)){
+      if (argument.parentElement.parentElement===hole){
+        // if you drag a filled argument just outside its hole, make it float
+        return makeFloating(argument,argument.parentElement)
+      }
+    }
+    return false
+  }
+  else if(hole.filled){
+    return makeFloating(argument,hole)
+  }
+
+  if(!checkMatch(argument.type,hole.type)){
+    if (hole===argument.owner && hole!==argument.parentElement){
+      // allow bound variables to be returned to their holes if not already there
+      return makeFloating(argument,hole)
+    }
+    console.log("Type mismatch")
+    return false
   }
   else{
-    if(!g.owner.contains(g.parentElement)){//out of scope
-      //TODO: think more carefully about where it should go - should it just go
-        // up to the nearest legal hole (nearest before the move that caused checkscope),
-        // rather than all the way up to its owner?
-      //
-      snapback(g)
-      return
-    }
-  }
-  for (ch of g.floating) if(ch){
-    checkScope(ch)
+    //If the types match and there's no other reason not to, go ahead and fill the hole
+    return fillHole(argument,hole)
   }
 }
-
-function snapback(g){
-  console.log(g.text,"+",g.parentElement.text)
-  if(!isArg(g))throw "Expected to have been an argument"
-  makeFloating(g,g.owner,false)
-}
-
+// Do the work of taking something out of where it came from and putting it (floating) somewhere else
 function makeFloating(g,target,savepos){
+  if (!target.isHole) throw "Things should only float in holes"
+
   if(g.parentElement!==g.target || isArg(g)){
     if (savepos===undefined) savepos=(target===svg)
     var [x,y] = g.getClientXY()
@@ -161,6 +214,55 @@ function makeFloating(g,target,savepos){
   }
 }
 
+// future Strategy: If there is an unambiguous ordered bijection between (((a subset of the argument's holes) and (the hole's arguments)) ^or^ ((the argument's holes) and (a subset of the hole's arguments)) then go for it; otherwise, if the final types line up, stick with that.
+//   a bijection is ambiguous if there is another one that does not involve a strict subset of chosen argument set
+
+// Do the work of moving filling a hole with an argument
+function fillHole(argument, hole){
+  /*if (typeEq(argtype,holetype)){//TODO: look more carefully at the details of what's already filled in
+    //This case should be easy
+  }*/
+    //If something moves, need to check hereditarily that everything is still in scope
+  oldPar = argument.parentElement
+  detatch(argument)
+  hole.filled=argument
+  hole.appendChild(argument)
+  if(!oldPar.contains(hole)){//If it does, we don't need to check recursively
+    checkScope(argument)
+  }
+  redraw(hole)
+  return true
+}
+
+
+
+function checkScope(g){
+  if(g.isHole){
+    if(g.filled)checkScope(g.filled)
+  }
+  else{
+    if(!g.owner.contains(g.parentElement)){//out of scope
+      //TODO: think more carefully about where it should go - should it just go
+        // up to the nearest legal hole (nearest before the move that caused checkscope),
+        // rather than all the way up to its owner?
+      //
+      snapback(g)
+      return
+    }
+  }
+  for (ch of g.floating) if(ch){
+    checkScope(ch)
+  }
+}
+
+// When something would become out of context, snap it back to its owner
+function snapback(g){
+  console.log(g.text,"+",g.parentElement.text)
+  if(!isArg(g))throw "Expected to have been an argument"
+  makeFloating(g,g.owner,false)
+}
+
+
 function detatch(g){
   if(isArg(g)){
     unfill(g.parentElement)
@@ -189,121 +291,6 @@ function unfill(g){
   if(arg.drawnh!==arg.h){
     redraw(arg)
   }
-}
-
-//Type stuff
-//Strong match: exact match
-//Weak match: return types match
-
-//given a type, return a pair consisting of a list of arguments and a result
-function decompose(t){
-  var args=[]
-  while(!isBase(t)){
-    var [arg,t] = t
-    args.push(arg)
-  }
-  return [args,t]
-}
-function checkMatch(s,t){
-  var [sargs,sres] = decompose(s)
-  var [targs,tres] = decompose(t)
-  return sres==tres
-}
-
-function isArg(g){
-  var a = g.parentElement.filled===g
-  //var b = g.owner.args[g.ownerIndex]!==g
-  //if(a!==b) throw "invariant violated"
-  return a
-}
-
-/*function getMatch(s,t){
-  var [sargs,sres] = decompose(s)
-  var [targs,tres] = decompose(s)
-  if (sres!=tres){
-    return false
-  }
-  if(sargs.length==targs.length){
-    sargs.map(function(sarg,i){
-      var targ=targs[i]
-    })
-  }
-}*/
-
-//Check that the types are compatible and do the best you can to jam it in
-//
-
-function dragInto(argument,hole){
-  console.log(argument.text,"-->", hole.text)
-  if(!argument.owner.contains(hole)){
-    if (hole===argument.owner.parentElement){
-      return makeFloating(argument,argument.owner)
-    }
-    console.log("out of scope") // consider snapping argument back to where it came from
-    return false
-  }
-  if (!hole.isHole){
-    return false
-  }
-  else if(hole.filled){
-    //console.log("Already filled")
-    /*if (hole===argument.owner){
-      return makeFloatingArg(argument,hole)
-    }
-    else {*/
-    return makeFloating(argument,hole)
-    //}
-    //console.log("Already filled")
-    //return false
-  }
-  if(!checkMatch(argument.type,hole.type)){
-    if (hole===argument.owner && hole!==argument.parentElement){
-      // allow bound variables to be returned to their holes if not already there
-      return makeFloating(argument,hole)
-    }
-    console.log("Type mismatch")
-    return false
-  }
-  else{
-    return fillHole(argument,hole)
-  }
-}
-/*function makeFloatingArg(argument,hole){
-  if(isArg(argument)){
-    makeFloating(argument,argument.owner,true)
-    return true
-  }
-  return false //safe, it's already in the right place
-}*/
-/*function makeFloating(argument,hole){
-  if(isArg(argument)){
-    var [x,y] = argument.getClientXY()
-    snapback(argument)
-    for (ch of argument.floating){
-      checkScope(ch)
-    }
-    argument.setClientXY(x,y)
-    return true
-  }
-  return false //safe, it's already in the right place
-}*/
-// future Strategy: If there is an unambiguous ordered bijection between (((a subset of the argument's holes) and (the hole's arguments)) ^or^ ((the argument's holes) and (a subset of the hole's arguments)) then go for it; otherwise, if the final types line up, stick with that.
-//   a bijection is ambiguous if there is another one that does not involve a strict subset of chosen argument set
-
-function fillHole(argument, hole){
-  /*if (typeEq(argtype,holetype)){//TODO: look more carefully at the details of what's already filled in
-    //This case should be easy
-  }*/
-    //If something moves, need to check hereditarily that everything is still in scope
-  oldPar = argument.parentElement
-  detatch(argument)
-  hole.filled=argument
-  hole.appendChild(argument)
-  if(!oldPar.contains(hole)){//If it does, we don't need to check recursively
-    checkScope(argument)
-  }
-  redraw(hole)
-  return true
 }
 
 
