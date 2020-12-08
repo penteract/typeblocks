@@ -76,7 +76,7 @@ function subBox(text,type,cols,altCols){
   g.floating = []
   while(!isBase(type)){
     assertEq(type.length,2)
-    var [arg,type]=type
+    var [arg,type] = type
     ch=subBox("",arg,altCols,cols)
     g.floating.push(ch)
     ch.owner=g
@@ -126,13 +126,14 @@ function checkScope(g){
 }
 
 function snapback(g){
+  console.log(g.text,"+",g.parentElement.text)
   if(!isArg(g))throw "Expected to have been an argument"
   makeFloating(g,g.owner,false)
 }
 
 function makeFloating(g,target,savepos){
   if(g.parentElement!==g.target || isArg(g)){
-    if (savepos===undefined) savepos=true
+    if (savepos===undefined) savepos=(target===svg)
     var [x,y] = g.getClientXY()
     detatch(g)
     if(target===g.owner){
@@ -181,8 +182,13 @@ function unfloat(g){
   redraw(holder)
 }
 function unfill(g){
+  arg = g.filled
+  g.removeChild(arg)
   g.filled = false
   redraw(g)
+  if(arg.drawnh!==arg.h){
+    redraw(arg)
+  }
 }
 
 //Type stuff
@@ -228,9 +234,10 @@ function isArg(g){
 //
 
 function dragInto(argument,hole){
+  console.log(argument.text,"-->", hole.text)
   if(!argument.owner.contains(hole)){
     if (hole===argument.owner.parentElement){
-      return makeFloatingArg(argument,hole)
+      return makeFloating(argument,argument.owner)
     }
     console.log("out of scope") // consider snapping argument back to where it came from
     return false
@@ -239,19 +246,20 @@ function dragInto(argument,hole){
     return false
   }
   else if(hole.filled){
-    if (hole===argument.owner){
+    //console.log("Already filled")
+    /*if (hole===argument.owner){
       return makeFloatingArg(argument,hole)
     }
-    else {
-      return makeFloating(argument,hole)
-    }
-    console.log("Already filled")
-    return false
+    else {*/
+    return makeFloating(argument,hole)
+    //}
+    //console.log("Already filled")
+    //return false
   }
   if(!checkMatch(argument.type,hole.type)){
     if (hole===argument.owner && hole!==argument.parentElement){
       // allow bound variables to be returned to their holes if not already there
-      return makeFloatingArg(argument,hole)
+      return makeFloating(argument,hole)
     }
     console.log("Type mismatch")
     return false
@@ -260,13 +268,13 @@ function dragInto(argument,hole){
     return fillHole(argument,hole)
   }
 }
-function makeFloatingArg(argument,hole){
+/*function makeFloatingArg(argument,hole){
   if(isArg(argument)){
     makeFloating(argument,argument.owner,true)
     return true
   }
   return false //safe, it's already in the right place
-}
+}*/
 /*function makeFloating(argument,hole){
   if(isArg(argument)){
     var [x,y] = argument.getClientXY()
@@ -291,8 +299,7 @@ function fillHole(argument, hole){
   detatch(argument)
   hole.filled=argument
   hole.appendChild(argument)
-  if(!oldPar.contains(hole)){//If it doesn't, we don't need to check recursively
-    console.log("checking scope")
+  if(!oldPar.contains(hole)){//If it does, we don't need to check recursively
     checkScope(argument)
   }
   redraw(hole)
