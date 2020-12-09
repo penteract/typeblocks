@@ -16,7 +16,16 @@ double click to do something (make floating?) (reset hole after arguments have b
   //make floating terms line up reasonably
 
 make types line up better (autofill)
- (make exact matches fit; think about which holes to count)
+ //(make exact matches fit; think about which holes to count)
+ do something for imperfect matches
+ This is a very deep rabbit hole - guessing what the programmer wants is tricky.
+   e.g. If something matches exactly (including order of arguments), we most likely want it
+        (in some cases, this corresponds to eta-reducing away a lambda in Haskell)
+        If there is exactly one permutation of arguments which works perfectly, we probably want it
+        if the 'works perfectly' above is changed to a recursive "almost perfect up to permuation of arguments",
+          do we still want it? Note that this shifts the definition of uniqueness so might actually apply in fewer situations.
+
+
 
 
 let blocks
@@ -39,6 +48,7 @@ Longer term:
 undo/redo
 do something with data type declarations
 get polymorphic types working
+  Frames (aka explicit type signatures)?
 integrate with Haskell
 think about what to do when something changes type
   Make things that don't fit float?

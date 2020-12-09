@@ -221,21 +221,69 @@ function makeFloating(g,target,savepos){
 
 // Do the work of moving filling a hole with an argument
 function fillHole(argument, hole){
-  /*if (typeEq(argtype,holetype)){//TODO: look more carefully at the details of what's already filled in
-    //This case should be easy
-  }*/
     //If something moves, need to check hereditarily that everything is still in scope
   let oldPar = argument.parentElement
   detatch(argument)
-  hole.filled=argument
+  hole.filled = argument
   hole.appendChild(argument)
   if(!oldPar.contains(hole)){//If it does, we don't need to check recursively
     checkScope(argument)
+  }//doing this before matching types hopefully saves some headaches
+  let match = isNearPerfectMatch(argument,hole)
+  for(let i=1; i<match.length; i++){//Start at 1 because
+    let s=match[i][0]
+    let h=match[i][1]
+    detatch(s)
+    h.filled = s
+    h.appendChild(s)
+    redraw(h)
   }
   redraw(hole)
   return true
 }
 
+function getHoles(g){
+  if(g.isHole) throw "expected to be called on non-holes"
+  let result = []
+  for (let hole of g.floating){
+    let fill = hole.filled
+    if(fill) result = result.concat(getHoles(fill))
+    else result.push(hole)
+  }
+  return result
+}
+
+//check if a shape as currently filled lines up perfectly with a hole (and the things floating in it)
+function isPerfectMatch(shape,hole){
+  if(shape.baseType!==hole.baseType)return false
+  let innerHoles = getHoles(shape)
+  let pairs = [[shape,hole]]
+  let i = 0
+  for(let arg of hole.floating)if(arg){
+    if(i>=innerHoles.length) return false
+    let m = isPerfectMatch(arg,innerHoles[i++])
+    if(!m) return false
+    pairs = pairs.concat(m)
+  }
+  if(i<innerHoles.length) return false
+  return pairs
+}
+
+//check if an initial segment of a shape's holes line up with an initial segment of a hole's floating terms
+//Note: this is not recursive - for children it calls isPerfectMatch
+function isNearPerfectMatch(shape,hole){
+  if(shape.baseType!==hole.baseType)return false
+  let innerHoles = getHoles(shape)
+  let pairs = [[shape,hole]]
+  let i = 0
+  for(let arg of hole.floating)if(arg){
+    if(i>=innerHoles.length) break
+    let m = isPerfectMatch(arg,innerHoles[i++])
+    if(!m) break
+    pairs = pairs.concat(m)
+  }
+  return pairs
+}
 
 
 function checkScope(g){
@@ -260,7 +308,6 @@ function checkScope(g){
 // When something would become out of context, snap it back to its owner
 function snapback(g){
   console.log(g.text,"+",g.parentElement.text)
-  if(!isArg(g))throw "Expected to have been an argument"
   makeFloating(g,g.owner,false)
 }
 
@@ -296,7 +343,7 @@ function unfill(g){
 }
 
 
-// Puts everything back in its place
+// Puts everything at or above the given node's children back in its place
 //TODO: don't make it reset everything else - have things remember where they started and adjust them based on the changes to that.
 function redraw(g){
   if(!g || g===svg)return false
@@ -349,6 +396,7 @@ function redrawBox(g,h){
   g.children[0].setAttribute("d",simplePath(0,0,g.w,h,g.baseType))
 }
 
+//Printing
 function makeVarname(lamIndex,ownerIndex){
   return `x${lamIndex}v${ownerIndex}`
 }
@@ -512,7 +560,14 @@ function quick(n,ty){
 
 GAME="Action->Event->GameState->GameState"
 GEGSTO="Action->Event->GameState->"
-RULE=`(${GAME})->${GAME}`
+RULE=`((${GAME})->${GAME})`
+/*
+quick("when",`(${GEGSTO}Bool)->${RULE}->${RULE}`)
+quick("cardIs",`(Card->Bool)->${GEGSTO}Bool`)
+quick("Eight",`Rank`)
+quick("rank","Card->Rank")
+quick("==","Rank->Rank->Bool")
+quick("skipNextTurn",`${RULE}`)*/
 
 //quick("when",`${GEGSTO}Bool->${RULE}->${RULE}`)
 
@@ -522,8 +577,6 @@ quick("+","Int->Int->Int")
 quick("negate","Int->Int")
 quick("xs","ListInt")
 quick("5","Int")
-
-
 
 </script>
 
