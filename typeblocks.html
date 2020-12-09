@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html>
-<!--Theorem - in simply typed lambda calculus, every term is beta equivalent to one under a certain version of this program (not yet the current version)-->
+<!--Theorem - in simply typed lambda calculus, every term is beta equivalent to one under a certain version of this program (not yet the current version) -->
 <head>
   <meta charset="utf-8">
   <title>TypeBlocks</title>
   <script src="Parser.js">  </script>
+  <script src="hsluv-0.1.0.min.js">  </script>
   <script src="Paths.js">  </script>
   <script type="text/javascript">
-var SVGNS = "http://www.w3.org/2000/svg";
+"use strict";
+let SVGNS = "http://www.w3.org/2000/svg"
 
 
 // Uses object identity. Should work
@@ -18,8 +20,8 @@ var SVGNS = "http://www.w3.org/2000/svg";
 }*/
 
 function hash(str){
-  var n=0
-  for (var i=0;i<str.length;i++){
+  let n=0
+  for (let i=0;i<str.length;i++){
     n=(n*31)%1000000007
     n+=str.charCodeAt(i)
   }
@@ -47,7 +49,7 @@ function changexy(x,y){
   this.setxy(this.x+x, this.y+y)
 }
 function getClientXY(){
-  var m = this.parentElement.getCTM()
+  let m = this.parentElement.getCTM()
   return [this.x*m.a+this.y*m.c+m.e,this.x*m.b+this.y*m.d+m.f]
 }
 function setClientXY(x,y){
@@ -56,7 +58,7 @@ function setClientXY(x,y){
 }
 
 function subBox(text,type,cols,altCols){
-  var g = document.createElementNS(SVGNS,"g")
+  let g = document.createElementNS(SVGNS,"g")
   g.type = type
   g.text = text
 
@@ -68,16 +70,16 @@ function subBox(text,type,cols,altCols){
   if(g.isHole = cols[1]=="none")
     g.filled = false
 
-  //var width = text?getLength(text):0
-  //var minh = text?BASEHEIGHT:0
-  var pth = ""//simplePath(0,0,width,minh,type)
+  //let width = text?getLength(text):0
+  //let minh = text?BASEHEIGHT:0
+  let pth = ""//simplePath(0,0,width,minh,type)
   g.innerHTML += `<path d="${pth}" fill="${cols[0]}" stroke="${cols[1]}" fill-rule="evenodd"> </path> `
   if(text) g.innerHTML+=`<text font-size="10"> ${text}</text> `
   g.floating = []
   while(!isBase(type)){
     assertEq(type.length,2)
     var [arg,type] = type
-    ch=subBox("",arg,altCols,cols)
+    let ch=subBox("",arg,altCols,cols)
     g.floating.push(ch)
     ch.owner=g
     ch.ownerIndex=g.floating.length-1
@@ -91,10 +93,10 @@ function subBox(text,type,cols,altCols){
   return g
 }
 function makeBox(text,type, x,y,w,h){
-  var c = Math.random()*360
-  var fill = `hsl(${c},100%,50%)`
-  var stroke = `hsl(${c},50%,70%)`
-  var g = subBox(text,type,[fill,stroke],["#DDD","none"])
+  let c = Math.random()*360
+  let fill = hsluv.hsluvToHex([c,100,60]) //`hsl(${c},100%,50%)`
+  let stroke =  hsluv.hsluvToHex([c,50,70])//`hsl(${c},50%,70%)`
+  let g = subBox(text,type,[fill,stroke],["#DDD","none"])
   svg.appendChild(g)
   svg.floating.push(g)
   g.owner=svg
@@ -113,7 +115,7 @@ function makeBox(text,type, x,y,w,h){
 
 //given a type, return a pair consisting of a list of arguments and a result
 function decompose(t){
-  var args=[]
+  let args=[]
   while(!isBase(t)){
     var [arg,t] = t
     args.push(arg)
@@ -121,25 +123,25 @@ function decompose(t){
   return [args,t]
 }
 function checkMatch(s,t){
-  var [sargs,sres] = decompose(s)
-  var [targs,tres] = decompose(t)
+  let [sargs,sres] = decompose(s)
+  let [targs,tres] = decompose(t)
   return sres==tres
 }
 
 function isArg(g){
-  var a = g.parentElement.filled===g
+  let a = g.parentElement.filled===g
   return a
 }
 
 /*function getMatch(s,t){
-  var [sargs,sres] = decompose(s)
-  var [targs,tres] = decompose(s)
+  let [sargs,sres] = decompose(s)
+  let [targs,tres] = decompose(s)
   if (sres!=tres){
     return false
   }
   if(sargs.length==targs.length){
     sargs.map(function(sarg,i){
-      var targ=targs[i]
+      let targ=targs[i]
     })
   }
 }*/
@@ -170,7 +172,7 @@ function dragInto(argument,hole){
 
   if(!checkMatch(argument.type,hole.type)){
     if (hole===argument.owner && hole!==argument.parentElement){
-      // allow bound variables to be returned to their holes if not already there
+      // allow bound letiables to be returned to their holes if not already there
       return makeFloating(argument,hole)
     }
     console.log("Type mismatch")
@@ -187,7 +189,7 @@ function makeFloating(g,target,savepos){
 
   if(g.parentElement!==g.target || isArg(g)){
     if (savepos===undefined) savepos=(target===svg)
-    var [x,y] = g.getClientXY()
+    let [x,y] = g.getClientXY()
     detatch(g)
     if(target===g.owner){
       if(target.floating[g.ownerIndex]!==undefined){
@@ -206,7 +208,7 @@ function makeFloating(g,target,savepos){
     for(i=g.ownerIndex;i<owner.args.length;i++){
       owner.args[i].changexy(g.w+4*MARX,0)
     }*/
-    for (ch of g.floating){
+    for (let ch of g.floating){
       checkScope(ch)
     }
     redraw(target)
@@ -223,7 +225,7 @@ function fillHole(argument, hole){
     //This case should be easy
   }*/
     //If something moves, need to check hereditarily that everything is still in scope
-  oldPar = argument.parentElement
+  let oldPar = argument.parentElement
   detatch(argument)
   hole.filled=argument
   hole.appendChild(argument)
@@ -250,7 +252,7 @@ function checkScope(g){
       return
     }
   }
-  for (ch of g.floating) if(ch){
+  for (let ch of g.floating) if(ch){
     checkScope(ch)
   }
 }
@@ -273,8 +275,8 @@ function detatch(g){
 
 
 function unfloat(g){
-  var holder=g.parentElement
-  var index = holder.floating.indexOf(g)
+  let holder=g.parentElement
+  let index = holder.floating.indexOf(g)
   if(index == -1) throw "expected to be in floating list"
   if(holder===g.owner && g.ownerIndex==index)// think about duplicates
     holder.floating[index]=undefined
@@ -284,7 +286,7 @@ function unfloat(g){
   redraw(holder)
 }
 function unfill(g){
-  arg = g.filled
+  let arg = g.filled
   g.removeChild(arg)
   g.filled = false
   redraw(g)
@@ -298,19 +300,19 @@ function unfill(g){
 //TODO: don't make it reset everything else - have things remember where they started and adjust them based on the changes to that.
 function redraw(g){
   if(!g || g===svg)return false
-  var width = 0
+  let width = 0
   if(!isInfix(g.text)){
     if(g.text)width+=getLength(g.text)
   }
-  var minh = g.text?BASEHEIGHT:0
+  let minh = g.text?BASEHEIGHT:0
 
   if(g.filled){
     g.filled.setxy(0,0)
     width+=g.filled.w
     minh=Math.max(minh,g.filled.h)
   }
-  var hasch = false
-  for(ch of g.floating)if(ch){
+  let hasch = false
+  for(let ch of g.floating)if(ch){
     if(ch.parentElement!==g) throw "not parent of child (child probably did not remove themselves correctly)"
     if(g.filled && !hasch){
       width+=MARX
@@ -332,7 +334,7 @@ function redraw(g){
     redrawBox(g.filled,minh)
   }
   if (g.filled){
-    var fw=g.filled.w
+    let fw=g.filled.w
     g.children[0].setAttribute("d",
       hasch?
         filledHolePath(fw,0,g.w-fw,minh,g.filled.baseType):
