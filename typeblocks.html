@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
-<!--Theorem - in simply typed lambda calculus, every term is beta equivalent to one under a certain version of this program (not yet the current version) -->
+<!--Theorem - in simply typed lambda calculus, every term is beta equivalent to
+one that can be constructed under a certain version of this program (not yet the current version) -->
 <head>
   <meta charset="utf-8">
   <title>TypeBlocks</title>
@@ -11,14 +12,6 @@
   <script type="text/javascript">
 "use strict";
 let SVGNS = "http://www.w3.org/2000/svg"
-
-
-// Uses object identity. Should work
-/*Array.prototype.remove=function(e){
-  for(i=0;i<this.length;i++){
-    if (this[i] === e) this[i]=undefined
-  }
-}*/
 
 function hash(str){
   let n=0
@@ -58,10 +51,12 @@ function setClientXY(x,y){
   this.setxy(x*m.a+y*m.c+m.e,x*m.b+y*m.d+m.f)
 }
 
-function subBox(text,type,cols,altCols){
+function subBox(text,type,cols,altCols,depth){
+  depth??=0
   let g = document.createElementNS(SVGNS,"g")
   g.type = type
   g.text = text
+  g.depth = depth
 
   g.setxy=setxy // I'm probably meant to use prototype
   g.changexy=changexy
@@ -70,9 +65,6 @@ function subBox(text,type,cols,altCols){
 
   if(g.isHole = cols[1]=="none")
     g.filled = false
-
-  //let width = text?getLength(text):0
-  //let minh = text?BASEHEIGHT:0
   let pth = ""//simplePath(0,0,width,minh,type)
   g.innerHTML += `<path d="${pth}" fill="${cols[0]}" stroke="${cols[1]}" fill-rule="evenodd"> </path> `
   if(text) g.innerHTML+=`<text font-size="10"> ${text}</text> `
@@ -80,7 +72,7 @@ function subBox(text,type,cols,altCols){
   while(!isBase(type)){
     assertEq(type.length,2)
     var [arg,type] = type
-    let ch=subBox("",arg,altCols,cols)
+    let ch=subBox("",arg,altCols,cols,depth+1)
     g.floating.push(ch)
     ch.owner=g
     ch.ownerIndex=g.floating.length-1
@@ -276,10 +268,11 @@ function isNearPerfectMatch(shape,hole){
   if(shape.baseType!==hole.baseType)return false
   let innerHoles = getHoles(shape)
   let pairs = [[shape,hole]]
-  let i = 0
-  for(let arg of hole.floating)if(arg){
-    if(i>=innerHoles.length) break
-    let m = isPerfectMatch(arg,innerHoles[i++])
+  let i = innerHoles.length-1
+  let arg
+  for(let j=hole.floating.length; j>0;)if(arg=hole.floating[--j]){
+    if(i<0) break
+    let m = isPerfectMatch(arg,innerHoles[i--])
     if(!m) break
     pairs = pairs.concat(m)
   }
@@ -487,8 +480,6 @@ quick("Eight",`Rank`)
 quick("rank","Card->Rank")
 quick("==","Rank->Rank->Bool")
 quick("skipNextTurn",`${RULE}`)*/
-
-//quick("when",`${GEGSTO}Bool->${RULE}->${RULE}`)
 
 
 quick("map","(Int->Int)->ListInt->ListInt")
