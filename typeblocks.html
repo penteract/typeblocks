@@ -400,7 +400,7 @@ function printTerm(g){
       if (g.owner===svg){
         throw "top level boxes expected to have text"
       }
-      lamIndex = g.owner.lamIndex
+      let lamIndex = g.owner.lamIndex
       if(lamIndex===undefined){
         throw "Either printTerm was called on a non-top-level box or something has gone wrong"
       }
@@ -453,6 +453,9 @@ path{
 g:hover>path{
   stroke-width:1;
 }
+#hsTerm{
+  position: absolute;
+}
 /*Awaiting feature support
 g{
   z-index: 0
@@ -481,6 +484,7 @@ g{
          The only reason I don't just use the svg is that that doesn't support .getCTM()-->
   </g>
 </svg>
+<pre id="hsTerm"> </pre>
 <script src="Events.js"> </script>
 
 <script type="text/javascript">

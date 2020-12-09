@@ -54,6 +54,8 @@ function endDrag(e){
     }
     dragging=false
   }
+  lamCount = 0
+  hsTerm.innerText = printTerm(svg.children[svg.children.length-1])
   //else console.log("spurious end",g)
 }
 
