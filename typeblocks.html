@@ -7,6 +7,7 @@
   <script src="Parser.js">  </script>
   <script src="hsluv-0.1.0.min.js">  </script>
   <script src="Paths.js">  </script>
+  <script src="Printing.js">  </script>
   <script type="text/javascript">
 "use strict";
 let SVGNS = "http://www.w3.org/2000/svg"
@@ -386,6 +387,7 @@ function redraw(g){
       hasch?
         filledHolePath(fw,0,g.w-fw,minh,g.filled.baseType):
         simplePath(0,0,fw,minh,g.filled.baseType))
+    //Does not set g.drawnh, but this does not matter for holes
   }
   else redrawBox(g,minh)
   redraw(g.parentElement)
@@ -394,89 +396,6 @@ function redraw(g){
 function redrawBox(g,h){
   g.drawnh=h
   g.children[0].setAttribute("d",simplePath(0,0,g.w,h,g.baseType))
-}
-
-//Printing
-function makeVarname(lamIndex,ownerIndex){
-  return `x${lamIndex}v${ownerIndex}`
-}
-
-let lamCount = 0
-function printTerm(g){
-  let result = ""
-  let parenthesize = false
-  if (g.isHole){
-    g.lamIndex = lamCount++
-    let numArgs = 0
-    let hasFloating = false
-    for(let i=0; i<g.floating.length; i++){
-      let float = g.floating[i]
-      if(float===undefined || (float.owner===g && float.ownerIndex===i)){
-        numArgs += 1
-      }
-      if(float!==undefined){
-        hasFloating = true
-      }
-    }
-    if(numArgs>0){
-      parenthesize = true
-      result = "\\ "
-      for (let i=0; i<numArgs; i++){
-        result += makeVarname(g.lamIndex,i)+" "
-      }
-      result += "-> "
-    }
-    if(hasFloating || !g.filled){
-      result +=  "_ " //Haskell hole indicating that something is incomplete.
-      //Generated terms without these holes SHOULD NOT have type errors
-    }
-    if (g.filled){
-      result += printTerm(g.filled)
-    }
-    if (hasFloating){
-      parenthesize=true
-      for(let i=0; i<g.floating.length; i++){
-        let float = g.floating[i]
-        if(float!==undefined){
-          result += printTerm(float)
-        }
-      }
-    }
-  }
-  else{
-    if(!g.text){
-      if (g.owner===svg){
-        throw "top level boxes expected to have text"
-      }
-      let lamIndex = g.owner.lamIndex
-      if(lamIndex===undefined){
-        throw "Either printTerm was called on a non-top-level box or something has gone wrong"
-      }
-      result = makeVarname(lamIndex,g.ownerIndex) + " "
-    }
-    else{
-      result = g.text + " "
-    }
-    let atArg = 0
-    if(isInfix(g.text)){
-      while(atArg<g.floating.length && atArg<2){
-        let arg = g.floating[atArg++]
-        if(atArg==1) result = printTerm(arg)+" "+result
-        else result+=printTerm(arg)
-      }
-      result="("+result+")"
-    }
-    if(g.floating.length>atArg){
-      parenthesize=true
-      while(atArg<g.floating.length ){
-        result+=printTerm(g.floating[atArg++])
-      }
-    }
-  }
-  if(parenthesize){
-    result=`(${result})`
-  }
-  return result
 }
 
   </script>
@@ -577,6 +496,9 @@ quick("+","Int->Int->Int")
 quick("negate","Int->Int")
 quick("xs","ListInt")
 quick("5","Int")
+for(let i=1; i<svg.children.length; i++){
+  svg.children[i].setxy(0,i*15)
+}
 
 </script>
 

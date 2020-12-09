@@ -25,9 +25,6 @@ make types line up better (autofill)
         if the 'works perfectly' above is changed to a recursive "almost perfect up to permuation of arguments",
           do we still want it? Note that this shifts the definition of uniqueness so might actually apply in fewer situations.
 
-
-
-
 let blocks
   (global background should be a let block?)
 
