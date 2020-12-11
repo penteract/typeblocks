@@ -24,9 +24,9 @@ function isBase(t){
 //Firefox for android does not support unicode character classes
 //token = /(\p{Z}+)|(\()|(\))|((?:(?![\(\)])(?:\p{M}|\p{S}|\p{P}))+)|((?:\p{L}|\p{N})+)/u
 
-// missing punctuation tokens: ()[]{}'"`:;_ and most of unicode
+// missing punctuation tokens: ()[]{}'"`_ and most of unicode
 // parentheses are the only ones used
-token = /([ \t\n]+)|(\()|(\))|([-+*%\/\\&|^=<>?!~¬@#$→.,]+)|([a-zA-Z0-9_]+)/u
+token = /([ \t\n]+)|(\()|(\))|([-+*%\/\\&|^=<>?!~¬@#$→.,:;]+)|([a-zA-Z0-9_]+)/u
 SPACE=1
 OPENPAREN=2
 CLOSEPAREN=3
@@ -34,7 +34,7 @@ SYMBOL=4
 WORD=5
 
 function isInfix(s){
-  return s.match(/^[-+*%\/\\&|^=<>?!~¬@#$→.,]+$/u)
+  return s.match(/^[-+*%\/\\&|^=<>?!~¬@#$→.,:;]+$/u)
 }
 
 function partition(s){

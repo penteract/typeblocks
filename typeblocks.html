@@ -397,6 +397,7 @@ svg{
 
   width: 100%;
   height: 100%;
+  cursor: default;
 }
 html,body{
   margin: 0px;
@@ -414,6 +415,11 @@ g:hover>path{
 }
 #hsTerm{
   position: absolute;
+  bottom:0px;
+}
+#entry{
+  position: absolute;
+  top:0px;
 }
 /*Awaiting feature support
 g{
@@ -444,6 +450,11 @@ g{
   </g>
 </svg>
 <pre id="hsTerm"> </pre>
+<div id="entry"><form id="newNode" action="" onsubmit="quick(newNodeName.value,newNodeType.value);return false">
+  <input id="newNodeName" placeholder="map"> :: <input id="newNodeType" placeholder="(Int->Int)->ListInt->ListInt">
+  <button type="submit" form="newNode">create</button>
+</form>
+</div>
 <script src="Events.js"> </script>
 
 <script type="text/javascript">
@@ -464,8 +475,14 @@ svg.filled=true //Not true, but we don't want anything to think it's the global 
 svg.isHole=true
 
 
-function quick(n,ty){
-  makeBox(n,parseType(partition(ty)[0]))
+function quick(n,type){
+  console.log(n,type)
+  try{
+    var parsedType=parseType(partition(type)[0])
+  }
+  catch(e){alert (e); throw e}
+  console.log(n,parsedType)
+  makeBox(n,parsedType)
 }
 
 GAME="Action->Event->GameState->GameState"
