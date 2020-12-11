@@ -33,39 +33,77 @@ function typeEq(s,t){
   }*/
 }
 
-function setxy(x,y){
+SVGGElement.prototype.setxy = function(x,y){
   if(x===undefined) throw "e"
   this.x=x
   this.y=y
   this.setAttribute("transform",`translate(${x},${y})`)
 }
-function changexy(x,y){
+SVGGElement.prototype.changexy = function(x,y){
   this.setxy(this.x+x, this.y+y)
 }
-function getClientXY(){
+SVGGElement.prototype.getClientXY = function(){
   let m = this.parentElement.getCTM()
   return [this.x*m.a+this.y*m.c+m.e,this.x*m.b+this.y*m.d+m.f]
 }
-function setClientXY(x,y){
+SVGGElement.prototype.setClientXY = function(x,y){
   let m = this.parentElement.getCTM().inverse()
   this.setxy(x*m.a+y*m.c+m.e,x*m.b+y*m.d+m.f)
 }
+//make a copy of this under newPar
+SVGGElement.prototype.duplicate = function(newPar){
+  let g = document.createElementNS(SVGNS,"g")
+  if(newPar===undefined){
+    newPar = this.parentElement
+    newPar.floating.push(g)
+  }
+  // Deal with owner
+  if(this.owner.contains(newPar)){
+    g.owner=this.owner
+  }
+  else{
+    g.owner=newPar
+    let climbing=this.parentElement
+    while(climbing!==this.owner){
+      climbing=climbing.parentElement
+      g.owner=g.owner.parentElement
+      if(climbing===svg) throw "Climbed too far"
+    }
+  }
+  //Deal with most of the properties
+  for (let prop of ["type","text","depth","cols","isHole","baseType","x","y","ownerIndex"]){
+    g[prop]=this[prop]
+  }
+  g.innerHTML += `<path d="" fill="${g.cols[0]}" stroke="${g.cols[1]}" fill-rule="evenodd"> </path> `
+  if(g.text) g.innerHTML+=`<text font-size="10"> ${g.text}</text> `
+  g.floating=[]
+
+  newPar.appendChild(g)
+  if(this.filled){
+    g.filled = this.filled.duplicate(g)
+  }
+  else g.filled=this.filled
+  for (let ch of this.floating){
+    if(ch) g.floating.push(ch.duplicate(g))
+    else g.floating.push(ch)//undefined
+  }
+  if(!g.isHole) g.addEventListener("touchstart",startDrag(g))
+  if(!g.isHole) g.addEventListener("mousedown",startDrag(g))
+  redraw(g)
+  return g
+}
+
 function subBox(text,type,cols,altCols,depth){
   if(depth===undefined)depth=0
   let g = document.createElementNS(SVGNS,"g")
   g.type = type
   g.text = text
   g.depth = depth
-
-  g.setxy=setxy // I'm probably meant to use prototype
-  g.changexy=changexy
-  g.getClientXY=getClientXY
-  g.setClientXY=setClientXY
+  g.cols = cols
 
   if(g.isHole = cols[1]=="none")
     g.filled = false
-  let pth = ""//simplePath(0,0,width,minh,type)
-  g.innerHTML += `<path d="${pth}" fill="${cols[0]}" stroke="${cols[1]}" fill-rule="evenodd"> </path> `
+  g.innerHTML += `<path d="" fill="${cols[0]}" stroke="${cols[1]}" fill-rule="evenodd"> </path> `
   if(text) g.innerHTML+=`<text font-size="10"> ${text}</text> `
   g.floating = []
   while(!isBase(type)){
@@ -186,11 +224,12 @@ function makeFloating(g,target,savepos){
     detatch(g)
     if(target===g.owner){
       if(target.floating[g.ownerIndex]!==undefined){
-        throw "Should not happen until I've added duplication"
-        remove(g)
-        return
+        //throw "Should not happen until I've added duplication"
+        //remove(g)
+        target.floating.push(g)
+        //return
       }
-      target.floating[g.ownerIndex] = g
+      else target.floating[g.ownerIndex] = g
     }
     else{
       target.floating.push(g)
@@ -476,12 +515,10 @@ svg.isHole=true
 
 
 function quick(n,type){
-  console.log(n,type)
   try{
     var parsedType=parseType(partition(type)[0])
   }
   catch(e){alert (e); throw e}
-  console.log(n,parsedType)
   makeBox(n,parsedType)
 }
 

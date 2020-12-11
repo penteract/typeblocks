@@ -3,8 +3,9 @@
 var dragging=false
 var selected=false
 var position=undefined
-function startDrag(g){
+function startDrag(target){
   return function(e){
+    let g=target
     if(e.touches){
       e.x=e.touches[0].clientX
       e.y=e.touches[0].clientY
@@ -14,6 +15,9 @@ function startDrag(g){
       e.stopPropagation()
       //console.log(e)
       if (dragging===false){
+        if(e.ctrlKey){
+          g=g.duplicate()
+        }
         dragging=g
         selected=g
         g.classList.add("dragging")
