@@ -47,12 +47,11 @@ function getClientXY(){
   return [this.x*m.a+this.y*m.c+m.e,this.x*m.b+this.y*m.d+m.f]
 }
 function setClientXY(x,y){
-  m = this.parentElement.getCTM().inverse()
+  let m = this.parentElement.getCTM().inverse()
   this.setxy(x*m.a+y*m.c+m.e,x*m.b+y*m.d+m.f)
 }
-
 function subBox(text,type,cols,altCols,depth){
-  depth??=0
+  if(depth===undefined)depth=0
   let g = document.createElementNS(SVGNS,"g")
   g.type = type
   g.text = text
@@ -81,6 +80,7 @@ function subBox(text,type,cols,altCols,depth){
   g.baseType=type
   g.x=0
   g.y=0
+  if(!g.isHole) g.addEventListener("touchstart",startDrag(g))
   if(!g.isHole) g.addEventListener("mousedown",startDrag(g))
   redraw(g)
   return g
@@ -301,7 +301,6 @@ function checkScope(g){
 
 // When something would become out of context, snap it back to its owner
 function snapback(g){
-  console.log(g.text,"+",g.parentElement.text)
   makeFloating(g,g.owner,false)
 }
 
@@ -449,6 +448,7 @@ g{
 
 <script type="text/javascript">
 
+
 // If the line below isn't needed, why does everyone use document.getElementById?
 //svg=document.getElementById("svg")
 
@@ -462,8 +462,6 @@ function getLength(txt){//TODO: sanitize
 svg.floating=[]
 svg.filled=true //Not true, but we don't want anything to think it's the global argument
 svg.isHole=true
-
-
 
 
 function quick(n,ty){
@@ -481,7 +479,7 @@ quick("rank","Card->Rank")
 quick("==","Rank->Rank->Bool")
 quick("skipNextTurn",`${RULE}`)*/
 
-
+try{
 quick("map","(Int->Int)->ListInt->ListInt")
 quick("+","Int->Int->Int")
 quick("negate","Int->Int")
@@ -490,6 +488,9 @@ quick("5","Int")
 for(let i=1; i<svg.children.length; i++){
   svg.children[i].setxy(0,i*15)
 }
+}
+catch(e) {alert(e);throw e}//for debugging on mobile
+
 
 </script>
 

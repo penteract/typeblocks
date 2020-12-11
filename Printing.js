@@ -1,3 +1,4 @@
+"use strict";
 function makeVarname(lamIndex,ownerIndex){
   return `x${lamIndex}v${ownerIndex}`
 }

@@ -1,10 +1,15 @@
+"use strict";
 // Event handlers
 var dragging=false
 var selected=false
 var position=undefined
 function startDrag(g){
   return function(e){
-    if(e.button===0){
+    if(e.touches){
+      e.x=e.touches[0].clientX
+      e.y=e.touches[0].clientY
+    }
+    if(e.button===0 || (e.touches && e.touches.length==1)){
       e.preventDefault()
       e.stopPropagation()
       //console.log(e)
@@ -27,15 +32,25 @@ function startDrag(g){
   }
 }
 function drag(e){
+  //try{
+  if(e.touches){
+    e.x=e.touches[0].clientX
+    e.y=e.touches[0].clientY
+  }
   if (dragging){
-    m=dragging.parentElement.getCTM()
+    let m=dragging.parentElement.getCTM()
     dragging.changexy((e.x-position[0])/m.a, (e.y-position[1])/m.d)
     position=[e.x,e.y]
   }
-  //console.log(e)
+  //}catch(e){alert(e);throw e}
   //else console.log("spurious move",g)
 }
 function endDrag(e){
+  //try{
+  if(e.touches){
+    e.x=e.changedTouches[0].clientX
+    e.y=e.changedTouches[0].clientY
+  }
   //console.log("main",e)
   if (dragging) {
     dragging.classList.remove("dragging")
@@ -55,9 +70,13 @@ function endDrag(e){
     dragging=false
   }
   hsTerm.innerText = printTerm(svg.children[svg.children.length-1])
+//}catch(e){alert(e);throw e}
   //else console.log("spurious end",g)
 }
 
+//O pointerEvents, why are you so buggy?
 svg.addEventListener("mousemove",drag)
+svg.addEventListener("touchmove",drag)
 svg.addEventListener("mouseup",endDrag)
+svg.addEventListener("touchend",endDrag)
 svg.addEventListener("mouseleave",endDrag)
