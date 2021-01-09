@@ -1,3 +1,4 @@
+"use strict";
 function assertEq(a,b){
   if (a!==b && JSON.stringify(a)!==JSON.stringify(b)) throw ("not Equal: "+a+" and "+b)
 }
@@ -8,8 +9,8 @@ function assertEq(a,b){
 //data Type = Base String | Arrow Type Type
 //            "Type"      | [Type,Type]
 
-Types = {} // Set of base types
-Constants = {} //dictionary giving Types
+const Types = {} // Set of base types
+const Constants = {} //dictionary giving Types
 
 function addType(t){
   Types[t]=true
@@ -26,12 +27,12 @@ function isBase(t){
 
 // missing punctuation tokens: ()[]{}'"`_ and most of unicode
 // parentheses are the only ones used
-token = /([ \t\n]+)|(\()|(\))|([-+*%\/\\&|^=<>?!~¬@#$→.,:;]+)|([a-zA-Z0-9_]+)/u
-SPACE=1
-OPENPAREN=2
-CLOSEPAREN=3
-SYMBOL=4
-WORD=5
+const token = /([ \t\n]+)|(\()|(\))|([-+*%\/\\&|^=<>?!~¬@#$→.,:;]+)|([a-zA-Z0-9_]+)/u
+const SPACE=1
+const OPENPAREN=2
+const CLOSEPAREN=3
+const SYMBOL=4
+const WORD=5
 
 function isInfix(s){
   return s.match(/^[-+*%\/\\&|^=<>?!~¬@#$→.,:;]+$/u)
@@ -48,7 +49,7 @@ function partition(s){
     if (match[SPACE]){
     }
     else if(match[OPENPAREN]){
-      [part,s]=partition(s)
+      var [part,s]=partition(s)
       seen.push(part)
     }
     else if (match[CLOSEPAREN]){

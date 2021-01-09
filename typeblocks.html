@@ -90,7 +90,56 @@ SVGGElement.prototype.duplicate = function(newPar){
   if(!g.isHole) g.addEventListener("touchstart",startDrag(g))
   if(!g.isHole) g.addEventListener("mousedown",startDrag(g))
   redraw(g)
+  if(newPar===this.parentElement){
+    g.setAttribute("transform",this.getAttribute("transform"))
+  }
   return g
+}
+
+SVGGElement.prototype.delete = function(started){
+  // Child node is responsible for removing self from parent
+  if(started===undefined){
+    this.toBeDeleted=true
+  }
+  else if(this.owner.toBeDeleted){
+    this.toBeDeleted=true
+  }
+  else{
+    //TODO: make sure this behaves as expected for higher order types
+    var snapTo = this.parentElement
+    if (snapTo.toBeDeleted){
+      while (snapTo.toBeDeleted){
+        snapTo=snapTo.parentElement
+      }
+      if(snapTo===this.owner && snapTo!==svg && this.owner.floating[this.ownerIndex]){
+        this.toBeDeleted=true
+      }
+    }
+    else{
+      //Will snapback, but need to process children first
+    }
+  }
+  if(this.filled){
+    this.filled.delete(true)
+  }
+  let i=this.floating.length
+  while(i>=0){
+    if (this.floating[i]) this.floating[i].delete(true)
+    i--
+  }
+
+  if(this.toBeDeleted){
+    if (this.filled) throw "Trying to delete something that's not empty(filled)"
+    for (let x of this.floating) if(x)throw "Trying to delete something that's not empty"
+    detatch(this)
+    this.remove()
+  }
+  else {
+    if(snapTo!==this.parentElement){
+      makeFloating(this,snapTo)
+    }
+    redraw(this)
+  }
 }
 
 function subBox(text,type,cols,altCols,depth){
@@ -217,7 +266,6 @@ function dragInto(argument,hole){
 // Do the work of taking something out of where it came from and putting it (floating) somewhere else
 function makeFloating(g,target,savepos){
   if (!target.isHole) throw "Things should only float in holes"
-
   if(g.parentElement!==g.target || isArg(g)){
     if (savepos===undefined) savepos=(target===svg)
     let [x,y] = g.getClientXY()
@@ -240,7 +288,7 @@ function makeFloating(g,target,savepos){
     for(i=g.ownerIndex;i<owner.args.length;i++){
       owner.args[i].changexy(g.w+4*MARX,0)
     }*/
-    for (let ch of g.floating){
+    for (let ch of g.floating) if(ch){
       checkScope(ch)
     }
     redraw(target)
@@ -470,23 +518,23 @@ g{
 </style>
 </head>
 <body>
-<svg viewBox="-10 -30 220 40" preserveAspectRatio="xMinYMin" zoomAndPan="magnify">
+<svg viewBox="-10 -30 300 40" preserveAspectRatio="xMinYMin" zoomAndPan="magnify">
+
+<text id="testtext" fill="none" font-size="10"> hello </text>
+<g id="svg" pointer-events="bounding-box">
+ <rect x="-10000" y="-10000" width="20000" height="20000" fill="white" />
+ <!-- If I implement zooming out and this isn't big enough, that might get hard to debug.
+      The only reason I don't just use the svg is that that doesn't support .getCTM()-->
+</g>
   <!--<rect x="0" y="0" width="100" height="100" fill="black" /> vb=0 0 200 10
   <rect x="10" y="10" width="100" height="900" fill="red" />
   <path d="M 0 0 L 100 100 L 100 10 Z" stroke="green" stroke-width="1" fill="none"/>
-  <rect x="0" y="0" width="3" height="3" fill="red" /> -->
+  <rect x="0" y="0" width="3" height="3" fill="red" />-->
   <!--"M 0 0 C 25 25  75 -25 100 0 Z"
   <path d="M 0 0 L 40 0 A 10 10 0 1 1 40 0.001 L 100 0 L 50 50 Z"
    stroke="green" stroke-width="1" fill-rule="evenodd"/>
   <path d="M 20 20 L 100 100 L 100 20 Z M 40 30 L 90 80 L 90 30 Z"
    stroke="green" stroke-width="1" fill="blue" fill-rule="evenodd" />-->
-
-  <text id="testtext" fill="none" font-size="10"> hello </text>
-  <g id="svg" pointer-events="bounding-box">
-    <rect x="-10000" y="-10000" width="20000" height="20000" fill="white" />
-    <!-- If I implement zooming out and this isn't big enough, that might get hard to debug.
-         The only reason I don't just use the svg is that that doesn't support .getCTM()-->
-  </g>
 </svg>
 <pre id="hsTerm"> </pre>
 <div id="entry"><form id="newNode" action="" onsubmit="quick(newNodeName.value,newNodeType.value);return false">
@@ -502,15 +550,14 @@ g{
 // If the line below isn't needed, why does everyone use document.getElementById?
 //svg=document.getElementById("svg")
 
-
 //setup
 textTester=document.getElementById("testtext")
 function getLength(txt){//TODO: sanitize
   testtext.innerHTML=txt
   return testtext.getComputedTextLength()
 }
-svg.floating=[]
-svg.filled=true //Not true, but we don't want anything to think it's the global argument
+svg.floating=[true]//prevents things from jumping back into place
+svg.filled=true //Not true, but we don't want anything to think it can become the global argument
 svg.isHole=true
 
 
@@ -525,6 +572,7 @@ function quick(n,type){
 GAME="Action->Event->GameState->GameState"
 GEGSTO="Action->Event->GameState->"
 RULE=`((${GAME})->${GAME})`
+
 /*
 quick("when",`(${GEGSTO}Bool)->${RULE}->${RULE}`)
 quick("cardIs",`(Card->Bool)->${GEGSTO}Bool`)
@@ -539,13 +587,12 @@ quick("+","Int->Int->Int")
 quick("negate","Int->Int")
 quick("xs","ListInt")
 quick("5","Int")
-for(let i=1; i<svg.children.length; i++){
-  svg.children[i].setxy(0,i*15)
-}
 }
 catch(e) {alert(e);throw e}//for debugging on mobile
 
-
+for(let i=1; i<svg.children.length; i++){
+  svg.children[i].setxy(0,i*15)
+}
 </script>
 
 </body>

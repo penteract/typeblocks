@@ -36,7 +36,7 @@ const curve =["C",[25,25],[75,-90],[100,0]]
 const curve2 =["C",[25,25],[25,-70],[50,0],"C",[75,25],[75,-70],[100,0]]
 const circ = ["L", [40,0], "A", ["scale",10,10], "0 1 0", [40, 0.001], "L", [100, 0]]
 
-const shapes=[caret,point,square,curve,curve2,zigzag] //,circ]
+const shapes=[caret,point,square,curve,curve2,zigzag]//,circ]
 
 function makePath(name,start,end){
   if (name=="line"){

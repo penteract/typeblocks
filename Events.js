@@ -13,6 +13,7 @@ function startDrag(target){
     if(e.button===0 || (e.touches && e.touches.length==1)){
       e.preventDefault()
       e.stopPropagation()
+      position=[e.x,e.y]
       //console.log(e)
       if (dragging===false){
         if(e.ctrlKey){
@@ -29,12 +30,24 @@ function startDrag(target){
           climb = climb.parentElement
         }
 
-        position=[e.x,e.y]
       }
       else console.log("spurious",g,e)
     }
+    if(e.button===2){
+      e.preventDefault()
+      e.stopPropagation()
+      g.delete()
+      //Why do none of these prevent the contextmenu event?
+      return false
+    }
   }
 }
+
+function hideMenu(e){
+  e.preventDefault()
+  return false
+}
+
 function drag(e){
   //try{
   if(e.touches){
@@ -84,3 +97,7 @@ svg.addEventListener("touchmove",drag)
 svg.addEventListener("mouseup",endDrag)
 svg.addEventListener("touchend",endDrag)
 svg.addEventListener("mouseleave",endDrag)
+// I'm sorry for doing this - I only want to supress context menu when the right
+// click is deleting something, but the mousedown handler won't let me do that
+// and the context menu handler doesn't run for the element that's deleted.
+svg.addEventListener("contextmenu",hideMenu)
