@@ -1,0 +1,50 @@
+Use box.children rather than box.floating
+put things into the right place when doing `makeFloating`
+
+ctrl-click to copy
+right-click to delete
+delete key to delete?
+  how do I get deleted arguments back?
+double click to do something (make floating?) (reset hole after arguments have been deleted?)
+  make a hole larger than it needs to be to make it easy to work in that context
+
+do something to indicate when something will fill a hole (draw border of the hole?)
+
+//allow floating terms
+  //make floating terms line up reasonably
+
+make types line up better (autofill)
+ //(make exact matches fit; think about which holes to count)
+ //do something for imperfect matches
+ This is a very deep rabbit hole - guessing what the programmer wants is tricky.
+   e.g. If something matches exactly (including order of arguments), we most likely want it
+        (in some cases, this corresponds to eta-reducing away a lambda in Haskell)
+        If there is exactly one permutation of arguments which works perfectly, we probably want it
+        if the 'works perfectly' above is changed to a recursive "almost perfect up to permuation of arguments",
+          do we still want it? Note that this shifts the definition of uniqueness so might actually apply in fewer situations.
+
+let blocks
+  (global background should be a let block?)
+
+zoom/pan
+  This is in the SVG1 spec but removed from SVG2 :(
+
+generate strings corresponding to the terms
+
+show a preview of what happens if you release the mouse (important for UI)
+  implementation thoughts: keep track of a "real" target based on the unmodified structure
+     when that changes, duplicate as much as needed to (including stuff that would move out of scope)
+                        and make the original invisible (but keep it present for hit testing)
+
+hide/shrink parts of more complicated types.
+  (only when autofilled? (η-reducible))
+  stack vertically sometimes?
+
+Longer term:
+undo/redo
+do something with data type declarations
+get polymorphic types working
+  Frames (aka explicit type signatures)?
+integrate with Haskell
+think about what to do when something changes type
+  Make things that don't fit float?

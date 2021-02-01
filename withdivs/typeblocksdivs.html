@@ -1,0 +1,298 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+			"http://www.w3.org/TR/html4/loose.dtd">
+<!-- Yes, it's 2021 and I'm deliberately triggering almost standards mode.
+ If someone knows a better way of getting nested empty divs to stay square,
+  please tell me. -->
+<html>
+<!--Theorem - in simply typed lambda calculus, every term is beta equivalent to
+one that can be constructed under a certain version of this program (not yet the current version) -->
+<head>
+  <meta charset="utf-8">
+  <title>TypeBlocks</title>
+	<link rel="stylesheet" href="styles.css">
+  <script src="../Parser.js">  </script>
+  <script src="../hsluv-0.1.0.min.js">  </script>
+  <script src="Printing.js">  </script>
+  <script src="../Utils.js">  </script>
+	<script src="../Paths.js">  </script>
+
+  <script type="text/javascript">
+"use strict";
+
+HTMLDivElement.prototype.setxy = function(x,y){
+  if(x===undefined) throw "e"
+  this.x=x
+  this.y=y
+  this.style.left=x+"px"
+  this.style.top=y+"px"
+}
+HTMLDivElement.prototype.changexy = function(x,y){
+  this.setxy(this.x+x, this.y+y)
+}
+HTMLDivElement.prototype.getClientXY = function(){
+  let r = this.getClientRects()[0]
+  return [r.x,r.y]
+}
+HTMLDivElement.prototype.setClientXY = function(x,y){
+  this.setxy(0,0)
+  let r = this.getClientRects()[0]
+  this.setxy(x-r.x,y-r.y)
+}
+
+function subBox(text,type,cols,otherCols,parent){
+  let [fill,stroke] = cols
+  let g = document.createElement("div")
+  if(g.isHole = stroke=="none"){
+		g.classList.add("hole")
+		g.filled = false
+	}
+  g.classList.add("box")
+  if(text && (!isInfix(text) || isBase(type))){g.append(text)}
+	g.type = type
+
+	//Children
+	g.floating=[]
+  while(!isBase(type)){
+    assertEq(type.length,2)
+    var [arg,type] = type
+    let ch=subBox("",arg,otherCols,cols,g)
+    //g.floating.push(ch)
+		if(g.floating.length==1 && text && isInfix(text)){g.append(text)}
+  }
+  g.baseType=type
+	//Appearance
+  g.style.backgroundColor = fill
+  g.style.borderColor = stroke
+	g.style.borderImageSource=`url(data:image/svg+xml;base64,${btoa(borderSVG(type,fill,stroke))})`
+	// Warning: borderImage is buggy in firefox in various ways.
+	// Consider reconstructing svg whenever the box's dimensions change
+
+	//Structure
+  g.owner = parent
+  parent.appendChild(g)
+  g.setxy(0,0)
+	if(!g.isHole)g.draggable="true"
+  //if(!g.isHole) g.addEventListener("touchstart",startDrag(g))
+  //if(!g.isHole) g.addEventListener("mousedown",startDrag(g))
+	parent.floating.push(g)
+	g.ownerIndex=parent.floating.length-1
+	everything.push(g)
+  return g
+}
+const everything=[]
+function makeBox(text,type){
+  let c = Math.random()*360
+  let fill = hsluv.hsluvToHex([c,100,70]) //`hsl(${c},100%,50%)`
+  let stroke =  hsluv.hsluvToHex([c,50,50])//`hsl(${c},50%,70%)`
+  let g = subBox(text,type,[fill,stroke],["#DDD","none"],root)
+}
+
+
+
+function dragInto(argument,hole){
+  console.log(argument.innerText,"-->", hole.innerText)
+  if(!argument.owner.contains(hole)){
+    if (hole===argument.owner.parentElement){
+      //Let something be made floating by dragging it just outside its context
+      return makeFloating(argument,argument.owner)
+    }
+    console.log("out of scope") // consider snapping argument back to where it came from
+    // alternatively, consider putting the new context into this hole (if possible)
+    return false
+  }
+  if (!hole.isHole){
+    if(isArg(argument)){
+      if (argument.parentElement.parentElement===hole){
+        // if you drag a filled argument just outside its hole, make it float
+        return makeFloating(argument,argument.parentElement)
+      }
+    }
+    return false
+  }
+  if(hole.filled===argument || hole===root){//Put stuff into
+    return makeFloating(argument,hole)
+  }
+	else if(hole.filled){//don't put things into holes that are already filled
+		return false
+	}
+
+  if(!checkMatch(argument.type,hole.type)){
+    if (hole===argument.owner && hole!==argument.parentElement){
+      // allow bound letiables to be returned to their holes if not already there
+      return makeFloating(argument,hole)
+    }
+    console.log("Type mismatch")
+    return false
+  }
+  else{
+    //If the types match and there's no other reason not to, go ahead and fill the hole
+    return fillHole(argument,hole)
+  }
+}
+
+// Do the work of taking something out of where it came from and putting it (floating) somewhere else
+function makeFloating(g,target){
+  if (!target.isHole) throw "Things should only float in holes"
+  if(g.parentElement!==target || isArg(g)){
+    detatch(g)
+    if(target===g.owner){
+      if(target.floating[g.ownerIndex]!==undefined){
+        target.floating.push(g)
+      }
+      else target.floating[g.ownerIndex] = g
+    }
+    else{
+      target.floating.push(g)
+    }
+    target.appendChild(g)
+    for (let ch of g.floating) if(ch){
+      checkScope(ch)
+    }
+		return true
+  }
+}
+
+
+// future Strategy: If there is an unambiguous ordered bijection between (((a subset of the argument's holes) and (the hole's arguments)) ^or^ ((the argument's holes) and (a subset of the hole's arguments)) then go for it; otherwise, if the final types line up, stick with that.
+//   a bijection is ambiguous if there is another one that does not involve a strict subset of chosen argument set
+
+// Do the work of moving filling a hole with an argument
+function fillHole(argument, hole){
+    //If something moves, need to check hereditarily that everything is still in scope
+  let oldPar = argument.parentElement
+  detatch(argument)
+	hole.classList.add("filled")
+  hole.filled = argument
+	argument.classList.add("filling")
+  hole.appendChild(argument)
+  if(!oldPar.contains(hole)){//If it does, we don't need to check recursively
+    checkScope(argument)
+  }//doing this before matching types hopefully saves some headaches
+  let match = isNearPerfectMatch(argument,hole)
+  for(let i=1; i<match.length; i++){//Start at 1 because
+    let s=match[i][0]
+    let h=match[i][1]
+    detatch(s)
+		h.classList.add("filled")
+		h.filled = s
+		s.classList.add("filling")
+    h.appendChild(s)
+  }
+  return true
+}
+
+
+
+function checkScope(g){
+  if(g.isHole){
+    if(g.filled)checkScope(g.filled)
+  }
+  else{
+    if(!g.owner.contains(g.parentElement)){//out of scope
+      //TODO: think more carefully about where it should go - should it just go
+        // up to the nearest legal hole (nearest before the move that caused checkscope),
+        // rather than all the way up to its owner?
+      //
+      snapback(g)
+      return
+    }
+  }
+  for (let ch of g.floating) if(ch){
+    checkScope(ch)
+  }
+}
+
+// When something would become out of context, snap it back to its owner
+function snapback(g){
+  makeFloating(g,g.owner)
+}
+
+
+function detatch(g){
+  if(isArg(g)){
+    unfill(g.parentElement)
+  }else{
+    unfloat(g)
+  }
+}
+
+function unfloat(g){
+  let holder=g.parentElement
+	holder.removeChild(g)
+  let index = holder.floating.indexOf(g)
+  if(index == -1) throw ("expected to be in floating list"+g.innerText +` : ${holder.innerText} : ${holder==root}`)
+  if(holder===g.owner && g.ownerIndex==index)// think about duplicates
+    holder.floating[index]=undefined
+  else{
+    holder.floating.splice(index,1)
+  }
+}
+function unfill(g){
+	g.classList.remove("filled")
+  let arg = g.filled
+	arg.classList.remove("filling")
+  g.removeChild(arg)
+  g.filled = false
+}
+
+  </script>
+</head>
+<body>
+<div id="entry"><form id="newNode" action="" onsubmit="quick(newNodeName.value,newNodeType.value);return false">
+  <input id="newNodeName" placeholder="map"> :: <input id="newNodeType" placeholder="(Int->Int)->ListInt->ListInt">
+  <button type="submit" form="newNode">create</button>
+</form>
+</div>
+<div id="root">
+</div>
+
+<pre id="hsTerm"> _ code will go here when clicked on (TODO)</pre>
+
+<script src="Events.js"> </script>
+
+<script type="text/javascript">
+
+
+// If the line below isn't needed, why does everyone use document.getElementById?
+//root=document.getElementById("root")
+
+root.floating=[true]//prevents things from jumping back into place
+root.filled=true //Not true, but we don't want anything to think it can become the global argument
+root.isHole=true
+
+function quick(n,type){
+  try{
+    var parsedType=parseType(partition(type)[0])
+  }
+  catch(e){alert (e); throw e}
+  makeBox(n,parsedType)
+}
+
+GAME="Action->Event->GameState->GameState"
+GEGSTO="Action->Event->GameState->"
+RULE=`((${GAME})->${GAME})`
+
+
+quick("when",`(${GEGSTO}Bool)->${RULE}->${RULE}`)
+quick("cardIs",`(Card->Bool)->${GEGSTO}Bool`)
+quick("Eight",`Rank`)
+quick("rank","Card->Rank")
+quick("==","Rank->Rank->Bool")
+quick("skipNextTurn",`${RULE}`)
+
+try{
+quick("map","(Int->Int)->ListInt->ListInt")
+quick("+","Int->Int->Int")
+quick("negate","Int->Int")
+quick("xs","ListInt")
+quick("5","Int")
+quick("","Int->Int")
+}
+catch(e) {alert(e);throw e}//for debugging on mobile
+
+for(let i=0; i<root.children.length; i++){
+  root.children[i].setxy(0,50+(i*10))
+}
+</script>
+</body>
+</html>

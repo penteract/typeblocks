@@ -1,0 +1,88 @@
+#root{
+  position: fixed;
+  width: 100%;
+  min-height: 100%;
+  background: white;
+  z-index: -1;
+  display: block;
+}
+html,body{
+  margin: 0px;
+  padding:0px;
+  /* overflow:hidden; */
+}
+.hidden{
+  display: none;
+}
+.invisible{
+  visibility: hidden;
+}
+path{
+  stroke-width: 0.6;
+}
+/*.box:hover{
+  border-width: 4px;
+  margin: 2px;
+}
+.hole:hover{
+  margin: 3px;
+}*/
+#hsTerm{
+  position: absolute;
+  bottom:0px;
+}
+#entry{
+  position: absolute;
+  top:0px;
+}
+
+.box{
+	user-select: none;/* stops people dragging text inside boxes */
+  display: inline-block;
+  z-index: 0;
+  position: relative;
+  padding: 3px;
+  border-width:0px;
+  margin: 1px;
+  vertical-align: middle;
+	border-style: solid;
+	border-width: 5px;
+	border-color: black;
+	background-clip: padding-box; /* means that the background isn't seen behind the transparent parts of the border image  */
+  /*line-height: 0;*/
+  /*font-size: 0;*/
+	border-image-width: 5px;
+	border-image-repeat: repeat;
+	border-image-source: url(data:image/svg+xml;whatever);
+	border-image-slice: 9%;
+	/*border-image-outset: 0px;*/
+}
+.box{
+	cursor: pointer;
+}
+.hole{
+	padding: 2px;
+}
+.filled{
+	padding: 0px;
+	border-width: 0px;
+	margin: 0px;
+border-image-outset: -5px;
+background-color: transparent !important;
+border-image-width: 0px;
+}
+.filled>.box{
+  display: none;
+}
+.filled>.filling{
+  display: inline-block;
+}
+.box:empty{
+  padding: 5px;
+}
+/*#root > .box{
+  position: absolute;
+}*/
+.dragging{
+  z-index: 10;
+}

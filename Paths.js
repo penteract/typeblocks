@@ -84,6 +84,20 @@ const MARX=3// Rise up!
 const MARY=3
 const BASEHEIGHT=7//with text (vertical center is BASEHEIGHT/2)
 
+//Path for border-image, ignores margins, starts at 0,0
+function borderPath(w,h,type){
+  let bl = [0,h]
+  let br = [w,h]
+  let tr = [w,0]
+  let tl = [0,0]
+  var pth = "M "+bl[0]+" "+bl[1]+" "+
+    makePath(type,bl,br) +
+    makePath(type,br,tr) +
+    makePath(type,tr,tl) +
+    makePath(type,tl,bl) +"Z "
+  return pth
+}
+
 // Given starting coordinates and a base type, make a path
 function simplePath(x,y,w,h,type){
   y = y-(BASEHEIGHT-h)/2
@@ -116,4 +130,8 @@ function filledHolePath(x,y,w,h,type){
     makePath(type,tm,tl) +
     makePath(type,tl,bl) +"Z "
   return pth
+}
+
+function borderSVG(type,fillcol,strokecol){
+  return`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-3 -3 46 46"> <path stroke="${strokecol}" fill="${fillcol}" d="${borderPath(40,40,type)}" /> </svg>`
 }
