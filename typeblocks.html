@@ -112,7 +112,7 @@ SVGGElement.prototype.delete = function(started){
   if(this.toBeDeleted){
     if (this.filled) throw "Trying to delete something that's not empty(filled)"
     for (let x of this.floating) if(x)throw "Trying to delete something that's not empty"
-    detatch(this)
+    detach(this)
     this.remove()
   }
   else {
@@ -215,7 +215,7 @@ function dragInto(argument,hole){
 
   if(!checkMatch(argument.type,hole.type)){
     if (hole===argument.owner && hole!==argument.parentElement){
-      // allow bound letiables to be returned to their holes if not already there
+      // allow bound variables to be returned to their holes if not already there
       return makeFloating(argument,hole)
     }
     console.log("Type mismatch")
@@ -232,7 +232,7 @@ function makeFloating(g,target,savepos){
   if(g.parentElement!==target || isArg(g)){
     if (savepos===undefined) savepos=(target===svg)
     let [x,y] = g.getClientXY()
-    detatch(g)
+    detach(g)
     if(target===g.owner){
       if(target.floating[g.ownerIndex]!==undefined){
         //throw "Should not happen until I've added duplication"
@@ -266,7 +266,7 @@ function makeFloating(g,target,savepos){
 function fillHole(argument, hole){
     //If something moves, need to check hereditarily that everything is still in scope
   let oldPar = argument.parentElement
-  detatch(argument)
+  detach(argument)
   hole.filled = argument
   hole.appendChild(argument)
   if(!oldPar.contains(hole)){//If it does, we don't need to check recursively
@@ -276,7 +276,7 @@ function fillHole(argument, hole){
   for(let i=1; i<match.length; i++){//Start at 1 because
     let s=match[i][0]
     let h=match[i][1]
-    detatch(s)
+    detach(s)
     h.filled = s
     h.appendChild(s)
     redraw(h)
@@ -312,7 +312,7 @@ function snapback(g){
 }
 
 
-function detatch(g){
+function detach(g){
   if(isArg(g)){
     unfill(g.parentElement)
   }else{

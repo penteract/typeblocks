@@ -80,9 +80,9 @@ border-image-width: 0px;
 .box:empty{
   padding: 5px;
 }
-/*#root > .box{
+#root > .box{
   position: absolute;
-}*/
+}
 .dragging{
   z-index: 10;
 }

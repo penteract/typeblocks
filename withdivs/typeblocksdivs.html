@@ -13,7 +13,7 @@ one that can be constructed under a certain version of this program (not yet the
   <script src="../Parser.js">  </script>
   <script src="../hsluv-0.1.0.min.js">  </script>
   <script src="Printing.js">  </script>
-  <script src="../Utils.js">  </script>
+  <script src="Utils.js">  </script>
 	<script src="../Paths.js">  </script>
 
   <script type="text/javascript">
@@ -51,13 +51,13 @@ function subBox(text,type,cols,otherCols,parent){
 	g.type = type
 
 	//Children
-	g.floating=[]
+	//g.floating=[]
   while(!isBase(type)){
     assertEq(type.length,2)
     var [arg,type] = type
     let ch=subBox("",arg,otherCols,cols,g)
     //g.floating.push(ch)
-		if(g.floating.length==1 && text && isInfix(text)){g.append(text)}
+		if(g.children.length==1 && text && isInfix(text)){g.append(text)}
   }
   g.baseType=type
 	//Appearance
@@ -74,8 +74,8 @@ function subBox(text,type,cols,otherCols,parent){
 	if(!g.isHole)g.draggable="true"
   //if(!g.isHole) g.addEventListener("touchstart",startDrag(g))
   //if(!g.isHole) g.addEventListener("mousedown",startDrag(g))
-	parent.floating.push(g)
-	g.ownerIndex=parent.floating.length-1
+	//parent.floating.push(g)
+	g.ownerIndex=parent.children.length-1
 	everything.push(g)
   return g
 }
@@ -89,7 +89,7 @@ function makeBox(text,type){
 
 
 
-function dragInto(argument,hole){
+function dragInto(argument,hole,pointerPosition){
   console.log(argument.innerText,"-->", hole.innerText)
   if(!argument.owner.contains(hole)){
     if (hole===argument.owner.parentElement){
@@ -103,53 +103,66 @@ function dragInto(argument,hole){
   if (!hole.isHole){
     if(isArg(argument)){
       if (argument.parentElement.parentElement===hole){
-        // if you drag a filled argument just outside its hole, make it float
-        return makeFloating(argument,argument.parentElement)
+        // If you drag a filled argument just outside its hole, make it float
+				// (and make it the first in the list of floating terms)
+        return makeFloating(argument,argument.parentElement,[0,0])
       }
     }
     return false
   }
-  if(hole.filled===argument || hole===root){//Put stuff into
+  if(hole.filled===argument || hole===root){//Put stuff into the root
     return makeFloating(argument,hole)
   }
 	else if(hole.filled){//don't put things into holes that are already filled
 		return false
 	}
-
-  if(!checkMatch(argument.type,hole.type)){
+	if(checkMatch(argument.type,hole.type)){
+    //If the types match and there's no other reason not to, go ahead and fill the hole
+    return fillHole(argument,hole)
+	}
+  else{ //If it can't be made an argument, make it floating
+		return makeFloating(argument,hole,pointerPosition)
+		/*
     if (hole===argument.owner && hole!==argument.parentElement){
-      // allow bound letiables to be returned to their holes if not already there
+      // allow bound variables to be returned to their holes if not already there
       return makeFloating(argument,hole)
     }
     console.log("Type mismatch")
     return false
-  }
-  else{
-    //If the types match and there's no other reason not to, go ahead and fill the hole
-    return fillHole(argument,hole)
+		*/
   }
 }
 
 // Do the work of taking something out of where it came from and putting it (floating) somewhere else
-function makeFloating(g,target){
+function makeFloating(g,target,location){
   if (!target.isHole) throw "Things should only float in holes"
-  if(g.parentElement!==target || isArg(g)){
-    detatch(g)
-    if(target===g.owner){
-      if(target.floating[g.ownerIndex]!==undefined){
-        target.floating.push(g)
-      }
-      else target.floating[g.ownerIndex] = g
-    }
-    else{
-      target.floating.push(g)
-    }
-    target.appendChild(g)
-    for (let ch of g.floating) if(ch){
-      checkScope(ch)
-    }
-		return true
-  }
+
+	let before=null
+	if (location!==undefined){
+		if (target!==root && target.filled) throw "filled holes don't have locations"
+		let [x,y]=location
+		for(let ch of target.children){
+			let r = ch.getClientRects()[0]
+			if (x < r.left+r.width/2 && y < r.bottom+10){
+				before=ch
+				break
+			}
+		}
+	}
+	else if (target===g.owner){
+		for(let ch of target.children){
+			if (ch.owner===target && ch.ownerIndex>g.ownerIndex){
+				before=ch
+				break;
+			}
+		}
+	}
+	detach(g)
+	target.insertBefore(g,before)
+	for (let ch of g.children) if(ch){
+		checkScope(ch)
+	}
+	return true // It moved
 }
 
 
@@ -160,7 +173,7 @@ function makeFloating(g,target){
 function fillHole(argument, hole){
     //If something moves, need to check hereditarily that everything is still in scope
   let oldPar = argument.parentElement
-  detatch(argument)
+  detach(argument)
 	hole.classList.add("filled")
   hole.filled = argument
 	argument.classList.add("filling")
@@ -168,16 +181,19 @@ function fillHole(argument, hole){
   if(!oldPar.contains(hole)){//If it does, we don't need to check recursively
     checkScope(argument)
   }//doing this before matching types hopefully saves some headaches
+	//We need to detach it again because "isNearPerfectMatch" uses the DOM tree
+	hole.removeChild(argument)
   let match = isNearPerfectMatch(argument,hole)
   for(let i=1; i<match.length; i++){//Start at 1 because
     let s=match[i][0]
     let h=match[i][1]
-    detatch(s)
+    detach(s)
 		h.classList.add("filled")
 		h.filled = s
 		s.classList.add("filling")
     h.appendChild(s)
   }
+	hole.prepend(argument)
   return true
 }
 
@@ -197,7 +213,7 @@ function checkScope(g){
       return
     }
   }
-  for (let ch of g.floating) if(ch){
+  for (let ch of g.children) if(ch){
     checkScope(ch)
   }
 }
@@ -208,7 +224,7 @@ function snapback(g){
 }
 
 
-function detatch(g){
+function detach(g){
   if(isArg(g)){
     unfill(g.parentElement)
   }else{
@@ -219,13 +235,13 @@ function detatch(g){
 function unfloat(g){
   let holder=g.parentElement
 	holder.removeChild(g)
-  let index = holder.floating.indexOf(g)
+  /*let index = holder.floating.indexOf(g)
   if(index == -1) throw ("expected to be in floating list"+g.innerText +` : ${holder.innerText} : ${holder==root}`)
   if(holder===g.owner && g.ownerIndex==index)// think about duplicates
     holder.floating[index]=undefined
   else{
     holder.floating.splice(index,1)
-  }
+  }*/
 }
 function unfill(g){
 	g.classList.remove("filled")
@@ -256,7 +272,7 @@ function unfill(g){
 // If the line below isn't needed, why does everyone use document.getElementById?
 //root=document.getElementById("root")
 
-root.floating=[true]//prevents things from jumping back into place
+//root.floating=[true]//prevents things from jumping back into place
 root.filled=true //Not true, but we don't want anything to think it can become the global argument
 root.isHole=true
 
