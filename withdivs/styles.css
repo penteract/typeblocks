@@ -66,10 +66,13 @@ path{
 .filled{
 	padding: 0px;
 	border-width: 0px;
-	margin: 0px;
+	margin: 1px;
 border-image-outset: -5px;
 background-color: transparent !important;
 border-image-width: 0px;
+}
+.filling{
+  margin:0px;
 }
 .filled>.box{
   display: none;

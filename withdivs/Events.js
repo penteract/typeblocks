@@ -52,7 +52,7 @@ document.addEventListener("drop", function( event ) {
           dragging.changexy(event.x-position[0],event.y-position[1])
         }
         // Move the thing being dragged into the target (if appropriate)
-        let moved = dragInto(dragging,event.target)
+        let moved = dragInto(dragging,event.target,[event.x,event.y])
         console.log(moved)
         if (event.target===root && event.target===dragging.parentElement){
           dragging.setClientXY(...pos)

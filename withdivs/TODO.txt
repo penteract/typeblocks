@@ -1,5 +1,8 @@
-Use box.children rather than box.floating
-put things into the right place when doing `makeFloating`
+//Use box.children rather than box.floating
+//put things into the right place when doing `makeFloating`
+  Make hitboxes not include the transparent part of the border
+
+dragging an argument into it's (filled) hole should make it floating in the hole
 
 ctrl-click to copy
 right-click to delete
