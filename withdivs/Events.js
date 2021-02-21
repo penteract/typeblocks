@@ -12,7 +12,7 @@ document.addEventListener("dragstart", function( event ) {
   dragging = event.target;
   // hide it after the bitmap copy has been made
   setTimeout(function(){event.target.classList.add("invisible");},10)
-  position=[event.x,event.y]
+  position=[event.pageX,event.pageY]
 }, false);
 
 document.addEventListener("dragend", function( event ) {
@@ -42,6 +42,7 @@ document.addEventListener("dragleave", function( event ) {
 
 document.addEventListener("drop", function( event ) {
     // prevent default action (open as link for some elements)
+    console.log(event.dataTransfer)
     event.preventDefault();
     let target = event.target
     if (target===document.body.parentElement){
@@ -49,25 +50,11 @@ document.addEventListener("drop", function( event ) {
       target=root  // This seems easier than figuring out if there exists CSS
       //  make the root both scrollable when needed and fill the screen
     }
-    // Don't do anything if the target is not something we expect
-    // perhaps this check should be in dragInto?
-    if ( root.contains(event.target) && !dragging.contains(event.target) ) {
-        let pos
-        if (event.target===root) pos = dragging.getClientXY()
-        if (event.target===dragging.parentElement){
-          dragging.changexy(event.x-position[0],event.y-position[1])
-        }
-        // Move the thing being dragged into the target (if appropriate)
-        let moved = dragInto(dragging,event.target,[event.x,event.y])
-        console.log(moved)
-        if (event.target===root && event.target===dragging.parentElement){
-          dragging.setClientXY(...pos)
-          dragging.changexy(event.x-position[0],event.y-position[1])
-        }
-        else if(moved){
-          dragging.setxy(0,0)
-        }
-    }
+    dragInto(dragging,target,
+      [event.x,event.y],
+      [event.pageX-position[0],event.pageY-position[1]],
+      event.dataTransfer.dropEffect)
+
     hsTerm.innerText = printTerm(root.children[root.children.length-1])
 
 }, false);

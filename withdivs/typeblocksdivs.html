@@ -29,15 +29,18 @@ HTMLDivElement.prototype.setxy = function(x,y){
 HTMLDivElement.prototype.changexy = function(x,y){
   this.setxy(this.x+x, this.y+y)
 }
-HTMLDivElement.prototype.getClientXY = function(){
-  let r = this.getClientRects()[0]
-  return [r.x,r.y]
+HTMLDivElement.prototype.getPageXY = function(){
+  let r = this.getBoundingClientRect()
+	let bodyRect = document.body.getBoundingClientRect()
+	// could use pageXOffset and pageYOffset instead
+  return [r.x-bodyRect.x, r.y-bodyRect.y]
 }
-HTMLDivElement.prototype.setClientXY = function(x,y){
+/*HTMLDivElement.prototype.setClientXY = function(x,y){
   this.setxy(0,0)
-  let r = this.getClientRects()[0]
+  let r = this.getBoundingClientRect()
   this.setxy(x-r.x,y-r.y)
-}
+} Does not interact well with scrolling
+*/
 
 function subBox(text,type,cols,otherCols,parent){
   let [fill,stroke] = cols
@@ -87,43 +90,72 @@ function makeBox(text,type){
 
 
 
-function dragInto(argument,hole,pointerPosition){
-  //console.log(argument.innerText,"-->", hole.innerText)
+function dragInto(argument,hole,pointerPos,pointerDelta,dropEffect){
+
+	// Don't do anything if the target is not something we expect
+	if ( root.contains(hole) && !argument.contains(hole) ) {
+			let pos
+			if (hole===argument.parentElement){
+				argument.changexy(...pointerDelta)
+				if (hole===root) return;
+			}
+			if (hole===root) pos = argument.getPageXY
+			// Move the thing being dragged into the target (if appropriate)
+			let cmd = getCommand(argument,hole,pointerPos)
+			let moved=false // moved within the syntax tree
+			if (cmd!==false){
+				let fn = cmd[0]
+				cmd[0] = argument
+				moved = fn(...cmd)
+				console.log(moved)
+			}
+			if(moved){
+				if (argument.parentElement===root){
+					argument.setxy(pos[0]+pointerDelta[0], pos[1]+pointerDelta[1])
+				}
+				else argument.setxy(0,0)
+			}
+	}
+}
+
+// What should be done when argument is dragged into hole
+function getCommand(argument,hole,pointerPosition){
   if (!hole.isHole){
     if(isArg(argument)){
       if (argument.parentElement.parentElement===hole){
         // If you drag a filled argument just outside its hole, make it float
 				// (and make it the first in the list of floating terms)
-        return makeFloating(argument,argument.parentElement,"start")
+        return [makeFloating,argument.parentElement,"start"]
       }
     }
     if (hole===argument.owner.parentElement){
       //Let something be made floating by dragging it just outside its context
-      return makeFloating(argument,argument.owner)
+      [makeFloating,argument.owner]
     }
 		console.log("Not a hole") // Consider trying the parent hole
     return false
   }
-  if(!argument.owner.contains(hole)){
-    console.log("out of scope") // consider snapping argument back to where it came from
+  else if(!argument.owner.contains(hole)){
+    console.log("Out of scope") // consider snapping argument back to where it came from
     // alternatively, consider putting the new context into this hole (if possible)
     return false
   }
-  if(hole.filled===argument || hole===root){//Put stuff into the root
-    return makeFloating(argument,hole)
+  else if(hole.filled===argument || hole===root){//Put stuff into the root
+    return [makeFloating,hole,"start"]
   }
 	else if(hole.filled){//don't put things into holes that are already filled
-		console.log("filled")
+		console.log("Already filled")
 		return false
 	}
-	if(checkMatch(argument.type,hole.type)){
+	else if(checkMatch(argument.type,hole.type)){
     //If the types match and there's no other reason not to, go ahead and fill the hole
-    return fillHole(argument,hole)
+    return [fillHole,hole]
 	}
   else{ //If it can't be made an argument, make it floating
-		return makeFloating(argument,hole,pointerPosition)
+		return [makeFloating,hole,pointerPosition]
   }
 }
+
 
 // Do the work of taking something out of where it came from and putting it (floating) somewhere else
 function makeFloating(g,target,location){
@@ -139,7 +171,7 @@ function makeFloating(g,target,location){
 		//if (target!==root && target.filled) throw "filled holes don't have locations"
 		let [x,y]=location
 		for(let ch of target.children) if (ch!==g){
-			let r = ch.getClientRects()[0]
+			let r = ch.getBoundingClientRect()
 			if (x < r.left+r.width/2 && y < r.bottom+10){
 				before=ch
 				break
