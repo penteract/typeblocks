@@ -91,34 +91,34 @@ function makeBox(text,type){
 
 
 function dragInto(argument,hole,pointerPos,pointerDelta,dropEffect){
-
 	// Don't do anything if the target is not something we expect
-	if ( root.contains(hole) && !argument.contains(hole) ) {
-			let pos
-			if (hole===argument.parentElement){
-				argument.changexy(...pointerDelta)
-				if (hole===root) return;
-			}
-			if (hole===root) pos = argument.getPageXY()
-			// Move the thing being dragged into the target (if appropriate)
-			let cmd = getCommand(argument,hole,pointerPos)
-			let moved=false // moved within the syntax tree
-			if (cmd!==false){
-				let fn = cmd[0]
-				cmd[0] = argument
-				moved = fn(...cmd)
-			}
-			if(moved){
-				if (argument.parentElement===root){
-					argument.setxy(pos[0]+pointerDelta[0], pos[1]+pointerDelta[1])
-				}
-				else argument.setxy(0,0)
-			}
+	if (!root.contains(hole) || argument.contains(hole)) return;
+
+	// Find out how to move the argument into the hole (if appropriate)
+	let cmd = getMoveCommand(argument,hole,pointerPos)
+	if (cmd===false) return; // the attempted move is invalid
+
+	// save some data that may be helpful for repositioning
+	let savedpos = argument.getPageXY()
+
+	if (dropEffect=="copy"){
+		//argument=argument.duplicate()
+	}
+	let fn = cmd[0]
+	cmd[0] = argument
+	let moved = fn(...cmd)// moved within the syntax tree
+	console.log(moved)
+	if (argument.parentElement===root){ // this implies moved in the current code
+		argument.setxy(savedpos[0]+pointerDelta[0], savedpos[1]+pointerDelta[1])
+	}
+	if(!moved){
+		argument.changexy(...pointerDelta)
 	}
 }
 
 // What should be done when argument is dragged into hole
-function getCommand(argument,hole,pointerPosition){
+// returns false if the attempted move is invalid
+function getMoveCommand(argument,hole,pointerPosition){
   if (!hole.isHole){
     if(isArg(argument)){
       if (argument.parentElement.parentElement===hole){
@@ -129,7 +129,7 @@ function getCommand(argument,hole,pointerPosition){
     }
     if (hole===argument.owner.parentElement){
       //Let something be made floating by dragging it just outside its context
-      [makeFloating,argument.owner]
+      return [makeFloating,argument.owner]
     }
 		console.log("Not a hole") // Consider trying the parent hole
     return false
@@ -157,42 +157,38 @@ function getCommand(argument,hole,pointerPosition){
 
 
 // Do the work of taking something out of where it came from and putting it (floating) somewhere else
+// returns true unless the
 function makeFloating(g,target,location){
   if (!target.isHole) throw "Things should only float in holes"
 	let before=null
-	if(location==="start"){
-		for(let ch of target.children) if (ch!==g){
+	function findfirst(test){
+		for(let ch of target.children) if (ch!==g && test(ch)){
 			before=ch
-			break
+			break;
 		}
 	}
+	if(location==="start"){
+		findfirst(x => true)
+	}
 	else if (location!==undefined){
-		//if (target!==root && target.filled) throw "filled holes don't have locations"
 		let [x,y]=location
-		for(let ch of target.children) if (ch!==g){
+		findfirst(function (ch){
 			let r = ch.getBoundingClientRect()
-			if (x < r.left+r.width/2 && y < r.bottom+10){
-				before=ch
-				break
-			}
-		}
+			return x < r.left+r.width/2 && y < r.bottom+10
+		})
 		if(g.parentElement===target && g.nextSibling===before){
 			return false // Don't rearrange if it's staying roughly where it was
 		}
 	}
 	else if (target===g.owner){
-		for(let ch of target.children){
-			if (ch.owner===target && ch.ownerIndex>g.ownerIndex){
-				before=ch
-				break;
-			}
-		}
+		findfirst((ch) => ch.owner===target && ch.ownerIndex>g.ownerIndex)
 	}
 	detach(g)
 	target.insertBefore(g,before)
 	for (let ch of g.children) if(ch){
 		checkScope(ch)
 	}
+	g.setxy(0,0)
 	return true // It moved
 }
 
@@ -205,9 +201,6 @@ function fillHole(argument, hole){
     //If something moves, need to check hereditarily that everything is still in scope
   let oldPar = argument.parentElement
   detach(argument)
-	hole.classList.add("filled")
-  hole.filled = argument
-	argument.classList.add("filling")
   hole.appendChild(argument)
   if(!oldPar.contains(hole)){//If it does, we don't need to check recursively
     checkScope(argument)
@@ -215,17 +208,16 @@ function fillHole(argument, hole){
 	//We need to detach it again because "isNearPerfectMatch" uses the DOM tree
 	hole.removeChild(argument)
   let match = isNearPerfectMatch(argument,hole)
-  for(let i=1; i<match.length; i++){//Start at 1 because the first pair is the original (argument, hole) which we deal with as a special case
+  for(let i=0; i<match.length; i++){
     let s=match[i][0]
     let h=match[i][1]
-    detach(s)
+    if (i>0) detach(s) // match[0]  is [argument,hole]
 		h.classList.add("filled")
 		h.filled = s
 		s.classList.add("filling")
 		s.setxy(0,0)
-    h.appendChild(s)
+    h.appendChild(s) // There might be an argument for prepending here
   }
-	hole.prepend(argument)
   return true
 }
 

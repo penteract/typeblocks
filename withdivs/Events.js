@@ -42,7 +42,6 @@ document.addEventListener("dragleave", function( event ) {
 
 document.addEventListener("drop", function( event ) {
     // prevent default action (open as link for some elements)
-    console.log(event.dataTransfer)
     event.preventDefault();
     let target = event.target
     if (target===document.body.parentElement){
