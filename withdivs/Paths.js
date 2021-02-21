@@ -169,5 +169,6 @@ function testp(n){
 }
 
 function borderSVG(type,fillcol,strokecol){
-  return`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="400" height="400"> <path stroke="${strokecol}" fill="${fillcol}" d="${borderPath(40,40,type)}" /> </svg>`
+  // Quite a bit of this could be cached
+  return`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="100" height="100"> <path stroke="${strokecol}" fill="${fillcol}" d="${borderPath(40,40,type)}" /> </svg>`
 }

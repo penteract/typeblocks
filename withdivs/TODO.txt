@@ -44,6 +44,21 @@ hide/shrink parts of more complicated types.
   (only when autofilled? (η-reducible))
   stack vertically sometimes?
 
+portability:
+  Test in browsers other than firefox
+    - I've been deliberately ignoring this
+    - Would need to stop using border-image
+       (make svgs when needed - might want to do this anyway
+          given what a pain border-image is)
+  Touchscreens (incl. phones/tablets
+    - These were the original motivation
+    - Drag and drop API
+    - debugging will be hell
+    - voice recognition?
+
+libraries
+ - sidebar (with tabs?) to take things from
+
 Longer term:
 undo/redo
 do something with data type declarations

@@ -1,5 +1,17 @@
+/*
+We want the following properties for the root (div) element:
+It should always fill the backgroud  (and register as the target of
+  drop events when there's nothing above it).
+If the elements inside it extend below the screen,
+  we should be able to scroll down (and it should still fill the background).
+If the elements inside do not extend below the screen,
+  the page should not be scrollable.
+
+I can't easily find a way to do all of these, so there's some code
+ which redirects drops on the backgroud to the root
+*/
 #root{
-  position: fixed;
+  position: absolute;
   width: 100%;
   min-height: 100%;
   background: white;

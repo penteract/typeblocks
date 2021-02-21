@@ -43,6 +43,12 @@ document.addEventListener("dragleave", function( event ) {
 document.addEventListener("drop", function( event ) {
     // prevent default action (open as link for some elements)
     event.preventDefault();
+    let target = event.target
+    if (target===document.body.parentElement){
+      console.log("root")
+      target=root  // This seems easier than figuring out if there exists CSS
+      //  make the root both scrollable when needed and fill the screen
+    }
     // Don't do anything if the target is not something we expect
     // perhaps this check should be in dragInto?
     if ( root.contains(event.target) && !dragging.contains(event.target) ) {

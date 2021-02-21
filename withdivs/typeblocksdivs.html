@@ -51,12 +51,10 @@ function subBox(text,type,cols,otherCols,parent){
 	g.type = type
 
 	//Children
-	//g.floating=[]
   while(!isBase(type)){
     assertEq(type.length,2)
     var [arg,type] = type
     let ch=subBox("",arg,otherCols,cols,g)
-    //g.floating.push(ch)
 		if(g.children.length==1 && text && isInfix(text)){g.append(text)}
   }
   g.baseType=type
@@ -124,14 +122,6 @@ function dragInto(argument,hole,pointerPosition){
 	}
   else{ //If it can't be made an argument, make it floating
 		return makeFloating(argument,hole,pointerPosition)
-		/*
-    if (hole===argument.owner && hole!==argument.parentElement){
-      // allow bound variables to be returned to their holes if not already there
-      return makeFloating(argument,hole)
-    }
-    console.log("Type mismatch")
-    return false
-		*/
   }
 }
 
@@ -158,7 +148,6 @@ function makeFloating(g,target,location){
 		if(g.parentElement===target && g.nextSibling===before){
 			return false // Don't rearrange if it's staying roughly where it was
 		}
-
 	}
 	else if (target===g.owner){
 		for(let ch of target.children){
@@ -247,13 +236,6 @@ function detach(g){
 function unfloat(g){
   let holder=g.parentElement
 	holder.removeChild(g)
-  /*let index = holder.floating.indexOf(g)
-  if(index == -1) throw ("expected to be in floating list"+g.innerText +` : ${holder.innerText} : ${holder==root}`)
-  if(holder===g.owner && g.ownerIndex==index)// think about duplicates
-    holder.floating[index]=undefined
-  else{
-    holder.floating.splice(index,1)
-  }*/
 }
 function unfill(g){
 	g.classList.remove("filled")
@@ -284,7 +266,6 @@ function unfill(g){
 // If the line below isn't needed, why does everyone use document.getElementById?
 //root=document.getElementById("root")
 
-//root.floating=[true]//prevents things from jumping back into place
 root.filled=true //Not true, but we don't want anything to think it can become the global argument
 root.isHole=true
 
