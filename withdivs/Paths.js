@@ -94,7 +94,6 @@ function addpath(pth, parts, scale){
   for(let part of parts){
     if (Array.isArray(part)){
       let [x,y]=part
-      console.log("a",x,y)
       pth.push([x*scale,y*scale])
     }
     else pth.push(part)
