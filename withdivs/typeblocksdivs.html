@@ -99,7 +99,7 @@ function dragInto(argument,hole,pointerPos,pointerDelta,dropEffect){
 				argument.changexy(...pointerDelta)
 				if (hole===root) return;
 			}
-			if (hole===root) pos = argument.getPageXY
+			if (hole===root) pos = argument.getPageXY()
 			// Move the thing being dragged into the target (if appropriate)
 			let cmd = getCommand(argument,hole,pointerPos)
 			let moved=false // moved within the syntax tree
@@ -107,7 +107,6 @@ function dragInto(argument,hole,pointerPos,pointerDelta,dropEffect){
 				let fn = cmd[0]
 				cmd[0] = argument
 				moved = fn(...cmd)
-				console.log(moved)
 			}
 			if(moved){
 				if (argument.parentElement===root){
