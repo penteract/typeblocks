@@ -2,7 +2,8 @@
 //put things into the right place when doing `makeFloating`
   Make hitboxes not include the transparent part of the border
 
-dragging an argument into it's (filled) hole should make it floating in the hole
+//dragging an argument into its (filled) hole should make it floating in the hole
+// procedurally generate borders (needs some improvement)
 
 ctrl-click to copy
 right-click to delete

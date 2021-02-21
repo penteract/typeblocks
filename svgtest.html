@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<!--For testing SVG construction techniques -->
+<head>
+  <meta charset="utf-8">
+  <title>TypeBlocks</title>
+  <script src="Parser.js">  </script>
+  <script src="hsluv-0.1.0.min.js">  </script>
+  <script src="Paths.js">  </script>
+  <script src="Printing.js">  </script>
+  <script src="Utils.js">  </script>
+  <script type="text/javascript">
+"use strict";
+let SVGNS = "http://www.w3.org/2000/svg"
+
+
+  </script>
+  <style>
+svg{
+  position:fixed;
+
+  width: 100%;
+  height: 100%;
+  cursor: default;
+}
+html,body{
+  margin: 0px;
+  padding:0px;
+  /* overflow:hidden; */
+}
+.hidden{
+  display: none;
+}
+path{
+  stroke-width: 0.6;
+}
+g:hover>path{
+  stroke-width:1;
+}
+#hsTerm{
+  position: absolute;
+  bottom:0px;
+}
+#entry{
+  position: absolute;
+  top:0px;
+}
+/*Awaiting feature support
+g{
+  z-index: 0
+}
+.dragging{
+  z-index: 10
+}*/
+</style>
+</head>
+<body>
+<svg  viewBox="-10 -10 90 10" preserveAspectRatio="xMinYMin" id="img">
+
+<text id="testtext" fill="none" font-size="10"> hello </text>
+<g id="svg" pointer-events="bounding-box">
+ <rect x="-10000" y="-10000" width="20000" height="20000" fill="white" />
+</g>
+  <path d="M 0 0 L 100 100 L 100 10 Z" stroke="green" stroke-width="1" fill="none"/>
+  <rect x="0" y="0" width="3" height="3" fill="red" />
+  <path d="M 0 0 L 100 200 A 80 65 0 1 0 200 150 L 100 10 Z" stroke="green" stroke-width="1" fill="none"/>
+  <!--"M 0 0 C 25 25  75 -25 100 0 Z"
+  <path d="M 0 0 L 40 0 A 10 10 0 1 1 40 0.001 L 100 0 L 50 50 Z"
+   stroke="green" stroke-width="1" fill-rule="evenodd"/>
+  <path d="M 20 20 L 100 100 L 100 20 Z M 40 30 L 90 80 L 90 30 Z"
+   stroke="green" stroke-width="1" fill="blue" fill-rule="evenodd" />-->
+</svg>
+<pre id="hsTerm"> </pre>
+<div id="entry"><form id="newNode" action="" onsubmit="quick(newNodeName.value,newNodeType.value);return false">
+  <input id="newNodeName" placeholder="map"> :: <input id="newNodeType" placeholder="(Int->Int)->ListInt->ListInt">
+  <button type="submit" form="newNode">create</button>
+</form>
+</div>
+<script src="withdivs/Paths.js"> </script>
+<script>
+img.innerHTML+=`<path d="${testp("Int")}" stroke="brown" stroke-width="1" fill="none"/>`
+let x = 1
+let abcd
+let INT = setInterval(function (){
+  x+=1
+  abcd = [minis[Math.floor(Math.random()*minis.length)],minis[Math.floor(Math.random()*minis.length)],minis[Math.floor(Math.random()*minis.length)],minis[Math.floor(Math.random()*minis.length)]]
+
+  img.children[img.children.length-1].setAttribute("d",testp(...abcd))
+},1000000)
+</script>
+
+</body>
+</html>

@@ -41,7 +41,7 @@ path{
   display: inline-block;
   z-index: 0;
   position: relative;
-  padding: 3px;
+  padding: 0px;
   border-width:0px;
   margin: 1px;
   vertical-align: middle;
@@ -54,14 +54,14 @@ path{
 	border-image-width: 5px;
 	border-image-repeat: repeat;
 	border-image-source: url(data:image/svg+xml;whatever);
-	border-image-slice: 9%;
+	border-image-slice: 21%;
 	/*border-image-outset: 0px;*/
 }
 .box{
 	cursor: pointer;
 }
 .hole{
-	padding: 2px;
+	padding: 1px;/*consider setting this to 0*/
 }
 .filled{
 	padding: 0px;
