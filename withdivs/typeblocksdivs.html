@@ -70,7 +70,7 @@ HTMLDivElement.prototype.duplicate = function(newPar){
   }
   //Deal with most of the properties
   for (let prop of [
-		"type","text","isHole","baseType","ownerIndex","draggable"]){
+		"type","text","isHole","baseType","ownerIndex","draggable","numOwned"]){
     g[prop]=this[prop]
   }for (let prop of [
 		"backgroundColor","borderColor","borderImageSource"]){
@@ -164,6 +164,7 @@ function subBox(text,type,cols,otherCols,parent){
 		if(g.children.length==1 && text && isInfix(text)){g.append(text)}
   }
   g.baseType=type
+	g.numOwned=g.children.length
 	//Appearance
   g.style.backgroundColor = fill
   g.style.borderColor = stroke
@@ -251,7 +252,10 @@ function getMoveCommand(argument,hole,pointerPosition){
     // alternatively, consider putting the new context into this hole (if possible)
     return false
   }
-  else if(hole.filled===argument || hole===root){//Put stuff into the root
+	else if (hole===root){//Put stuff into the root
+		return [makeFloating,hole,"end"]
+	}
+  else if(hole.filled===argument){// Take something out of a hole by moving it a little
     return [makeFloating,hole,"start"]
   }
 	else if(hole.filled){//don't put things into holes that are already filled
@@ -281,6 +285,9 @@ function makeFloating(g,target,location){
 	}
 	if(location==="start"){
 		findfirst(x => true)
+	}
+	else if(location==="end"){
+		before=null
 	}
 	else if (location!==undefined){
 		let [x,y]=location

@@ -33,7 +33,7 @@ let blocks
 zoom/pan
   This is in the SVG1 spec but removed from SVG2 :(
 
-generate strings corresponding to the terms
+//generate strings corresponding to the terms
 
 show a preview of what happens if you release the mouse (important for UI)
   implementation thoughts: keep track of a "real" target based on the unmodified structure

@@ -5,7 +5,6 @@ function makeVarname(lamIndex,ownerIndex){
 
 let lamCount = 0
 function printTerm(g){
-  return "unimplemented"
   lamCount = 0
   return printRec(g)
 }
@@ -14,15 +13,11 @@ function printRec(g){
   let parenthesize = false
   if (g.isHole){
     g.lamIndex = lamCount++
-    let numArgs = 0
+    let numArgs = g.numOwned
     let hasFloating = false
-    for(let i=0; i<g.floating.length; i++){
-      let float = g.floating[i]
-      if(float===undefined || (float.owner===g && float.ownerIndex===i)){
-        numArgs += 1
-      }
-      if(float!==undefined){
-        hasFloating = true
+    for(let ch of g.children){
+      if(ch!==g.filled){
+        hasFloating=true
       }
     }
     if(numArgs>0){
@@ -41,42 +36,48 @@ function printRec(g){
       result += printRec(g.filled)
     }
     if (hasFloating){
-      parenthesize=true
-      for(let i=0; i<g.floating.length; i++){
-        let float = g.floating[i]
-        if(float!==undefined){
-          result += printRec(float)
+      if (g.filled) result += "{- "
+      else parenthesize=true
+      for(let ch of g.children){
+        if(ch!==g.filled){
+          result += printRec(ch)
         }
       }
+      if (g.filled) result += " -}";
     }
   }
   else{
-    if(!g.text){
-      if (g.owner===svg){
-        throw "top level boxes expected to have text"
-      }
+    if (g.owner!==root){
       let lamIndex = g.owner.lamIndex
       if(lamIndex===undefined){
         throw "Either printTerm was called on a non-top-level box or something has gone wrong"
       }
       result = makeVarname(lamIndex,g.ownerIndex) + " "
     }
-    else{
-      result = g.text + " "
-    }
-    let atArg = 0
-    if(isInfix(g.text)){
-      while(atArg<g.floating.length && atArg<2){
-        let arg = g.floating[atArg++]
-        if(atArg==1) result = printRec(arg)+" "+result
-        else result+=printRec(arg)
+
+    let n=0
+    let infix=false
+    for(let node of g.childNodes){// This makes some assumptions about text nodes (eg there's only 1)
+      n++
+      if(node.nodeType==Node.TEXT_NODE){
+        let text = node.textContent
+        if(n==1){
+          if(isInfix(text)) text="("+text+")"
+        }
+        else if(n==2){
+          if(!isInfix(text)) text="`"+text+"`"
+          infix=true
+        }
+        else throw ("text occurs after the second argument");
+        result = result+" "+text
       }
-      result="("+result+")"
-    }
-    if(g.floating.length>atArg){
-      parenthesize=true
-      while(atArg<g.floating.length ){
-        result+=printRec(g.floating[atArg++])
+      else{
+        result = result+" "+printRec(node)
+        if(n==3 && infix){
+          result="("+result+")"
+          parenthesize=false
+        }
+        else parenthesize=true
       }
     }
   }
