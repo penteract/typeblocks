@@ -2,6 +2,7 @@
 // Event handlers
 var dragging=false
 var position=undefined
+var effect=undefined
 
 /* events fired on the draggable target */
 document.addEventListener("drag", function( event ) {
@@ -12,25 +13,50 @@ document.addEventListener("dragstart", function( event ) {
   dragging = event.target;
   if(dragging.parentElement===root)
     event.dataTransfer.setData("text/plain", printReduced(dragging))
+  effect=undefined
   // hide it after the bitmap copy has been made
-  setTimeout(function(){event.target.classList.add("invisible");},10)
+  //setTimeout(function(){event.target.classList.add("invisible");},10)
   position=[event.pageX,event.pageY]
 }, false);
 
 document.addEventListener("dragend", function( event ) {
     // reset the transparency
-    event.target.style.opacity = "";
+    //event.target.style.opacity = "";
     event.target.classList.remove("invisible")
     //dragging=undefined
 }, false);
 
 /* events fired on the drop targets */
 document.addEventListener("dragover", function( event ) {
+    if(event.dataTransfer.dropEffect!=effect){
+      if(effect=="move"){
+      dragging.classList.remove("invisible")
+      }
+      effect=event.dataTransfer.dropEffect
+      if(effect=="move"){
+      dragging.classList.add("invisible")
+      }
+    }
     // prevent default to allow drop
     event.preventDefault();
 }, false);
+/*document.addEventListener("drag",function(event){
+    //console.log("drag",event.dataTransfer.dropEffect)
+
+}, false)*/
 
 document.addEventListener("dragenter", function( event ) {
+    //console.log("enter",event.dataTransfer.dropEffect)
+    /*if(event.dataTransfer.dropEffect!=effect){
+      if(effect=="move"){
+      dragging.classList.remove("invisible")
+      }
+      effect=event.dataTransfer.dropEffect
+      if(effect=="move"){
+      dragging.classList.add("invisible")
+      }
+    }*/
+
     if ( event.target.isHole ) {
     }
     event.preventDefault();

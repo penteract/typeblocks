@@ -489,8 +489,8 @@ function quick(n,type){
   makeBox(n,parsedType)
 }
 
-GAME="Action->Event->GameState->GameState"
-GEGSTO="Action->Event->GameState->"
+GAME="Event->GameState->GameState"
+GEGSTO="(${GAME})->Event->GameState->"
 RULE=`((${GAME})->${GAME})`
 
 /*

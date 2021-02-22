@@ -201,7 +201,14 @@ function deleteNode(g){
 
 function dragInto(argument,hole,pointerPos,pointerDelta,dropEffect){
 	// Don't do anything if the target is not something we expect
-	if (!root.contains(hole) || argument.contains(hole)) return;
+	if (!root.contains(hole)){
+		console.log("Target is not part of a term")
+		return;
+	}
+	if (dropEffect=="move" && argument.contains(hole)){
+		console.log("Cannot move into self")
+		return;
+	}
 
 	// Find out how to move the argument into the hole (if appropriate)
 	let cmd = getMoveCommand(argument,hole,pointerPos)
@@ -419,8 +426,8 @@ function quick(n,type){
   makeBox(n,parsedType)
 }
 
-GAME="Action->Event->GameState->GameState"
-GEGSTO="Action->Event->GameState->"
+GAME="Event->GameState->GameState"
+GEGSTO=`(${GAME})->Event->GameState->`
 RULE=`((${GAME})->${GAME})`
 
 
