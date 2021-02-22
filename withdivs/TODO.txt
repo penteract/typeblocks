@@ -5,8 +5,8 @@
 //dragging an argument into its (filled) hole should make it floating in the hole
 // procedurally generate borders (needs some improvement)
 
-ctrl-click to copy
-right-click to delete
+//ctrl-click to copy
+//right-click to delete
 delete key to delete?
   how do I get deleted arguments back?
 double click to do something (make floating?) (reset hole after arguments have been deleted?)

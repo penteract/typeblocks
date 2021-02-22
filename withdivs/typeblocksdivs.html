@@ -95,6 +95,54 @@ HTMLDivElement.prototype.duplicate = function(newPar){
 
   return g
 }
+HTMLDivElement.prototype.delete = function(started){
+	// Child node is responsible for removing self from parent
+  if(started===undefined){
+    this.toBeDeleted=true
+  }
+  else if(this.owner.toBeDeleted){
+    this.toBeDeleted=true
+  }
+  else{
+    //TODO: make sure this behaves as expected for higher order types
+    var snapTo = this.parentElement
+    if (snapTo.toBeDeleted){
+      while (snapTo.toBeDeleted){
+        snapTo=snapTo.parentElement
+      }
+      if(snapTo===this.owner && snapTo!==root){
+				for(let sib of snapTo.children){
+					if(sib.owner===snapTo && sib.ownerIndex===this.ownerIndex){
+						// Consider not doing this  - it may delete things that are still
+						// wanted, and the behaviour of deleteing every copy of a variable
+						// except the first may be found  surprising
+						this.toBeDeleted=true
+						break
+					}
+				}
+      }
+    }
+    else{
+      //Will snapback, but need to process children first
+    }
+  }
+	for (let ch of Array.from(this.children)){
+		ch.delete(true)
+	}
+
+  if(this.toBeDeleted){
+    if (this.filled) throw "Trying to delete something that's not empty(filled)"
+    for (let x of this.children) throw "Trying to delete something that's not empty"
+    detach(this)
+    this.remove()
+  }
+  else {
+    if(snapTo!==this.parentElement){
+      makeFloating(this,snapTo)
+    }
+  }
+}
+
 
 function subBox(text,type,cols,otherCols,parent){
   let [fill,stroke] = cols
@@ -132,10 +180,10 @@ function subBox(text,type,cols,otherCols,parent){
   //if(!g.isHole) g.addEventListener("mousedown",startDrag(g))
 	//parent.floating.push(g)
 	g.ownerIndex=parent.children.length-1
-	everything.push(g)
+	//everything.push(g)
   return g
 }
-const everything=[]
+//const everything=[]
 function makeBox(text,type){
   let c = Math.random()*360
   let fill = hsluv.hsluvToHex([c,100,70]) //`hsl(${c},100%,50%)`
@@ -143,7 +191,12 @@ function makeBox(text,type){
   let g = subBox(text,type,[fill,stroke],["#DDD","#BBB"],root)
 }
 
-
+function deleteNode(g){
+	if(!g.isHole){
+		g.delete()
+		return true
+	}
+}
 
 function dragInto(argument,hole,pointerPos,pointerDelta,dropEffect){
 	// Don't do anything if the target is not something we expect

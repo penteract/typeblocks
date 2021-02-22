@@ -57,3 +57,29 @@ document.addEventListener("drop", function( event ) {
     hsTerm.innerText = printTerm(root.children[root.children.length-1])
 
 }, false);
+
+/*document.addEventListener("mousedown",function(event){
+  console.log(event)
+
+  if(event.button===2){
+    deleteNode(event.target)
+    event.preventDefault()
+    event.stopPropagation()
+    //Why do none of these prevent the contextmenu event?
+    return false
+  }
+})*/
+
+
+// I'm sorry for doing this - I only want to supress context menu when the right
+// click is deleting something, but the mousedown handler won't let me do that
+// and the context menu handler doesn't run for the element that's deleted.
+document.addEventListener("contextmenu",function (e){
+  console.log(e)
+  if(event.target.classList.contains("box")){
+    if(deleteNode(event.target)){
+      e.preventDefault()
+      return false
+    }
+  }
+})
