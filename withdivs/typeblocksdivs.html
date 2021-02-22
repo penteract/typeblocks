@@ -41,6 +41,60 @@ HTMLDivElement.prototype.getPageXY = function(){
   this.setxy(x-r.x,y-r.y)
 } Does not interact well with scrolling
 */
+HTMLDivElement.prototype.duplicate = function(newPar){
+	let g = document.createElement("div")
+  if(newPar===undefined){
+    newPar = this.parentElement
+		g.classList.add("hidden")
+		g.setxy(0,0)
+  }
+	else{
+		g.setxy(this.x,this.y)
+	}
+	newPar.appendChild(g)
+  // Deal with owner
+  if(this.owner.contains(newPar)){
+    g.owner=this.owner
+  }
+  else{
+		// Our (this's) owner has already been duplicated.
+		// The duplicated owner should be as many levels above g
+		// as our owner is above us
+    g.owner=newPar
+    let climbing=this.parentElement
+    while(climbing!==this.owner){
+      climbing=climbing.parentElement
+      g.owner=g.owner.parentElement
+      if(climbing===root) throw "Climbed too far"
+    }
+  }
+  //Deal with most of the properties
+  for (let prop of [
+		"type","text","isHole","baseType","ownerIndex","draggable"]){
+    g[prop]=this[prop]
+  }for (let prop of [
+		"backgroundColor","borderColor","borderImageSource"]){
+    g.style[prop]=this.style[prop]
+  }
+	for (let c of ["filled", "filling", "hole", "box"]){
+		if (this.classList.contains(c))g.classList.add(c)
+	}
+
+	// Deal with the children
+	for(let node of this.childNodes){
+		if (node.nodeType===Node.TEXT_NODE){
+			g.append(node.textContent)
+		}
+		else{
+			let dupnode = node.duplicate(g)
+			if (this.filled===node){
+				g.filled=dupnode
+			}
+		}
+	}
+
+  return g
+}
 
 function subBox(text,type,cols,otherCols,parent){
   let [fill,stroke] = cols
@@ -52,6 +106,7 @@ function subBox(text,type,cols,otherCols,parent){
   g.classList.add("box")
   if(text && (!isInfix(text) || isBase(type))){g.append(text)}
 	g.type = type
+  g.text = text
 
 	//Children
   while(!isBase(type)){
@@ -72,7 +127,7 @@ function subBox(text,type,cols,otherCols,parent){
   g.owner = parent
   parent.appendChild(g)
   g.setxy(0,0)
-	if(!g.isHole)g.draggable="true"
+	if(!g.isHole)g.draggable=true
   //if(!g.isHole) g.addEventListener("touchstart",startDrag(g))
   //if(!g.isHole) g.addEventListener("mousedown",startDrag(g))
 	//parent.floating.push(g)
@@ -102,7 +157,7 @@ function dragInto(argument,hole,pointerPos,pointerDelta,dropEffect){
 	let savedpos = argument.getPageXY()
 
 	if (dropEffect=="copy"){
-		//argument=argument.duplicate()
+		argument=argument.duplicate()
 	}
 	let fn = cmd[0]
 	cmd[0] = argument
@@ -111,9 +166,13 @@ function dragInto(argument,hole,pointerPos,pointerDelta,dropEffect){
 	if (argument.parentElement===root){ // this implies moved in the current code
 		argument.setxy(savedpos[0]+pointerDelta[0], savedpos[1]+pointerDelta[1])
 	}
-	if(!moved){
+	if (dropEffect=="copy"){
+		argument.classList.remove("hidden")
+	}
+	else if(!moved){
 		argument.changexy(...pointerDelta)
 	}
+
 }
 
 // What should be done when argument is dragged into hole
