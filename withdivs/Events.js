@@ -10,6 +10,8 @@ document.addEventListener("drag", function( event ) {
 
 document.addEventListener("dragstart", function( event ) {
   dragging = event.target;
+  if(dragging.parentElement===root)
+    event.dataTransfer.setData("text/plain", printReduced(dragging))
   // hide it after the bitmap copy has been made
   setTimeout(function(){event.target.classList.add("invisible");},10)
   position=[event.pageX,event.pageY]
@@ -54,7 +56,7 @@ document.addEventListener("drop", function( event ) {
       [event.pageX-position[0],event.pageY-position[1]],
       event.dataTransfer.dropEffect)
 
-    hsTerm.innerText = printTerm(root.children[root.children.length-1])
+    hsTerm.innerText = printReduced(root.children[root.children.length-1])
 
 }, false);
 
