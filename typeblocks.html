@@ -152,6 +152,12 @@ function subBox(text,type,cols,otherCols,parent){
 		g.classList.add("hole")
 		g.filled = false
 	}
+	else{
+		fill=hsluv.hsluvToHex(fill)
+		cols[0][2]-=5 // make nested parts darker
+		// Possibly this is a mistake and it's more important to have
+		// identical colors for recognising when things are the same
+	}
   g.classList.add("box")
   if(text && (!isInfix(text) || isBase(type))){g.append(text)}
 	g.type = type
@@ -170,25 +176,28 @@ function subBox(text,type,cols,otherCols,parent){
   g.style.backgroundColor = fill
   g.style.borderColor = stroke
 	g.style.borderImageSource=`url(data:image/svg+xml;base64,${btoa(borderSVG(type,fill,stroke))})`
+  g.setxy(0,0)
+	if(!g.isHole){
+		g.draggable=true
+		cols[0][2]+=5 //restore mutated value
+	}
 	// Warning: borderImage is buggy in firefox in various ways.
 	// Consider reconstructing svg whenever the box's dimensions change
 
 	//Structure
   g.owner = parent
   parent.appendChild(g)
-  g.setxy(0,0)
-	if(!g.isHole)g.draggable=true
+	g.ownerIndex=parent.children.length-1
   //if(!g.isHole) g.addEventListener("touchstart",startDrag(g))
   //if(!g.isHole) g.addEventListener("mousedown",startDrag(g))
 	//parent.floating.push(g)
-	g.ownerIndex=parent.children.length-1
 	//everything.push(g)
   return g
 }
 //const everything=[]
 function makeBox(text,type){
   let c = Math.random()*360
-  let fill = hsluv.hsluvToHex([c,100,70]) //`hsl(${c},100%,50%)`
+  let fill = [c,100,80] //hsluv.hsluvToHex([c,100,80]) //`hsl(${c},100%,50%)`
   let stroke =  hsluv.hsluvToHex([c,50,50])//`hsl(${c},50%,70%)`
   let g = subBox(text,type,[fill,stroke],["#DDD","#BBB"],root)
 }
@@ -352,6 +361,19 @@ quick("Eight",`Rank`)
 quick("rank","Card->Rank")
 quick("==","Rank->Rank->Bool")
 quick("skipNextTurn",`${RULE}`)
+
+// Tricky case for autofill:
+quick("fn", "(((o->o->b)->s)->b)->r")
+quick("inner", "((o->o->b)->s)->b")
+
+//from state:
+//   fn (\ x0v0 -> _ (x0v0 (\ x1v0 x1v1 -> inner (\ x2v0 -> _ (x2v0 x1v1 x1v0)))))
+// dragging inner to become the argument of fn should result in
+//   fn (\ x0v0 -> inner (\ x1v0 -> x0v0 (\ x2v0 x2v1 -> x1v0 x2v1 x2v0)))
+// NOT
+//   fn (\ x0v0 -> inner (\ x1v0 -> x0v0 (\ x2v0 x2v1 -> x1v0 x2v0 x2v1)))
+// which would happen if the arguments were snapped out before seeing if inner was a perfect match
+
 
 try{
 quick("map","(Int->Int)->ListInt->ListInt")

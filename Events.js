@@ -98,6 +98,16 @@ document.addEventListener("drop", function( event ) {
   }
 })*/
 
+document.addEventListener("dblclick",function (e){
+  //console.log(e)
+  if(event.target.classList.contains("box")){
+    if(fillOrUnfill(event.target)){
+      e.preventDefault()
+      return false
+    }
+  }
+  hsTerm.innerText = printReduced(root.children[root.children.length-1])
+})
 
 // I'm sorry for doing this - I only want to supress context menu when the right
 // click is deleting something, but the mousedown handler won't let me do that

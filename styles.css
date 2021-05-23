@@ -70,7 +70,7 @@ path{
 	/*border-image-outset: 0px;*/
 }
 .box{
-	cursor: pointer;
+	cursor: grab;
 }
 .hole{
 	padding: 1px;/*consider setting this to 0*/

@@ -6,6 +6,21 @@ function deleteNode(g){
 	}
 }
 
+function fillOrUnfill(g){
+  if(g===g.parentElement.filled){
+    makeFloating(g,g.parentElement)
+    return;
+  }
+    if(g.isHole){
+      // Consider using this to expand holes
+      return;
+    }
+    if (!g.parentElement.filled
+      && checkMatch(g.parentElement.type,g.type)){
+      fillHole(g,g.parentElement)
+    }
+}
+
 function dragInto(argument,hole,pointerPos,pointerDelta,dropEffect){
 	// Don't do anything if the target is not something we expect
 	if (!root.contains(hole)){
@@ -76,11 +91,38 @@ function getMoveCommand(argument,hole,pointerPosition){
 		console.log("Already filled")
 		return false
 	}
-	else if(checkMatch(argument.type,hole.type)){
+	else {
     //If the types match and there's no other reason not to, go ahead and fill the hole
-    return [fillHole,hole]
+    // (currently does not do so)
+    return [tryToFillHole,hole,pointerPosition]
 	}
-  else{ //If it can't be made an argument, make it floating
-		return [makeFloating,hole,pointerPosition]
-  }
 }
+
+// See if a term can fit a hole perfectly, taking into account
+// stuff that is no longer in scope, but dealing with complicated cases correctly
+function tryToFillHole(arg, hole, pointerPos){
+  //detatch(arg)//hopefully
+  if(arg.baseType!=hole.baseType)
+    return makeFloating(arg,hole,pointerPos);
+  return makeFloating(arg,hole,pointerPos);
+  /*hole.appendChild(arg)
+  for(let ch of Array(...arg.children).reverse()){
+    if
+  }*/
+}
+
+/**
+Tricky case:
+given
+> fn :: (((o->o->b)->s)->b)->r
+> inner :: ((o->o->b)->s)->b
+and the term
+> fn (\ fn0 -> _ (fn0 (\ fn1v0 fn1v1 -> inner (\ inner0 -> _ (inner0 fn1v1 fn1v0)))))
+if 'inner' is dragged into the outer hole, what should be the result?
+> fn (\ fn0 -> inner (\ inner0 -> fn0 (\ fn1v0 fn1v1 -> inner0 fn1v1 fn1v0)))
+feels right, but current implementations would detatch 'fn1v1' and 'fn1v0' from
+their holes before trying t
+and result in
+> fn (\ fn0 -> inner (\ inner0 -> fn0 (\ fn1v0 fn1v1 -> inner0 fn1v1 fn1v0)))
+(η-equivalent to 'fn inner'
+*/

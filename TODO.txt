@@ -9,8 +9,12 @@
 //right-click to delete
 delete key to delete?
   how do I get deleted arguments back?
-double click to do something (make floating?) (reset hole after arguments have been deleted?)
-  make a hole larger than it needs to be to make it easy to work in that context
+  (implemented) idea: don't allow deleting, just double-click to force an argument into a hole 
+
+//double click floating term to fill hole, double click filled term to make it float.
+
+  sometimes make a hole larger than it needs to be to make it easy to work in that context
+  (particularly when using let blocks)
 
 do something to indicate when something will fill a hole (draw border of the hole?)
 
