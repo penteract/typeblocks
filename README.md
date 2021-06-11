@@ -1,4 +1,4 @@
-#TypeBlocks
+# TypeBlocks
 https://penteract.github.io/typeblocks/typeblocks.html
 
 Types are shapes.
@@ -12,7 +12,7 @@ thought of as an argument to a lambda.
 [TODO: Add pictures]
 
 
-#UI
+# UI
 
 Ctrl-drag to copy terms ; right click to delete
 

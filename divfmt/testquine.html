@@ -1,0 +1,182 @@
+<script src="tree-sitter.js"></script>
+<script src="hsluv-0.1.0.min.js">  </script>
+
+<script id=thisscript>
+ const Parser
+= window
+. TreeSitter
+;
+Parser
+. init
+( )
+. then
+( function ( )
+{ parser
+= new Parser
+( )
+Parser
+. Language
+. load
+( "tree-sitter-javascript.wasm"
+)
+. then
+( function ( Lang
+)
+{ parser
+. setLanguage
+( Lang
+)
+s
+= thisscript
+. innerHTML
+tree
+= parser
+. parse
+( s
+)
+makeTree
+( tree
+. rootNode
+, main
+)
+}
+)
+}
+)
+;
+function makeTree
+( nd
+, par
+)
+{ if ( nd
+. firstChild
+== null
+|| nd
+. type
+== "string"
+)
+{ if ( nd
+. type
+== nd
+. text
+)
+{ let s
+= document
+. createElement
+( "span"
+)
+s
+. innerText
+= " "
++ nd
+. text
++ " "
+par
+. appendChild
+( s
+)
+}
+else { let d
+= makeDiv
+( nd
+. type
+)
+d
+. innerText
+= " "
++ nd
+. text
++ " "
+par
+. appendChild
+( d
+)
+}
+}
+else { let d
+= makeDiv
+( nd
+. type
+)
+for ( let ch
+of
+nd
+. children
+) { makeTree
+( ch
+, d
+)
+}
+par
+. appendChild
+( d
+)
+}
+}
+function makeDiv
+( str
+)
+{ let n
+= 0
+// hash
+for ( let i
+= 0
+;
+i
+< str
+. length
+;
+i
++= 1
+) { n
+= ( n
+* 31
+)
+% 1000000007
+n
++= str
+. charCodeAt
+( i
+)
+}
+let d
+= document
+. createElement
+( "div"
+)
+let c
+= n
+% 360
+d
+. style
+. backgroundColor
+= hsluv
+. hsluvToHex
+( [ c
+, 100
+, 80
+]
+)
+d
+. style
+. borderColor
+= hsluv
+. hsluvToHex
+( [ c
+, 50
+, 50
+]
+)
+return d
+}
+</script>
+<style>
+div{
+  border: 1px solid black;
+  /*margin :1px;*/
+  display: inline-block;
+}
+</style>
+<body>
+    <div id=main />
+</body>
