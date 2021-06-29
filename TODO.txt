@@ -9,7 +9,7 @@
 //right-click to delete
 delete key to delete?
   how do I get deleted arguments back?
-  (implemented) idea: don't allow deleting, just double-click to force an argument into a hole 
+  (implemented) idea: don't allow deleting, just double-click to force an argument into a hole
 
 //double click floating term to fill hole, double click filled term to make it float.
 
@@ -33,6 +33,14 @@ make types line up better (autofill)
 
 let blocks
   (global background should be a let block?)
+
+//global definitions
+  copying from LHS (moving from/within LHS should be impossible until patterns)
+    copying the subject (global scope)
+    copying arguments (scope limited to definition)
+  pattern matching
+  evaluation (single step)
+    animated
 
 zoom/pan
   This is in the SVG1 spec but removed from SVG2 :(

@@ -2,8 +2,8 @@
 function hash(str){
   let n=0
   for (let i=0;i<str.length;i++){
-    n=(n*31)%1000000007
     n+=str.charCodeAt(i)
+    n=(n*31)%1000000007
   }
   return n
 }
@@ -35,7 +35,9 @@ function checkMatch(s,t){
 function isArg(g){
   return g.parentElement.filled===g
 }
-
+function isDefn(g){
+  return g.classList.contains("defn")
+}
 
 function getHoles(g){
   if(g.isHole) throw "expected to be called on non-holes"

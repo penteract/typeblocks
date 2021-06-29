@@ -1,12 +1,31 @@
 "use strict";
-function makeVarname(lamIndex,ownerIndex){
-  return `x${lamIndex}v${ownerIndex}`
+function makeVarname(lamIndex,scopeIndex){
+  return `x${lamIndex}v${scopeIndex}`
 }
 
 let lamCount = 0
 function printTerm(g){
+  try{
   lamCount = 0
-  return printRec(g)
+  if (isDefn(g)){
+    console.log("g",g)
+    let result=""
+    for (let line of g.children){
+      console.log(line)
+      if (result) result += "\n"
+      result += line.lhs.text + "=" + printReduced(line.rhs)
+    }
+    return result
+  }
+  else {
+    return printReduced(g)
+  }
+  }
+  catch(e){
+    throw e
+    return (""+e)
+  }
+  //return printRec(g)
 }
 function printRec(g){
   let result = ""
@@ -47,12 +66,12 @@ function printRec(g){
     }
   }
   else{
-    if (g.owner!==root){
-      let lamIndex = g.owner.lamIndex
+    if (g.scope!==root){
+      let lamIndex = g.scope.lamIndex
       if(lamIndex===undefined){
         throw "Either printTerm was called on a non-top-level box or something has gone wrong"
       }
-      result = makeVarname(lamIndex,g.ownerIndex) + " "
+      result = makeVarname(lamIndex,g.scopeIndex) + " "
     }
 
     let n=0
@@ -87,8 +106,6 @@ function printRec(g){
   return result
 }
 
-
-
 function printReduced(g){
   lamCount = 0
   let t = buildTerm(g)
@@ -108,7 +125,7 @@ class Lambda{
     while(this.argCounts[this.numArgs-1]
       && (args = this.body.args)
       && (a=args[args.length-1])
-      && a.owner===this
+      && a.scope===this
       && a.argIndex===this.numArgs-1
     ){
       args.pop()
@@ -189,14 +206,14 @@ class Application {
   }
 }
 class Variable{
-  constructor(owner,argIndex){
-    this.owner=owner
+  constructor(scope,argIndex){
+    this.scope=scope
     this.argIndex=argIndex
-    this.owner.argCounts[argIndex]+=1
+    this.scope.argCounts[argIndex]+=1
   }
   reduce(){return this}
   toString(p){
-    return makeVarname(this.owner.lamIndex,this.argIndex)
+    return makeVarname(this.scope.lamIndex,this.argIndex)
   }
 }
 
@@ -230,8 +247,8 @@ function buildTerm(g){
   else{
     term.__proto__=Application.prototype
     term.args=[]
-    if(g.owner!==root){
-      term.head=new Variable(g.owner.term,g.ownerIndex)
+    if(g.scope!==root){
+      term.head=new Variable(g.scope.term,g.scopeIndex)
     }
     for(let node of g.childNodes){
       if(node.nodeType==Node.TEXT_NODE){

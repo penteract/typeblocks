@@ -31,6 +31,12 @@ function dragInto(argument,hole,pointerPos,pointerDelta,dropEffect){
 		console.log("Cannot move into self")
 		return;
 	}
+	if (isDefn(argument)){
+	  if (hole===root && dropEffect=="move"){
+		  argument.changexy(...pointerDelta)
+		}
+		return;
+	}
 
 	// Find out how to move the argument into the hole (if appropriate)
 	let cmd = getMoveCommand(argument,hole,pointerPos)
@@ -69,14 +75,14 @@ function getMoveCommand(argument,hole,pointerPosition){
         return [makeFloating,argument.parentElement,"start"]
       }
     }
-    if (hole===argument.owner.parentElement){
+    if (hole===argument.scope.parentElement){
       //Let something be made floating by dragging it just outside its context
-      return [makeFloating,argument.owner]
+      return [makeFloating,argument.scope]
     }
 		console.log("Not a hole") // Consider trying the parent hole
     return false
   }
-  else if(!argument.owner.contains(hole)){
+  else if(!argument.scope.contains(hole)){
     console.log("Out of scope") // consider snapping argument back to where it came from
     // alternatively, consider putting the new context into this hole (if possible)
     return false

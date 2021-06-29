@@ -12,7 +12,7 @@ document.addEventListener("drag", function( event ) {
 document.addEventListener("dragstart", function( event ) {
   dragging = event.target;
   if(dragging.parentElement===root)
-    event.dataTransfer.setData("text/plain", printReduced(dragging))
+    event.dataTransfer.setData("text/plain", printTerm(dragging))
   effect=undefined
   // hide it after the bitmap copy has been made
   //setTimeout(function(){event.target.classList.add("invisible");},10)
@@ -28,13 +28,14 @@ document.addEventListener("dragend", function( event ) {
 
 /* events fired on the drop targets */
 document.addEventListener("dragover", function( event ) {
+    if(dragging.isLHS){event.dataTransfer.dropEffect="copy";}
     if(event.dataTransfer.dropEffect!=effect){
       if(effect=="move"){
-      dragging.classList.remove("invisible")
+        dragging.classList.remove("invisible")
       }
       effect=event.dataTransfer.dropEffect
       if(effect=="move"){
-      dragging.classList.add("invisible")
+        dragging.classList.add("invisible")
       }
     }
     // prevent default to allow drop
@@ -82,7 +83,7 @@ document.addEventListener("drop", function( event ) {
       [event.pageX-position[0],event.pageY-position[1]],
       event.dataTransfer.dropEffect)
 
-    hsTerm.innerText = printReduced(root.children[root.children.length-1])
+    hsTerm.innerText = printTerm(root.children[root.children.length-1])
 
 }, false);
 
@@ -106,7 +107,7 @@ document.addEventListener("dblclick",function (e){
       return false
     }
   }
-  hsTerm.innerText = printReduced(root.children[root.children.length-1])
+  hsTerm.innerText = printTerm(root.children[root.children.length-1])
 })
 
 // I'm sorry for doing this - I only want to supress context menu when the right

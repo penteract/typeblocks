@@ -42,6 +42,12 @@ HTMLDivElement.prototype.getPageXY = function(){
   this.setxy(x-r.x,y-r.y)
 } Does not interact well with scrolling
 */
+HTMLDivElement.prototype.visit = function(f){
+	f(this)
+	for(let node of this.children){
+		node.visit(f)
+	}
+}
 HTMLDivElement.prototype.duplicate = function(newPar){
 	let g = document.createElement("div")
   if(newPar===undefined){
@@ -53,25 +59,25 @@ HTMLDivElement.prototype.duplicate = function(newPar){
 		g.setxy(this.x,this.y)
 	}
 	newPar.appendChild(g)
-  // Deal with owner
-  if(this.owner.contains(newPar)){
-    g.owner=this.owner
+  // Deal with scope
+  if(this.scope.contains(newPar)){
+    g.scope=this.scope
   }
   else{
-		// Our (this's) owner has already been duplicated.
-		// The duplicated owner should be as many levels above g
-		// as our owner is above us
-    g.owner=newPar
+		// Our (this's) scope has already been duplicated.
+		// The duplicated scope should be as many levels above g
+		// as our scope is above us
+    g.scope=newPar
     let climbing=this.parentElement
-    while(climbing!==this.owner){
+    while(climbing!==this.scope){
       climbing=climbing.parentElement
-      g.owner=g.owner.parentElement
+      g.scope=g.scope.parentElement
       if(climbing===root) throw "Climbed too far"
     }
   }
   //Deal with most of the properties
   for (let prop of [
-		"type","text","isHole","baseType","ownerIndex","draggable","numOwned"]){
+		"type","text","isHole","baseType","scopeIndex","draggable","numOwned"]){
     g[prop]=this[prop]
   }for (let prop of [
 		"backgroundColor","borderColor","borderImageSource"]){
@@ -101,7 +107,7 @@ HTMLDivElement.prototype.delete = function(started){
   if(started===undefined){
     this.toBeDeleted=true
   }
-  else if(this.owner.toBeDeleted){
+  else if(this.scope.toBeDeleted){
     this.toBeDeleted=true
   }
   else{
@@ -111,9 +117,9 @@ HTMLDivElement.prototype.delete = function(started){
       while (snapTo.toBeDeleted){
         snapTo=snapTo.parentElement
       }
-      if(snapTo===this.owner && snapTo!==root){
+      if(snapTo===this.scope && snapTo!==root){
 				for(let sib of snapTo.children){
-					if(sib.owner===snapTo && sib.ownerIndex===this.ownerIndex){
+					if(sib.scope===snapTo && sib.scopeIndex===this.scopeIndex){
 						// Consider not doing this  - it may delete things that are still
 						// wanted, and the behaviour of deleteing every copy of a variable
 						// except the first may be found  surprising
@@ -145,14 +151,14 @@ HTMLDivElement.prototype.delete = function(started){
 }
 
 
-function subBox(text,type,cols,otherCols,parent){
+function subBox(text,type,cols,otherCols,isHole,parent){
   let [fill,stroke] = cols
   let g = document.createElement("div")
-  if(g.isHole = fill=="#DDD"){
+  if(g.isHole = isHole){
 		g.classList.add("hole")
 		g.filled = false
 	}
-	else{
+	if(typeof cols[0] != "string"){
 		fill=hsluv.hsluvToHex(fill)
 		cols[0][2]-=5 // make nested parts darker
 		// Possibly this is a mistake and it's more important to have
@@ -167,7 +173,7 @@ function subBox(text,type,cols,otherCols,parent){
   while(!isBase(type)){
     assertEq(type.length,2)
     var [arg,type] = type
-    let ch=subBox("",arg,otherCols,cols,g)
+    let ch=subBox("",arg,otherCols,cols,!isHole,g)
 		if(g.children.length==1 && text && isInfix(text)){g.append(text)}
   }
   g.baseType=type
@@ -179,15 +185,17 @@ function subBox(text,type,cols,otherCols,parent){
   g.setxy(0,0)
 	if(!g.isHole){
 		g.draggable=true
+	}
+	if(typeof cols[0] != "string"){
 		cols[0][2]+=5 //restore mutated value
 	}
 	// Warning: borderImage is buggy in firefox in various ways.
 	// Consider reconstructing svg whenever the box's dimensions change
 
 	//Structure
-  g.owner = parent
+  g.scope = parent
   parent.appendChild(g)
-	g.ownerIndex=parent.children.length-1
+	g.scopeIndex=parent.children.length-1
   //if(!g.isHole) g.addEventListener("touchstart",startDrag(g))
   //if(!g.isHole) g.addEventListener("mousedown",startDrag(g))
 	//parent.floating.push(g)
@@ -199,9 +207,46 @@ function makeBox(text,type){
   let c = Math.random()*360
   let fill = [c,100,80] //hsluv.hsluvToHex([c,100,80]) //`hsl(${c},100%,50%)`
   let stroke =  hsluv.hsluvToHex([c,50,50])//`hsl(${c},50%,70%)`
-  let g = subBox(text,type,[fill,stroke],["#DDD","#BBB"],root)
+  let g = subBox(text,type,[fill,stroke],["#DDD","#BBB"],false,root)
+	return g
 }
 
+function makeDefn(text,type){
+	let c = Math.random()*360
+	let op = (c+180)%360
+  let defn = document.createElement("div")
+	defn.classList.add("defn")
+	let line = document.createElement("div")
+	defn.appendChild(line)
+	defn.classList.add("box")
+	line.classList.add("line")
+
+  let fill = [c,100,80] //hsluv.hsluvToHex([c,100,80]) //`hsl(${c},100%,50%)`
+  let stroke =  hsluv.hsluvToHex([c,50,50])//`hsl(${c},50%,70%)`
+	let opFill = [op,100,80]
+	let opStroke =  hsluv.hsluvToHex([op,50,50])
+
+	line.lhs = subBox(text,type,[fill,stroke],[opFill,opStroke],false,line)
+	line.append("↦")//consider ⟼
+	line.rhs = subBox("",type,["#DDD","#BBB"],[opFill,opStroke],true,line)
+
+	line.lhs.visit((node)=>{
+		node.isLHS=true
+		if (node===line.lhs || node.parentElement===line.lhs){
+			node.draggable = true
+			node.scope=line.rhs
+		}
+		else{
+			node.draggable = false
+		}
+	})
+	line.lhs.scope = root
+
+	defn.draggable=true
+	root.appendChild(defn)
+	defn.setxy(0,0)
+	return defn
+}
 
 // Do the work of taking something out of where it came from and putting it (floating) somewhere else
 // returns true unless the
@@ -230,8 +275,8 @@ function makeFloating(g,target,location){
 			return false // Don't rearrange if it's staying roughly where it was
 		}
 	}
-	else if (target===g.owner){
-		findfirst((ch) => ch.owner===target && ch.ownerIndex>g.ownerIndex)
+	else if (target===g.scope){
+		findfirst((ch) => ch.scope===target && ch.scopeIndex>g.scopeIndex)
 	}
 	detach(g)
 	target.insertBefore(g,before)
@@ -278,10 +323,10 @@ function checkScope(g){
     if(g.filled)checkScope(g.filled)
   }
   else{
-    if(!g.owner.contains(g.parentElement)){//out of scope
+    if(!g.scope.contains(g.parentElement)){//out of scope
       //TODO: think more carefully about where it should go - should it just go
         // up to the nearest legal hole (nearest before the move that caused checkscope),
-        // rather than all the way up to its owner?
+        // rather than all the way up to its scope?
       //
       snapback(g)
       return
@@ -292,9 +337,9 @@ function checkScope(g){
   }
 }
 
-// When something would become out of context, snap it back to its owner
+// When something would become out of context, snap it back to its scope
 function snapback(g){
-  makeFloating(g,g.owner)
+  makeFloating(g,g.scope)
 }
 
 
@@ -321,9 +366,9 @@ function unfill(g){
   </script>
 </head>
 <body>
-<div id="entry"><form id="newNode" action="" onsubmit="quick(newNodeName.value,newNodeType.value);return false">
+<div id="entry"><form id="newNode" action="" onsubmit="newDef(newNodeName.value,newNodeType.value);return false">
   <input id="newNodeName" placeholder="map"> :: <input id="newNodeType" placeholder="(Int->Int)->ListInt->ListInt">
-  <button type="submit" form="newNode">create</button>
+  <button type="submit" form="newNode">define</button>
 </form>
 </div>
 <div id="root">
@@ -348,6 +393,13 @@ function quick(n,type){
   }
   catch(e){alert (e); throw e}
   makeBox(n,parsedType)
+}
+function newDef(n,type){
+  try{
+    var parsedType=parseType(partition(type)[0])
+  }
+  catch(e){alert (e); throw e}
+  makeDefn(n,parsedType)
 }
 
 GAME="Event->GameState->GameState"
@@ -394,7 +446,7 @@ for(let i=0; i<root.children.length; i++){
 <!--
 Invariants:
 Let g be any div such that root.contains(g)
-g.owner.contains(g)
+g.scope.contains(g)
 if(g.filled) g.filled.parentElement===g
 if(g!==root)bool(g.parentElement.isHole) == !g.isHole
 bool(g.filled) == g.classList.contains("filled")

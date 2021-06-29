@@ -72,6 +72,9 @@ path{
 .box{
 	cursor: grab;
 }
+.defn{
+  border-image-source: none;
+}
 .hole{
 	padding: 1px;/*consider setting this to 0*/
 }
@@ -92,8 +95,14 @@ border-image-width: 0px;
 .filled>.filling{
   display: inline-block;
 }
+.box:hover{
+  padding: 2px;
+}
 .box:empty{
   padding: 5px;
+}
+.box:empty:hover{
+  padding: 6px;
 }
 #root > .box{
   position: absolute;
