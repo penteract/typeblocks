@@ -1,24 +1,31 @@
 
 function deleteNode(g){
-	if(!g.isHole){
+	if(!(g.isHole || g.isLHS)){
 		g.delete()
 		return true
 	}
 }
 
 function fillOrUnfill(g){
+  if(g.isLHS){
+    return
+  }
+  if(g.isHole){
+    if (g.children.length==0) g=g.parentElement
+    else return;
+  }
   if(g===g.parentElement.filled){
     makeFloating(g,g.parentElement)
     return;
   }
-    if(g.isHole){
-      // Consider using this to expand holes
-      return;
-    }
-    if (!g.parentElement.filled
-      && checkMatch(g.parentElement.type,g.type)){
-      fillHole(g,g.parentElement)
-    }
+  if(g.isHole){
+    // Consider using this to expand holes
+    return;
+  }
+  if (!g.parentElement.filled
+    && checkMatch(g.parentElement.type,g.type)){
+    fillHole(g,g.parentElement)
+  }
 }
 
 function dragInto(argument,hole,pointerPos,pointerDelta,dropEffect){
@@ -35,6 +42,7 @@ function dragInto(argument,hole,pointerPos,pointerDelta,dropEffect){
 	  if (hole===root && dropEffect=="move"){
 		  argument.changexy(...pointerDelta)
 		}
+		else console.log("can't copy definitions");
 		return;
 	}
 

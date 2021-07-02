@@ -151,10 +151,12 @@ function getPath(type, scale){
 
 //Path for border-image, ignores margins, starts at 0,0
 function borderPath(w,h,type){
-  let bl = [0,0]
-  let br = [w,0]
+  w-=0.5
+  h-=0.5
+  let bl = [0.5,0.5]
+  let br = [w,0.5]
   let tr = [w,h]
-  let tl = [0,h]
+  let tl = [0.5,h]
   let pth = getPath(type,2)
   var path = "M "+bl[0]+" "+bl[1]+" "+
     stretchPath(pth,bl,br) +

@@ -8,10 +8,8 @@ function printTerm(g){
   try{
   lamCount = 0
   if (isDefn(g)){
-    console.log("g",g)
     let result=""
     for (let line of g.children){
-      console.log(line)
       if (result) result += "\n"
       result += line.lhs.text + "=" + printReduced(line.rhs)
     }

@@ -35,9 +35,9 @@ let blocks
   (global background should be a let block?)
 
 //global definitions
-  copying from LHS (moving from/within LHS should be impossible until patterns)
-    copying the subject (global scope)
-    copying arguments (scope limited to definition)
+  //copying from LHS (moving from/within LHS should be impossible until patterns)
+    //copying the subject (global scope)
+    //copying arguments (scope limited to definition)
   pattern matching
   evaluation (single step)
     animated

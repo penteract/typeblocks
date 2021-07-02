@@ -49,6 +49,17 @@ HTMLDivElement.prototype.visit = function(f){
 	}
 }
 HTMLDivElement.prototype.duplicate = function(newPar){
+	if(this.isLHS){// just make a brand new box with the right type, colors and scope
+		let hide=false
+		if(newPar===undefined){
+			newPar=this.scope
+			hide=true
+		}
+		// TODO: this isn't perfect - the colors won't change with deeper nesting
+		let cols = [this.style.backgroundColor,this.style.borderColor]
+		return subBox(this.text,this.type,cols,["#DDD","#BBB"],false,newPar,hide)
+	}
+
 	let g = document.createElement("div")
   if(newPar===undefined){
     newPar = this.parentElement
@@ -125,6 +136,7 @@ HTMLDivElement.prototype.delete = function(started){
 						// except the first may be found  surprising
 						this.toBeDeleted=true
 						break
+						//surprising behaviour #1: if the implementation
 					}
 				}
       }
@@ -151,9 +163,10 @@ HTMLDivElement.prototype.delete = function(started){
 }
 
 
-function subBox(text,type,cols,otherCols,isHole,parent){
+function subBox(text,type,cols,otherCols,isHole,parent,hide){
   let [fill,stroke] = cols
   let g = document.createElement("div")
+  if(hide) g.classList.add("hidden")
   if(g.isHole = isHole){
 		g.classList.add("hole")
 		g.filled = false
@@ -162,7 +175,8 @@ function subBox(text,type,cols,otherCols,isHole,parent){
 		fill=hsluv.hsluvToHex(fill)
 		cols[0][2]-=5 // make nested parts darker
 		// Possibly this is a mistake and it's more important to have
-		// identical colors for recognising when things are the same
+		// identical colors for recognising when things are from the same
+		// top level object
 	}
   g.classList.add("box")
   if(text && (!isInfix(text) || isBase(type))){g.append(text)}
@@ -216,9 +230,9 @@ function makeDefn(text,type){
 	let op = (c+180)%360
   let defn = document.createElement("div")
 	defn.classList.add("defn")
+	defn.classList.add("box")
 	let line = document.createElement("div")
 	defn.appendChild(line)
-	defn.classList.add("box")
 	line.classList.add("line")
 
   let fill = [c,100,80] //hsluv.hsluvToHex([c,100,80]) //`hsl(${c},100%,50%)`
@@ -347,6 +361,7 @@ function detach(g){
   if(isArg(g)){
     unfill(g.parentElement)
   }else{
+    g.classList.remove("filling")//for recently duplicated terms
     unfloat(g)
   }
 }
@@ -401,7 +416,7 @@ function newDef(n,type){
   catch(e){alert (e); throw e}
   makeDefn(n,parsedType)
 }
-
+/*
 GAME="Event->GameState->GameState"
 GEGSTO=`(${GAME})->Event->GameState->`
 RULE=`((${GAME})->${GAME})`
@@ -416,7 +431,7 @@ quick("skipNextTurn",`${RULE}`)
 
 // Tricky case for autofill:
 quick("fn", "(((o->o->b)->s)->b)->r")
-quick("inner", "((o->o->b)->s)->b")
+quick("inner", "((o->o->b)->s)->b")*/
 
 //from state:
 //   fn (\ x0v0 -> _ (x0v0 (\ x1v0 x1v1 -> inner (\ x2v0 -> _ (x2v0 x1v1 x1v0)))))
@@ -426,7 +441,7 @@ quick("inner", "((o->o->b)->s)->b")
 //   fn (\ x0v0 -> inner (\ x1v0 -> x0v0 (\ x2v0 x2v1 -> x1v0 x2v0 x2v1)))
 // which would happen if the arguments were snapped out before seeing if inner was a perfect match
 
-
+newDef("thrice","(Int->Int)->Int->Int")
 try{
 quick("map","(Int->Int)->ListInt->ListInt")
 quick("+","Int->Int->Int")
@@ -446,19 +461,38 @@ for(let i=0; i<root.children.length; i++){
 <!--
 Invariants:
 Let g be any div such that root.contains(g)
-g.scope.contains(g)
+g.scope.contains(g) || (g.isLHS && g.parentElement.classList.contains("line"))
 if(g.filled) g.filled.parentElement===g
-if(g!==root)bool(g.parentElement.isHole) == !g.isHole
+g.classList.contains("filling") ==  g.parentElement.filled===g
 bool(g.filled) == g.classList.contains("filled")
-if(!g.isHole){
-  g.children.length==arity(g.type)
-	∀i. ntharg(type,i)==g.children[i].type
-	if(g.parentElement!==root) g.childNodes.length==g.children.length
-	else{
-	 g.childNodes.length==g.children.length+1
-	 (g.childNodes[0].nodeType==Node.TEXT_NODE && !isInfix(g.childNodes[0].nodeType)
-	 || g.childNodes[1].nodeType==Node.TEXT_NODE && isInfix(g.childNodes[1].nodeType))
- }
+if(!g.classList.contains("defn") && !g.classList.contains("line")){
+  if(g!==root)bool(g.parentElement.isHole) == !g.isHole
+  if(!g.isHole){
+    g.children.length==arity(g.type)
+    ∀i. ntharg(type,i)==g.children[i].type
+    if(g.scope!==root) g.childNodes.length==g.children.length
+    else{
+     g.childNodes.length==g.children.length+1
+     (g.childNodes[0].nodeType==Node.TEXT_NODE && !isInfix(g.childNodes[0].nodeType)
+     || g.childNodes[1].nodeType==Node.TEXT_NODE && isInfix(g.childNodes[1].nodeType))
+   }
 }
-
+if (g.classList.contains("defn")){
+  g.parentElement === root
+  for(let ch of g.children){
+    ch.classList.contains("line")
+  }
+}
+if (g.classList.contains("line")){
+  g.parentElement.classList.contains("defn")
+  g.children.length==2
+  g.children[0]===g.lhs
+  g.children[1]===g.rhs
+  g.rhs.isHole
+  !g.lhs.isHole
+  g.lhs.isLHS
+}
+if (g.isLHS){
+  g.parentElement.isLHS || g.parentElement.classList.contains("line")
+}
 -->
