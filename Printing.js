@@ -120,7 +120,7 @@ class Lambda{
   reduce(){
     this.body = this.body.reduce()
     let args,a
-    while(this.argCounts[this.numArgs-1]
+    while(this.argCounts[this.numArgs-1]==1
       && (args = this.body.args)
       && (a=args[args.length-1])
       && a.scope===this
