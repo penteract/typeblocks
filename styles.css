@@ -49,7 +49,7 @@ path{
 }
 
 .box{
-	user-select: none;/* stops people dragging text inside boxes */
+  user-select: none;/* stops people dragging text inside boxes */
   display: inline-block;
   z-index: 0;
   position: relative;
@@ -57,31 +57,31 @@ path{
   border-width:0px;
   margin: 1px;
   vertical-align: middle;
-	border-style: solid;
-	border-width: 5px;
-	border-color: black;
-	background-clip: padding-box; /* means that the background isn't seen behind the transparent parts of the border image  */
+  border-style: solid;
+  border-width: 5px;
+  border-color: black;
+  background-clip: padding-box; /* means that the background isn't seen behind the transparent parts of the border image  */
   /*line-height: 0;*/
   /*font-size: 0;*/
-	border-image-width: 5px;
-	border-image-repeat: repeat;
-	border-image-source: url(data:image/svg+xml;whatever);
-	border-image-slice: 21%;
-	/*border-image-outset: 0px;*/
+  border-image-width: 5px;
+  border-image-repeat: repeat;
+  border-image-source: url(data:image/svg+xml;whatever);
+  border-image-slice: 21%;
+  /*border-image-outset: 0px;*/
 }
 .box{
-	cursor: grab;
+  cursor: grab;
 }
 .defn{
   border-image-source: none;
 }
 .hole{
-	padding: 1px;/*consider setting this to 0*/
+  padding: 1px;/*consider setting this to 0*/
 }
 .filled{
-	padding: 0px;
-	border-width: 0px;
-	margin: 1px;
+  padding: 0px;
+  border-width: 0px;
+  margin: 1px;
   border-image-outset: -5px;
   background-color: transparent !important;
   border-image-width: 0px;

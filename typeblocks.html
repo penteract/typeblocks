@@ -1,5 +1,5 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-			"http://www.w3.org/TR/html4/loose.dtd">
+    "http://www.w3.org/TR/html4/loose.dtd">
 <!-- Yes, it's 2021 and I'm deliberately triggering almost standards mode.
  If someone knows a better way of getting nested empty divs to stay square,
   please tell me. -->
@@ -9,13 +9,13 @@ one that can be constructed under a certain version of this program (not yet the
 <head>
   <meta charset="utf-8">
   <title>TypeBlocks</title>
-	<link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css">
   <script src="Parser.js">  </script>
   <script src="hsluv-0.1.0.min.js">  </script>
   <script src="Printing.js">  </script>
   <script src="Utils.js">  </script>
-	<script src="Paths.js">  </script>
-	<script src="Actions.js">  </script>
+  <script src="Paths.js">  </script>
+  <script src="Actions.js">  </script>
 
   <script type="text/javascript">
 "use strict";
@@ -32,8 +32,8 @@ HTMLDivElement.prototype.changexy = function(x,y){
 }
 HTMLDivElement.prototype.getPageXY = function(){
   let r = this.getBoundingClientRect()
-	let bodyRect = document.body.getBoundingClientRect()
-	// could use pageXOffset and pageYOffset instead
+  let bodyRect = document.body.getBoundingClientRect()
+  // could use pageXOffset and pageYOffset instead
   return [r.x-bodyRect.x, r.y-bodyRect.y]
 }
 /*HTMLDivElement.prototype.setClientXY = function(x,y){
@@ -43,41 +43,41 @@ HTMLDivElement.prototype.getPageXY = function(){
 } Does not interact well with scrolling
 */
 HTMLDivElement.prototype.visit = function(f){
-	f(this)
-	for(let node of this.children){
-		node.visit(f)
-	}
+  f(this)
+  for(let node of this.children){
+    node.visit(f)
+  }
 }
 HTMLDivElement.prototype.duplicate = function(newPar){
-	if(this.isLHS){// just make a brand new box with the right type, colors and scope
-		let hide=false
-		if(newPar===undefined){
-			newPar=this.scope
-			hide=true
-		}
-		// TODO: this isn't perfect - the colors won't change with deeper nesting
-		let cols = [this.style.backgroundColor,this.style.borderColor]
-		return subBox(this.text,this.type,cols,["#DDD","#BBB"],false,newPar,hide)
-	}
+  if(this.isLHS){// just make a brand new box with the right type, colors and scope
+    let hide=false
+    if(newPar===undefined){
+      newPar=this.scope
+      hide=true
+    }
+    // TODO: this isn't perfect - the colors won't change with deeper nesting
+    let cols = [this.style.backgroundColor,this.style.borderColor]
+    return subBox(this.text,this.type,cols,["#DDD","#BBB"],false,newPar,hide)
+  }
 
-	let g = document.createElement("div")
+  let g = document.createElement("div")
   if(newPar===undefined){
     newPar = this.parentElement
-		g.classList.add("hidden")
-		g.setxy(0,0)
+    g.classList.add("hidden")
+    g.setxy(0,0)
   }
-	else{
-		g.setxy(this.x,this.y)
-	}
-	newPar.appendChild(g)
+  else{
+    g.setxy(this.x,this.y)
+  }
+  newPar.appendChild(g)
   // Deal with scope
   if(this.scope.contains(newPar)){
     g.scope=this.scope
   }
   else{
-		// Our (this's) scope has already been duplicated.
-		// The duplicated scope should be as many levels above g
-		// as our scope is above us
+    // Our (this's) scope has already been duplicated.
+    // The duplicated scope should be as many levels above g
+    // as our scope is above us
     g.scope=newPar
     let climbing=this.parentElement
     while(climbing!==this.scope){
@@ -88,33 +88,33 @@ HTMLDivElement.prototype.duplicate = function(newPar){
   }
   //Deal with most of the properties
   for (let prop of [
-		"type","text","isHole","baseType","scopeIndex","draggable","numOwned"]){
+    "type","text","isHole","baseType","scopeIndex","draggable","numOwned"]){
     g[prop]=this[prop]
   }for (let prop of [
-		"backgroundColor","borderColor","borderImageSource"]){
+    "backgroundColor","borderColor","borderImageSource"]){
     g.style[prop]=this.style[prop]
   }
-	for (let c of ["filled", "filling", "hole", "box"]){
-		if (this.classList.contains(c))g.classList.add(c)
-	}
+  for (let c of ["filled", "filling", "hole", "box"]){
+    if (this.classList.contains(c))g.classList.add(c)
+  }
 
-	// Deal with the children
-	for(let node of this.childNodes){
-		if (node.nodeType===Node.TEXT_NODE){
-			g.append(node.textContent)
-		}
-		else{
-			let dupnode = node.duplicate(g)
-			if (this.filled===node){
-				g.filled=dupnode
-			}
-		}
-	}
+  // Deal with the children
+  for(let node of this.childNodes){
+    if (node.nodeType===Node.TEXT_NODE){
+      g.append(node.textContent)
+    }
+    else{
+      let dupnode = node.duplicate(g)
+      if (this.filled===node){
+        g.filled=dupnode
+      }
+    }
+  }
 
   return g
 }
 HTMLDivElement.prototype.delete = function(started){
-	// Child node is responsible for removing self from parent
+  // Child node is responsible for removing self from parent
   if(started===undefined){
     this.toBeDeleted=true
   }
@@ -129,25 +129,25 @@ HTMLDivElement.prototype.delete = function(started){
         snapTo=snapTo.parentElement
       }
       if(snapTo===this.scope && snapTo!==root){
-				for(let sib of snapTo.children){
-					if(sib.scope===snapTo && sib.scopeIndex===this.scopeIndex){
-						// Consider not doing this  - it may delete things that are still
-						// wanted, and the behaviour of deleteing every copy of a variable
-						// except the first may be found  surprising
-						this.toBeDeleted=true
-						break
-						//surprising behaviour #1: if the implementation
-					}
-				}
+        for(let sib of snapTo.children){
+          if(sib.scope===snapTo && sib.scopeIndex===this.scopeIndex){
+            // Consider not doing this  - it may delete things that are still
+            // wanted, and the behaviour of deleteing every copy of a variable
+            // except the first may be found  surprising
+            this.toBeDeleted=true
+            break
+            //surprising behaviour #1: if the implementation
+          }
+        }
       }
     }
     else{
       //Will snapback, but need to process children first
     }
   }
-	for (let ch of Array.from(this.children)){
-		ch.delete(true)
-	}
+  for (let ch of Array.from(this.children)){
+    ch.delete(true)
+  }
 
   if(this.toBeDeleted){
     if (this.filled) throw "Trying to delete something that's not empty(filled)"
@@ -168,52 +168,52 @@ function subBox(text,type,cols,otherCols,isHole,parent,hide){
   let g = document.createElement("div")
   if(hide) g.classList.add("hidden")
   if(g.isHole = isHole){
-		g.classList.add("hole")
-		g.filled = false
-	}
-	if(typeof cols[0] != "string"){
-		fill=hsluv.hsluvToHex(fill)
-		cols[0][2]-=5 // make nested parts darker
-		// Possibly this is a mistake and it's more important to have
-		// identical colors for recognising when things are from the same
-		// top level object
-	}
+    g.classList.add("hole")
+    g.filled = false
+  }
+  if(typeof cols[0] != "string"){
+    fill=hsluv.hsluvToHex(fill)
+    cols[0][2]-=5 // make nested parts darker
+    // Possibly this is a mistake and it's more important to have
+    // identical colors for recognising when things are from the same
+    // top level object
+  }
   g.classList.add("box")
   if(text && (!isInfix(text) || isBase(type))){g.append(text)}
-	g.type = type
+  g.type = type
   g.text = text
 
-	//Children
+  //Children
   while(!isBase(type)){
     assertEq(type.length,2)
     var [arg,type] = type
     let ch=subBox("",arg,otherCols,cols,!isHole,g)
-		if(g.children.length==1 && text && isInfix(text)){g.append(text)}
+    if(g.children.length==1 && text && isInfix(text)){g.append(text)}
   }
   g.baseType=type
-	g.numOwned=g.children.length
-	//Appearance
+  g.numOwned=g.children.length
+  //Appearance
   g.style.backgroundColor = fill
   g.style.borderColor = stroke
-	g.style.borderImageSource=`url(data:image/svg+xml;base64,${btoa(borderSVG(type,fill,stroke))})`
+  g.style.borderImageSource=`url(data:image/svg+xml;base64,${btoa(borderSVG(type,fill,stroke))})`
   g.setxy(0,0)
-	if(!g.isHole){
-		g.draggable=true
-	}
-	if(typeof cols[0] != "string"){
-		cols[0][2]+=5 //restore mutated value
-	}
-	// Warning: borderImage is buggy in firefox in various ways.
-	// Consider reconstructing svg whenever the box's dimensions change
+  if(!g.isHole){
+    g.draggable=true
+  }
+  if(typeof cols[0] != "string"){
+    cols[0][2]+=5 //restore mutated value
+  }
+  // Warning: borderImage is buggy in firefox in various ways.
+  // Consider reconstructing svg whenever the box's dimensions change
 
-	//Structure
+  //Structure
   g.scope = parent
   parent.appendChild(g)
-	g.scopeIndex=parent.children.length-1
+  g.scopeIndex=parent.children.length-1
   //if(!g.isHole) g.addEventListener("touchstart",startDrag(g))
   //if(!g.isHole) g.addEventListener("mousedown",startDrag(g))
-	//parent.floating.push(g)
-	//everything.push(g)
+  //parent.floating.push(g)
+  //everything.push(g)
   return g
 }
 //const everything=[]
@@ -222,83 +222,83 @@ function makeBox(text,type){
   let fill = [c,100,80] //hsluv.hsluvToHex([c,100,80]) //`hsl(${c},100%,50%)`
   let stroke =  hsluv.hsluvToHex([c,50,50])//`hsl(${c},50%,70%)`
   let g = subBox(text,type,[fill,stroke],["#DDD","#BBB"],false,root)
-	return g
+  return g
 }
 
 function makeDefn(text,type){
-	let c = Math.random()*360
-	let op = (c+180)%360
+  let c = Math.random()*360
+  let op = (c+180)%360
   let defn = document.createElement("div")
-	defn.classList.add("defn")
-	defn.classList.add("box")
-	let line = document.createElement("div")
-	defn.appendChild(line)
-	line.classList.add("line")
+  defn.classList.add("defn")
+  defn.classList.add("box")
+  let line = document.createElement("div")
+  defn.appendChild(line)
+  line.classList.add("line")
 
   let fill = [c,100,80] //hsluv.hsluvToHex([c,100,80]) //`hsl(${c},100%,50%)`
   let stroke =  hsluv.hsluvToHex([c,50,50])//`hsl(${c},50%,70%)`
-	let opFill = [op,100,80]
-	let opStroke =  hsluv.hsluvToHex([op,50,50])
+  let opFill = [op,100,80]
+  let opStroke =  hsluv.hsluvToHex([op,50,50])
 
-	line.lhs = subBox(text,type,[fill,stroke],[opFill,opStroke],false,line)
-	line.append("↦")//consider ⟼
-	line.rhs = subBox("",type,["#DDD","#BBB"],[opFill,opStroke],true,line)
+  line.lhs = subBox(text,type,[fill,stroke],[opFill,opStroke],false,line)
+  line.append("↦")//consider ⟼
+  line.rhs = subBox("",type,["#DDD","#BBB"],[opFill,opStroke],true,line)
 
-	line.lhs.visit((node)=>{
-		node.isLHS=true
-		if (node===line.lhs || node.parentElement===line.lhs){
-			node.draggable = true
-			node.scope=line.rhs
-		}
-		else{
-			node.draggable = false
-		}
-	})
-	line.lhs.scope = root
+  line.lhs.visit((node)=>{
+    node.isLHS=true
+    if (node===line.lhs || node.parentElement===line.lhs){
+      node.draggable = true
+      node.scope=line.rhs
+    }
+    else{
+      node.draggable = false
+    }
+  })
+  line.lhs.scope = root
 
-	defn.draggable=true
-	root.appendChild(defn)
-	defn.setxy(0,0)
-	return defn
+  defn.draggable=true
+  root.appendChild(defn)
+  defn.setxy(0,0)
+  return defn
 }
 
 // Do the work of taking something out of where it came from and putting it (floating) somewhere else
 // returns true unless the
 function makeFloating(g,target,location){
   if (!target.isHole) throw "Things should only float in holes"
-	let before=null
-	function findfirst(test){
-		for(let ch of target.children) if (ch!==g && test(ch)){
-			before=ch
-			break;
-		}
-	}
-	if(location==="start"){
-		findfirst(x => true)
-	}
-	else if(location==="end"){
-		before=null
-	}
-	else if (location!==undefined){
-		let [x,y]=location
-		findfirst(function (ch){
-			let r = ch.getBoundingClientRect()
-			return x < r.left+r.width/2 && y < r.bottom+10
-		})
-		if(g.parentElement===target && g.nextSibling===before){
-			return false // Don't rearrange if it's staying roughly where it was
-		}
-	}
-	else if (target===g.scope){
-		findfirst((ch) => ch.scope===target && ch.scopeIndex>g.scopeIndex)
-	}
-	detach(g)
-	target.insertBefore(g,before)
-	for (let ch of g.children) if(ch){
-		checkScope(ch)
-	}
-	g.setxy(0,0)
-	return true // It moved
+  let before=null
+  function findfirst(test){
+    for(let ch of target.children) if (ch!==g && test(ch)){
+      before=ch
+      break;
+    }
+  }
+  if(location==="start"){
+    findfirst(x => true)
+  }
+  else if(location==="end"){
+    before=null
+  }
+  else if (location!==undefined){
+    let [x,y]=location
+    findfirst(function (ch){
+      let r = ch.getBoundingClientRect()
+      return x < r.left+r.width/2 && y < r.bottom+10
+    })
+    if(g.parentElement===target && g.nextSibling===before){
+      return false // Don't rearrange if it's staying roughly where it was
+    }
+  }
+  else if (target===g.scope){
+    findfirst((ch) => ch.scope===target && ch.scopeIndex>g.scopeIndex)
+  }
+  detach(g)
+  target.insertBefore(g,before)
+  for (let ch of g.children) if(ch){
+    checkScope(ch)
+  }
+  g.setxy(0,0)
+  return true // It moved
 }
 
 
@@ -314,17 +314,17 @@ function fillHole(argument, hole){
   if(!oldPar.contains(hole)){//If it does, we don't need to check recursively
     checkScope(argument)
   }//doing this before matching types hopefully saves some headaches
-	//We need to detach it again because "isNearPerfectMatch" uses the DOM tree
-	hole.removeChild(argument)
+  //We need to detach it again because "isNearPerfectMatch" uses the DOM tree
+  hole.removeChild(argument)
   let match = isNearPerfectMatch(argument,hole)
   for(let i=0; i<match.length; i++){
     let s=match[i][0]
     let h=match[i][1]
     if (i>0) detach(s) // match[0]  is [argument,hole]
-		h.classList.add("filled")
-		h.filled = s
-		s.classList.add("filling")
-		s.setxy(0,0)
+    h.classList.add("filled")
+    h.filled = s
+    s.classList.add("filling")
+    s.setxy(0,0)
     h.appendChild(s) // There might be an argument for prepending here
   }
   return true
@@ -368,12 +368,12 @@ function detach(g){
 
 function unfloat(g){
   let holder=g.parentElement
-	holder.removeChild(g)
+  holder.removeChild(g)
 }
 function unfill(g){
-	g.classList.remove("filled")
+  g.classList.remove("filled")
   let arg = g.filled
-	arg.classList.remove("filling")
+  arg.classList.remove("filling")
   g.removeChild(arg)
   g.filled = false
 }
