@@ -39,8 +39,16 @@ let blocks
     //copying the subject (global scope)
     //copying arguments (scope limited to definition)
   pattern matching
-  evaluation (single step)
+  //evaluation (single step)
     animated
+
+Think about colors
+  If a higher-order term occurs in an argument to a copy of itself identical one,
+    some anonymous variables become indistinguishable
+  Example:
+    twice2 :: ((Int->Int)->Int->Int)->(Int->Int)->Int->Int
+    twice2 = \ x0v0 x0v1 -> x0v0 (x0v0 x0v1)
+
 
 zoom/pan
   This is in the SVG1 spec but removed from SVG2 :(

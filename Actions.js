@@ -1,4 +1,4 @@
-
+"use strict";
 function deleteNode(g){
   if(!(g.isHole || g.isLHS)){
     g.delete()
@@ -41,6 +41,7 @@ function dragInto(argument,hole,pointerPos,pointerDelta,dropEffect){
   if (isDefn(argument)){
     if (hole===root && dropEffect=="move"){
       argument.changexy(...pointerDelta)
+      root.appendChild(argument)
     }
     else console.log("can't copy definitions");
     return;

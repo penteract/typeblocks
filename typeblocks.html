@@ -16,6 +16,7 @@ one that can be constructed under a certain version of this program (not yet the
   <script src="Utils.js">  </script>
   <script src="Paths.js">  </script>
   <script src="Actions.js">  </script>
+  <script src="Evaluation.js">  </script>
 
   <script type="text/javascript">
 "use strict";
@@ -57,7 +58,9 @@ HTMLDivElement.prototype.duplicate = function(newPar){
     }
     // TODO: this isn't perfect - the colors won't change with deeper nesting
     let cols = [this.style.backgroundColor,this.style.borderColor]
-    return subBox(this.text,this.type,cols,["#DDD","#BBB"],false,newPar,hide)
+    let g = subBox(this.text,this.type,cols,["#DDD","#BBB"],false,newPar,hide)
+    if(!this.isHole) g.defn = this.parentElement.parentElement // should be defn
+    return g
   }
 
   let g = document.createElement("div")
@@ -88,7 +91,7 @@ HTMLDivElement.prototype.duplicate = function(newPar){
   }
   //Deal with most of the properties
   for (let prop of [
-    "type","text","isHole","baseType","scopeIndex","draggable","numOwned"]){
+    "type","text","isHole","baseType","scopeIndex","draggable","numOwned","defn"]){
     g[prop]=this[prop]
   }for (let prop of [
     "backgroundColor","borderColor","borderImageSource"]){
@@ -153,7 +156,7 @@ HTMLDivElement.prototype.delete = function(started){
     if (this.filled) throw "Trying to delete something that's not empty(filled)"
     for (let x of this.children) throw "Trying to delete something that's not empty"
     detach(this)
-    this.remove()
+    this.remove() //does this do anything?
   }
   else {
     if(snapTo!==this.parentElement){
@@ -378,9 +381,22 @@ function unfill(g){
   g.filled = false
 }
 
+function reduce(){
+  console.log("reduce")
+  let ch = root.children
+  let n = root.children.length-1
+  while(n>0 && isDefn(ch[n])){
+    n-=1
+  }
+  if (n<0) return;
+  console.log("starting")
+  singleStep(ch[n])
+}
+
   </script>
 </head>
 <body>
+<button style="right:10px;position:absolute;" onclick="reduce()">reduce</button>
 <div id="entry"><form id="newNode" action="" onsubmit="newDef(newNodeName.value,newNodeType.value);return false">
   <input id="newNodeName" placeholder="map"> :: <input id="newNodeType" placeholder="(Int->Int)->ListInt->ListInt">
   <button type="submit" form="newNode">define</button>
@@ -414,7 +430,7 @@ function newDef(n,type){
     var parsedType=parseType(partition(type)[0])
   }
   catch(e){alert (e); throw e}
-  makeDefn(n,parsedType)
+  return makeDefn(n,parsedType)
 }
 /*
 GAME="Event->GameState->GameState"
@@ -441,8 +457,22 @@ quick("inner", "((o->o->b)->s)->b")*/
 //   fn (\ x0v0 -> inner (\ x1v0 -> x0v0 (\ x2v0 x2v1 -> x1v0 x2v0 x2v1)))
 // which would happen if the arguments were snapped out before seeing if inner was a perfect match
 
-newDef("thrice","(Int->Int)->Int->Int")
+
 try{
+  let d = newDef("thrice","(Int->Int)->Int->Int")
+  let r = d.children[0].rhs
+  let f1 = r.children[0]
+  let f2 = f1.duplicate()
+  let f3 = f1.duplicate()
+  function putIn (a,b){
+    makeFloating(a,b.children[0])
+    fillOrUnfill(a)
+  }
+  putIn(r.children[1],f1)
+  putIn(f1,f2)
+  putIn(f2,f3)
+  fillOrUnfill(f3)
+
 quick("map","(Int->Int)->ListInt->ListInt")
 quick("+","Int->Int->Int")
 quick("negate","Int->Int")
