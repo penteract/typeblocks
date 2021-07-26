@@ -48,13 +48,18 @@ svg{
 	border:30px solid transparent;
 	border-image-width: 60px;
 	border-image-source: url(data:image/svg+xml;whatever);
-	border-image-slice: 30% 15%;
+	border-image-slice: 21%;
 	border-image-outset: 30px;
+  border-image-repeat: round;
 }
+/*path{
+  transform: rotate(10deg)
+}*/
 
 </style>
 </head>
 <body>
+<!--
 <div id="entry"><form id="newNode" action="" onsubmit="quick(newNodeName.value,newNodeType.value);return false">
   <input id="newNodeName" placeholder="map"> :: <input id="newNodeType" placeholder="(Int->Int)->ListInt->ListInt">
   <button type="submit" form="newNode">create</button>
@@ -69,10 +74,11 @@ svg{
 	<div class=inner id=i2>
 		inner dv to test, let's write something longer and longer again
 	</div>
-</div>
+</div>-->
 <div id=testar>
 	<img id=testim width="100px" src="data:image/svg+xml;whatever">
 	<img src="data:image/svg+xml;utf8,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 200 100&quot; height=&quot;100px&quot; width=&quot;100px&quot;>
+
 <g>
 	<path d=&quot;M39.8,57.6C54.3,66.7,70,73,86.5,76.4c0.6-0.8,1.1-1.6,1.7-2.5c4.8-7.7,7-16.3,6.8-24.8c-13.8-9.3-31.3-8.4-45.8-7.7   c-9.5,0.5-17.8,0.9-23.2-1.7c-0.1,0.1-0.2,0.3-0.3,0.4c-1,1.7-2,3.4-2.9,5.1C28.2,49.7,33.8,53.9,39.8,57.6z&quot;/>
 	<path d=&quot;M26.2,88.2c3.3,2,6.7,3.6,10.2,4.7c-3.5-6.2-6.3-12.6-8.8-18.5c-3.1-7.2-5.8-13.5-9-17.2c-1.9,8-2,16.4-0.3,24.7   C20.6,84.2,23.2,86.3,26.2,88.2z&quot;/>
@@ -82,15 +88,45 @@ svg{
 	<!--<svg viewBox="0 0 10 10">
 		<rect x="0" y="0" width="10" height="10" fill="red"/>
 	</svg>-->
-	<svg viewBox="-10 -10 120 120" width="90px" height="90px" > <path fill="none" stroke="black" d="M -3 49.5 L 45 49.5  L 49 49.5 L 50 51.5 L 51 49.5 L 55 49.5 L 103 49.5 L 103 1.5  L 103 -2.5 L 105 -3.5 L 103 -4.5 L 103 -8.5 L 103 -56.5 L 55 -56.5  L 51 -56.5 L 50 -58.5 L 49 -56.5 L 45 -56.5 L -3 -56.5 L -3 -8.5  L -3 -4.5 L -5 -3.5 L -3 -2.5 L -3 1.5 L -3 49.5 Z "> </svg>
+  <image src="/svg/Example lingrag01.svg" />
+
 </div>
 
 <pre id="hsTerm"> _ code will go here when clicked on (TODO)</pre>
 <script src="Utils.js">  </script>
 <script src="Paths.js">  </script>
 <script>
-k=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 100 50"> <path stroke="black" fill="yellow" d="${s=borderPath(80,30,"a")}" /> </svg>`
-document.getElementById("testar").style.borderImageSource=`url(data:image/svg+xml;base64,${btoa(k)})`
+k=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 100 100">
+<defs>
+<filter id="filt2">
+<feGaussianBlur stdDeviation="2">
+<animate attributeName="stdDeviation" from="0" to="2" dur="3s" repeatCount="indefinite"/>
+</feGaussianBlur>
+</filter>
+</defs>
+<g>
+ <path filter="url(#filt2)" stroke="black" fill="yellow" d="${s=borderPath(80,80,"a")}" />
+ </g></svg>`
+k2 = `
+<svg xmlns="http://www.w3.org/2000/svg" id="svg" viewBox="0 0 40 40">
+<defs>
+  <filter id="filt">
+    <feImage href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAACTUlEQVR42u3bK1JjURRG4dWp7bDgQIEgIkWYITPkUWCiQIEECaoViq423VVLnPVN4PwRN/ee/fh1c3PDFWzhFI7gE97gAA9wC0/wAu+wgWM4hx1cww7O4Rg28A4v8Ah38AAHeIUvOIJT2MKePx9xD3c/jriAHex/HPEMT/9wxDN8wAZOvn/FX464hwO8fR9xBlu4gj1c/ucj5oqYZmsnWNyc2gkWN0d2gsXNp51gcfNmJ1jcHOwEi5sHO8Hi5tZOsLh5shMsbl7sBIubdzvB4mZjJ1jcHNsJFjfndoLFzc5OsLi5thMsridA1jtA1leQrHuArJuwrFqQbB7tBIubOzvB4uqIyeoJy+bVTrC4+bITLK7JOFmzobKmo2WztxMsrgUNWX9Bsl7Csj5DZS1oyFrQkFWMk829nWBxNWRkLWjIasrLGkuRNZglazRRNhd2gsU1ni6rISPrCZC1oCHrK0jWPUDWTVg2z3aCxVUNldUPkLWgIasnLGtBQ9aChqzJOFmzobKmo2X1A2QtaMj6C5L1Epb1GSprQUPWgoasYpysBQ1ZDRlZLUlZTXnZfNgJFtdglmxO7ASLazhX1ni6rIaMrCdA1jtA1oKGrHuArAUNWbUgWdVQWf0AWR0xWT1hWVMRshY0ZE3GyebMTrC4pqNl7QfIasjI5tJOsLgWNGR9hspa0JBVipBVjJNVjpbVkJHVkpTVlJe1oCFrMEvWgoas4VxZ4+my+gGyngBZ7wBZCxqy7gGyFjRk1YJkVUNl9QNkdcRk9YRlTUXIfgMFiICKOe1iSgAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyMS0wNy0yNVQyMzowMDoxMyswMDowMF4JdsgAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjEtMDctMjVUMjM6MDA6MTMrMDA6MDAvVM50AAAAAElFTkSuQmCC" result="im1" />
+    <feOffset dx="0" dy="0" in="im1" result="im">
+      <animate attributeName="dx" from="-3.867" to="3.867" dur="1s" repeatCount="indefinite" />
+      <animate attributeName="dy" from="-3.867" to="3.867" dur="1s" repeatCount="indefinite" />
+    </feOffset>
+    <feDisplacementMap color-interpolation-filters="sRGB" scale="2" in="SourceGraphic" in2="im" xChannelSelector="R" yChannelSelector="G" />
+  </filter>
+</defs>
+<g filter="url(#filt)" >
+  <rect x="-5" y="-5" stroke-width="0" width="50" height="50" stroke="pink" fill="none"> </rect>
+  <rect x="2" y="2" width="36" height="36" stroke="red" fill="green"> </rect>
+</g>
+</svg>`
+//testar.innerHTML+=k2
+document.getElementById("testar").style.borderImageSource=`url(data:image/svg+xml;base64,${btoa(k2)})`
+//document.getElementById("testar").style.borderImageSource="url(test.svg)"
 </script>
 </body>
 </html>

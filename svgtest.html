@@ -3,22 +3,11 @@
 <!--For testing SVG construction techniques -->
 <head>
   <meta charset="utf-8">
-  <title>TypeBlocks</title>
-  <script src="Parser.js">  </script>
-  <script src="hsluv-0.1.0.min.js">  </script>
-  <script src="Paths.js">  </script>
-  <script src="Printing.js">  </script>
-  <script src="Utils.js">  </script>
-  <script type="text/javascript">
-"use strict";
-let SVGNS = "http://www.w3.org/2000/svg"
+  <title>SVGTEST</title>
 
-
-  </script>
   <style>
-svg{
+/*svg{
   position:fixed;
-
   width: 100%;
   height: 100%;
   cursor: default;
@@ -26,68 +15,35 @@ svg{
 html,body{
   margin: 0px;
   padding:0px;
-  /* overflow:hidden; */
-}
-.hidden{
-  display: none;
-}
-path{
-  stroke-width: 0.6;
-}
-g:hover>path{
-  stroke-width:1;
-}
-#hsTerm{
-  position: absolute;
-  bottom:0px;
-}
-#entry{
-  position: absolute;
-  top:0px;
-}
-/*Awaiting feature support
-g{
-  z-index: 0
-}
-.dragging{
-  z-index: 10
+  // overflow:hidden;
 }*/
 </style>
 </head>
 <body>
-<svg  viewBox="-10 -10 90 10" preserveAspectRatio="xMinYMin" id="img">
-
-<text id="testtext" fill="none" font-size="10"> hello </text>
-<g id="svg" pointer-events="bounding-box">
- <rect x="-10000" y="-10000" width="20000" height="20000" fill="white" />
-</g>
-  <path d="M 0 0 L 100 100 L 100 10 Z" stroke="green" stroke-width="1" fill="none"/>
-  <rect x="0" y="0" width="3" height="3" fill="red" />
-  <path d="M 0 0 L 100 200 A 80 65 0 1 0 200 150 L 100 10 Z" stroke="green" stroke-width="1" fill="none"/>
-  <!--"M 0 0 C 25 25  75 -25 100 0 Z"
-  <path d="M 0 0 L 40 0 A 10 10 0 1 1 40 0.001 L 100 0 L 50 50 Z"
-   stroke="green" stroke-width="1" fill-rule="evenodd"/>
-  <path d="M 20 20 L 100 100 L 100 20 Z M 40 30 L 90 80 L 90 30 Z"
-   stroke="green" stroke-width="1" fill="blue" fill-rule="evenodd" />-->
-</svg>
-<pre id="hsTerm"> </pre>
-<div id="entry"><form id="newNode" action="" onsubmit="quick(newNodeName.value,newNodeType.value);return false">
-  <input id="newNodeName" placeholder="map"> :: <input id="newNodeType" placeholder="(Int->Int)->ListInt->ListInt">
-  <button type="submit" form="newNode">create</button>
-</form>
-</div>
-<script src="withdivs/Paths.js"> </script>
-<script>
-img.innerHTML+=`<path d="${testp("Int")}" stroke="brown" stroke-width="1" fill="none"/>`
-let x = 1
-let abcd
-let INT = setInterval(function (){
-  x+=1
-  abcd = [minis[Math.floor(Math.random()*minis.length)],minis[Math.floor(Math.random()*minis.length)],minis[Math.floor(Math.random()*minis.length)],minis[Math.floor(Math.random()*minis.length)]]
-
-  img.children[img.children.length-1].setAttribute("d",testp(...abcd))
-},1000000)
-</script>
+  <img src="data:image/png;base64,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" id="img1" />
+  <img src="test.bmp" />
+  <img src="test.jpg" />
+  <img src="test.png" />
+<br />
+  <svg id="svg" viewBox="0 0 40 40" width="90px" height="90px" >
+  <defs>
+    <filter id="filt">
+      <feImage href="test.bmp" result="im1" />
+      <feOffset dx="0" dy="0" in="im1" result="im">
+        <animate attributeName="dx" from="-3.867" to="3.867" dur="1s" repeatCount="indefinite" />
+        <animate attributeName="dy" from="-3.867" to="3.867" dur="1s" repeatCount="indefinite" />
+      </feOffset>
+      <feDisplacementMap color-interpolation-filters="sRGB" scale="2" in="SourceGraphic" in2="im" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </defs>
+  <g filter="url(#filt)" >
+    <!-- I don't understand exactly why this works - I expected the factor of
+       1.5 in the python code to generate the image to mean that a width of 60(40*1.5) was needed.
+       -->
+    <rect x="-5" y="-5" stroke-width="0" width="50" height="50" stroke="pink" fill="none"> </rect>
+    <rect x="2" y="2" width="36" height="36" stroke="red" fill="green"> </rect>
+  </g>
+  </svg>
 
 </body>
 </html>
