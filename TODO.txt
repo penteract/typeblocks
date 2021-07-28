@@ -40,7 +40,8 @@ let blocks
     //copying arguments (scope limited to definition)
   pattern matching
   //evaluation (single step)
-    animated
+    animated (due to the need to recursively eliminate anonymous variables, this is not straightforward)
+    //builtins (integers)
 
 Think about colors
   If a higher-order term occurs in an argument to a copy of itself identical one,

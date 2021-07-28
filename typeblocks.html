@@ -17,6 +17,7 @@ one that can be constructed under a certain version of this program (not yet the
   <script src="Paths.js">  </script>
   <script src="Actions.js">  </script>
   <script src="Evaluation.js">  </script>
+  <script src="Builtins.js">  </script>
 
   <script type="text/javascript">
 "use strict";
@@ -57,7 +58,7 @@ HTMLDivElement.prototype.duplicate = function(newPar){
       hide=true
     }
     // TODO: this isn't perfect - the colors won't change with deeper nesting
-    let cols = [this.style.backgroundColor,this.style.borderColor]
+    let cols = this.colors//[this.style.backgroundColor,this.style.borderColor]
     let g = subBox(this.text,this.type,cols,["#DDD","#BBB"],false,newPar,hide)
     if(!this.isHole) g.defn = this.parentElement.parentElement // should be defn
     return g
@@ -91,7 +92,7 @@ HTMLDivElement.prototype.duplicate = function(newPar){
   }
   //Deal with most of the properties
   for (let prop of [
-    "type","text","isHole","baseType","scopeIndex","draggable","numOwned","defn"]){
+    "type","text","isHole","baseType","scopeIndex","draggable","numOwned","defn","isConstructor"]){
     g[prop]=this[prop]
   }for (let prop of [
     "backgroundColor","borderColor","borderImageSource"]){
@@ -249,15 +250,18 @@ function makeDefn(text,type){
 
   line.lhs.visit((node)=>{
     node.isLHS=true
-    if (node===line.lhs || node.parentElement===line.lhs){
+    if (node.parentElement===line.lhs){
       node.draggable = true
       node.scope=line.rhs
+      node.colors=[opFill,opStroke]
     }
     else{
       node.draggable = false
     }
   })
+  line.lhs.draggable = true
   line.lhs.scope = root
+  line.lhs.colors=[fill,stroke]
 
   defn.draggable=true
   root.appendChild(defn)
@@ -390,7 +394,7 @@ function reduce(){
   }
   if (n<0) return;
   console.log("starting")
-  singleStep(ch[n])
+  ch[n].evl((x)=>false)
 }
 
   </script>
@@ -398,7 +402,7 @@ function reduce(){
 <body>
 <button style="right:10px;position:absolute;" onclick="reduce()">reduce</button>
 <div id="entry"><form id="newNode" action="" onsubmit="newDef(newNodeName.value,newNodeType.value);return false">
-  <input id="newNodeName" placeholder="map"> :: <input id="newNodeType" placeholder="(Int->Int)->ListInt->ListInt">
+  <input id="newNodeName" placeholder="S"> :: <input id="newNodeType" placeholder="(a->b->c)->(a->b)->a->c">
   <button type="submit" form="newNode">define</button>
 </form>
 </div>
@@ -423,7 +427,7 @@ function quick(n,type){
     var parsedType=parseType(partition(type)[0])
   }
   catch(e){alert (e); throw e}
-  makeBox(n,parsedType)
+  return makeBox(n,parsedType)
 }
 function newDef(n,type){
   try{
@@ -472,19 +476,28 @@ try{
   putIn(f1,f2)
   putIn(f2,f3)
   fillOrUnfill(f3)
-
+/*
 quick("map","(Int->Int)->ListInt->ListInt")
 quick("+","Int->Int->Int")
 quick("negate","Int->Int")
 quick("xs","ListInt")
-quick("5","Int")
+quick("5","Int")*/
 /*quick("","Int->Int")*/
 }
 catch(e) {alert(e);throw e}//for debugging on mobile
 
+for (let k in builtins){
+  ;[type,defn] = builtins[k]
+  let parsedType=parseType(partition(type)[0])
+  let g = makeBox(k,parsedType)
+  g.defn=defn
+}
+
+makeBox("1","Int").isConstructor=true
 for(let i=0; i<root.children.length; i++){
   root.children[i].setxy(0,50+(i*35))
 }
+
 </script>
 </body>
 </html>

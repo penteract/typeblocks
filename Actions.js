@@ -29,6 +29,9 @@ function fillOrUnfill(g){
 }
 
 function dragInto(argument,hole,pointerPos,pointerDelta,dropEffect){
+  // TODO: Chromium gives drags a "none" effect by default
+  //console.log(argument,dropEffect)
+
   // Don't do anything if the target is not something we expect
   if (!root.contains(hole)){
     console.log("Target is not part of a term")
@@ -119,7 +122,8 @@ function tryToFillHole(arg, hole, pointerPos){
   //detatch(arg)//hopefully
   if(arg.baseType!=hole.baseType)
     return makeFloating(arg,hole,pointerPos);
-  return makeFloating(arg,hole,pointerPos);
+  //return makeFloating(arg,hole,pointerPos);
+  return fillHole(arg,hole)
   /*hole.appendChild(arg)
   for(let ch of Array(...arg.children).reverse()){
     if
