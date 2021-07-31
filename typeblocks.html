@@ -400,15 +400,23 @@ function reduce(){
   </script>
 </head>
 <body>
-<button style="right:10px;position:absolute;" onclick="reduce()">reduce</button>
-<div id="entry"><form id="newNode" action="" onsubmit="newDef(newNodeName.value,newNodeType.value);return false">
-  <input id="newNodeName" placeholder="S"> :: <input id="newNodeType" placeholder="(a->b->c)->(a->b)->a->c">
-  <button type="submit" form="newNode">define</button>
-</form>
+<div id="manual">
+<button class="invisible">reduce</button>  <br />
+Click and drag to move terms <br />
+Ctrl+click and drag to copy terms <br />
+Right click to delete nodes <br />
+Double click to force terms into holes or snap them out <br />
+Use the boxes at the top left to make a new definition with a particular type.
 </div>
 <div id="root">
 </div>
-
+<button id="reduceButton" onclick="reduce()">reduce</button>
+<div id="entry">
+  <form id="newNode" action="" onsubmit="newDef(newNodeName.value,newNodeType.value);return false">
+    <input id="newNodeName" placeholder="S"> :: <input id="newNodeType" placeholder="(a->b->c)->(a->b)->a->c">
+    <button type="submit" form="newNode">define</button>
+  </form>
+</div>
 <pre id="hsTerm"> _ code will go here when clicked on (TODO)</pre>
 
 <script src="Events.js"> </script>

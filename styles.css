@@ -14,9 +14,6 @@ I can't easily find a way to do all of these, so there's some code
   position: absolute;
   width: 100%;
   min-height: 100%;
-  background: white;
-  z-index: -1;
-  display: block;
 }
 html,body{
   margin: 0px;
@@ -32,13 +29,6 @@ html,body{
 path{
   stroke-width: 0.6;
 }
-/*.box:hover{
-  border-width: 4px;
-  margin: 2px;
-}
-.hole:hover{
-  margin: 3px;
-}*/
 #hsTerm{
   position: absolute;
   bottom:0px;
@@ -46,6 +36,18 @@ path{
 #entry{
   position: absolute;
   top:0px;
+}
+#manual{
+  position:absolute;
+  right:5px;
+  text-align:right;
+  max-width:50%;
+  color:grey;
+  pointer-events: none;
+}
+#reduceButton{
+  position:absolute;
+  right:10px;
 }
 
 .box{
