@@ -57,10 +57,10 @@ HTMLDivElement.prototype.duplicate = function(newPar){
       newPar=this.scope
       hide=true
     }
-    // TODO: this isn't perfect - the colors won't change with deeper nesting
     let cols = this.colors//[this.style.backgroundColor,this.style.borderColor]
     let g = subBox(this.text,this.type,cols,["#DDD","#BBB"],false,newPar,hide)
     if(!this.isHole) g.defn = this.parentElement.parentElement // should be defn
+    g.scopeIndex=this.scopeIndex
     return g
   }
 
@@ -183,6 +183,7 @@ function subBox(text,type,cols,otherCols,isHole,parent,hide){
     // top level object
   }
   g.classList.add("box")
+  if(text=="ifThenElse"){}else
   if(text && (!isInfix(text) || isBase(type))){g.append(text)}
   g.type = type
   g.text = text
@@ -191,6 +192,7 @@ function subBox(text,type,cols,otherCols,isHole,parent,hide){
   while(!isBase(type)){
     assertEq(type.length,2)
     var [arg,type] = type
+    if(text=="ifThenElse"){g.append(["if"," then"," otherwise"][g.children.length])}
     let ch=subBox("",arg,otherCols,cols,!isHole,g)
     if(g.children.length==1 && text && isInfix(text)){g.append(text)}
   }
@@ -252,8 +254,8 @@ function makeDefn(text,type){
     node.isLHS=true
     if (node.parentElement===line.lhs){
       node.draggable = true
-      node.scope=line.rhs
-      node.colors=[opFill,opStroke]
+      node.scope = line.rhs
+      node.colors = [opFill,opStroke]
     }
     else{
       node.draggable = false

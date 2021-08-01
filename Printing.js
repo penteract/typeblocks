@@ -250,8 +250,8 @@ function buildTerm(g){
     }
     for(let node of g.childNodes){
       if(node.nodeType==Node.TEXT_NODE){
-        if (term.head) throw "More than 1 text node";
-        term.head=new Constant(node.textContent)
+        //if (term.head) throw "More than 1 text node";
+        if (! term.head) term.head=new Constant(node.textContent)
       }
       else{
         term.args.push(buildTerm(node))
