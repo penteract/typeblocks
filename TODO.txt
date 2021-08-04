@@ -39,9 +39,20 @@ let blocks
     //copying the subject (global scope)
     //copying arguments (scope limited to definition)
   pattern matching
-  //evaluation (single step)
-    animated (due to the need to recursively eliminate anonymous variables, this is not straightforward)
-    //builtins (integers)
+datatype declarations
+
+pane of known identifiers
+  tabs for different modules
+  should this include functions or datatypes defined in the current module?
+    should it be the only place datatype declarations are visible?
+
+//evaluation (single step)
+  animated (due to the need to recursively eliminate anonymous variables, this is not straightforward)
+  //builtins (integers)
+  efficient evaluation
+    when expressions are duplicated then reduced, track the
+      I think GHC Core does something with let blocks that might make sense here - let blocks allocate thunks
+        I don't think that translating programs to GHC Core would aid understanding
 
 Think about colors
   If a higher-order term occurs in an argument to a copy of itself identical one,
