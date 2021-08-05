@@ -41,7 +41,7 @@ let blocks
   pattern matching
 datatype declarations
 
-pane of known identifiers
+//pane of known identifiers
   tabs for different modules
   should this include functions or datatypes defined in the current module?
     should it be the only place datatype declarations are visible?

@@ -59,7 +59,7 @@ HTMLDivElement.prototype.duplicate = function(newPar){
     }
     let cols = this.colors//[this.style.backgroundColor,this.style.borderColor]
     let g = subBox(this.text,this.type,cols,["#DDD","#BBB"],false,newPar,hide)
-    if(!this.isHole) g.defn = this.parentElement.parentElement // should be defn
+    if(!this.isHole) g.defn = this.defn
     g.scopeIndex=this.scopeIndex
     return g
   }
@@ -264,6 +264,7 @@ function makeDefn(text,type){
   line.lhs.draggable = true
   line.lhs.scope = root
   line.lhs.colors=[fill,stroke]
+  line.lhs.defn=defn
 
   defn.draggable=true
   root.appendChild(defn)
@@ -412,6 +413,8 @@ Use the boxes at the top left to make a new definition with a particular type.
 </div>
 <div id="root">
 </div>
+<div id="imports">
+</div>
 <button id="reduceButton" onclick="reduce()">reduce</button>
 <div id="entry">
   <form id="newNode" action="" onsubmit="newDef(newNodeName.value,newNodeType.value);return false">
@@ -499,8 +502,19 @@ catch(e) {alert(e);throw e}//for debugging on mobile
 for (let k in builtins){
   ;[type,defn] = builtins[k]
   let parsedType=parseType(partition(type)[0])
-  let g = makeBox(k,parsedType)
-  g.defn=defn
+  //let g = makeBox(k,parsedType)
+  let c = Math.random()*360
+  let fill = [c,100,80] //hsluv.hsluvToHex([c,100,80]) //`hsl(${c},100%,50%)`
+  let stroke =  hsluv.hsluvToHex([c,50,50])//`hsl(${c},50%,70%)`
+  let g = subBox(k,parsedType,[fill,stroke],["#DDD","#BBB"],false,root)
+  g.colors = [fill,stroke]
+  imports.appendChild(g)
+  g.visit(n => {
+    n.isLHS=true
+    n.draggable = (n===g)
+  })
+  g.defn = defn
+
 }
 
 makeBox("1","Int").isConstructor=true

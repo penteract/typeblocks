@@ -13,7 +13,21 @@ I can't easily find a way to do all of these, so there's some code
 #root{
   position: absolute;
   width: 100%;
-  min-height: 100%;
+  height: 60%;
+  overflow-y: scroll;
+  overflow-x: auto;
+}
+#imports{
+  position: absolute;
+  width: 100%;
+  height: 40%;
+  bottom: 0px;
+  background: #EEE;
+  overflow-x: scroll;
+  writing-mode: vertical-lr;
+}
+#imports div{
+  writing-mode: horizontal-tb;
 }
 html,body{
   margin: 0px;
@@ -66,7 +80,7 @@ path{
   /*line-height: 0;*/
   /*font-size: 0;*/
   border-image-width: 5px;
-  border-image-repeat: repeat;
+  border-image-repeat: round;
   border-image-source: url(data:image/svg+xml;whatever);
   border-image-slice: 21%;
   /*border-image-outset: 0px;*/
