@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>TypeBlocks</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="../Parser.js">  </script>
+  <script src="../hsluv-0.1.0.min.js">  </script>
+
+<body>
+
+<div id="manual">
+<button class="invisible">reduce</button>  <br />
+Click and drag to move terms <br />
+Ctrl+click and drag to copy terms <br />
+Right click to delete nodes <br />
+Double click to force terms into holes or snap them out <br />
+Use the boxes at the top left to make a new definition with a particular type.
+</div>
+<svg id="root" viewBox="-10 -30 300 300" preserveAspectRatio="xMinYMin">
+<text id="testtext" fill="none" font-size="10"> hello </text>
+<g id="svg" pointer-events="bounding-box">
+ <rect x="-10000" y="-10000" width="20000" height="20000" fill="white" />
+ <!-- If I implement zooming out and this isn't big enough, that might get hard to debug.
+      The only reason I don't just use the svg is that that doesn't support .getCTM()-->
+</g>
+  <!--<rect x="0" y="0" width="100" height="100" fill="black" /> vb=0 0 200 10
+  <rect x="10" y="10" width="100" height="900" fill="red" />
+  <path d="M 0 0 L 100 100 L 100 10 Z" stroke="green" stroke-width="1" fill="none"/>
+  <rect x="0" y="0" width="3" height="3" fill="red" />-->
+  <!--"M 0 0 C 25 25  75 -25 100 0 Z"
+  <path d="M 0 0 L 40 0 A 10 10 0 1 1 40 0.001 L 100 0 L 50 50 Z"
+   stroke="green" stroke-width="1" fill-rule="evenodd"/>
+  <path d="M 20 20 L 100 100 L 100 20 Z M 40 30 L 90 80 L 90 30 Z"
+   stroke="green" stroke-width="1" fill="blue" fill-rule="evenodd" />-->
+</svg>
+<!--<div id="root">
+</div>-->
+<div id="imports">
+</div>
+<button id="reduceButton" onclick="reduce()">reduce</button>
+<div id="entry">
+  <form id="newNode" action="" onsubmit="newDef(newNodeName.value,newNodeType.value);return false">
+    <input id="newNodeName" placeholder="S"> :: <input id="newNodeType" placeholder="(a->b->c)->(a->b)->a->c">
+    <button type="submit" form="newNode">define</button>
+  </form>
+</div>
+<pre id="hsTerm"> _ code will go here when clicked on (TODO)</pre>
+</body>
+</html>
