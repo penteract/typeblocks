@@ -49,6 +49,8 @@ These are topologically sorted and freewidths are updated (bottom up), marking
 updated nodes as dirty. Dirty nodes are then redrawn top down, computing
 maxwidth and descending into dirty nodes and nodes for which
 overflow = max(0, freewidth-maxwidth) has changed since the last redraw
+(theorem: if n.overflow changes, then n.parentElement.dirty or
+n.parentElement.overflow changes)
 */
 
 // dirty is a list of nodes, each of which is moved or vacated
@@ -68,13 +70,13 @@ function redraw(dirty) {
         n.dirty -= 1
         return false
       }
-      if(n.filled){
-        n.freewidth=n.filled.freewidth
+      if (n.filled) {
+        n.freewidth = n.filled.freewidth
       }
-      else{
+      else {
         n.freewidth = PADDINGH * 2
-        for (let i = 0; i < n.children.length; i++) {
-          n.freewidth += n.children[i].freewidth + SPACINGH * (i > 0)
+        for (let i = 1; i < n.children.length; i++) {
+          n.freewidth += n.children[i].freewidth + SPACINGH * (i > 1)
         }
       }
       if (n.parentElement === svg) topNodes.append(n)
@@ -82,100 +84,89 @@ function redraw(dirty) {
     })
   }
   // Now descend, recomputing layouts
-  for(let t of topNodes){
+  for (let t of topNodes) {
     t.redraw(MAXWIDTH)
   }
 }
 
 
-  /*
-  To be called when a box has children added, removed, rearranged or resized
-  Returns true and redraws the box if it changes size,
-  Returns false otherwise
-  */
-  SVGGElement.prototype.childChanged = function(maxwidth) {
-    /*let overflow = Math.max(0, this.freewidth-maxwidth)
-    if (overflow == this.overflow && this.dirty==0){
-      return;
+/*
+Recomputes layout for a box if it needs updating. Descends into children where
+needed.
+*/
+SVGGElement.prototype.redraw = function(maxwidth) {
+  let overflow = Math.max(0, this.freewidth - maxwidth)
+  if (overflow == this.overflow && this.dirty == 0) {
+    return;
+  }
+  this.overflow = overflow
+  this.dirty = 0
+  if (this.filled) {
+    this.filled.redraw(maxwidth)
+    this.width = this.filled.width
+    this.height = this.filled.height
+    return;
+  }
+
+  // track the place that new things get put
+  let line = { "x": PADDINGH, "y": PADDINGV, "width": 0, "height": 0, "count": 0 }
+  let lines = []
+  let maxw = 0
+  // Add a finished line and set child positions
+  let chcount = 1
+  function pushline(l) {
+    lines.push(l)
+    if (maxw < l.width) maxw = l.width;
+    for (i = chcount; i < chcount + l.count; i++) {
+      let c = this.children[i]
+      c.y = l.y + ((l.height - height) / 2)
+      c.setPos()
     }
-    this.overflow = overflow
-    this.dirty = 0
-    if(this.filled){
-      this.filled.redraw(maxwidth)
-      this.width=this.filled.width
-      this.height=this.filled.height
-    }*/
+    chcount += l.count
+  }
 
-    // track the place that new things get put
-    let line = { "x": PADDINGH, "y": PADDINGV, "width": 0, "height": 0, "count": 0 }
-    let lines = []
-    let maxw = 0
-
-    for (let c of this.children) {
-      if (line.count > 0 && line.x + line.width + SPACINGH + c.width > this.maxwidth - PADDINGH) {
-        lines.push(line)
-        if (maxw < line.width) maxw = line.width;
-        line = {
-          "x": PADDINGH, "y": line.y + height + SPACINGV,
-          "width": c.width, "height": c.height, "count": 1
-        }
+  for (let c of this.children) if (c.nodeName.toLowerCase() != "path") {
+    if (c.redraw) c.redraw(maxwidth - 2 * PADDINGH)
+    if (line.count > 0 && line.x + line.width + SPACINGH + c.width > this.maxwidth - PADDINGH) {
+      pushline(line)
+      line = {
+        "x": PADDINGH, "y": line.y + line.height + SPACINGV,
+        "width": c.width, "height": c.height, "count": 1
       }
-      else {
-        line.width = line.width + SPACINGH * (line.count !== 0) + c.width
-        if (c.height > line.height) line.height = c.height
-        line.count += 1
-      }
+      c.x = PADDINGH
     }
-    if (line.count > 0) {
-      lines.push(line)
-      if (maxw < line.width) maxw = line.width;
+    else {
+      c.x = line.x + line.width + SPACINGH * (line.count !== 0)
+      line.width = c.x - line.x + c.width
+      if (c.height > line.height) line.height = c.height
+      line.count += 1
     }
-    this.lines = lines
-    let changed = false
-    let width = maxw + 2 * PADDINGH
-    if (this.width !== width) {//floating point comparison. It would be nice to avoid this
-      this.width = width
-      changed = true
-    }
-    let height = line.y + line.height + PADDINGV
-    if (this.height !== height) {//floating point comparison. It would be nice to avoid this
-      this.height = width
-      changed = true
-    }
-    if (changed) this.redraw()
-    return changed
   }
-  /*
-  Sets the maximum width of a box.
-  This should be called when a box is moved or its parent's maxwidth changes
-  Also called for initialisation.
-  Returns
-  */
-  SVGGElement.prototype.setWidth = function(maxwidth) {
-    maxwidth ??= MAXWIDTH
-  if (maxwidth === this.maxwidth || (this.width <= maxwidth && this.lines.length == 1)) {
-      this.maxwidth = maxwidth
-      return False
-    }
-    this.maxwidth = maxwidth
-    if (this.filled) {
-      this.filled.setWidth(maxwidth)
-      let ret = this.width === this.filled.width && this.height === this.filled.height
-      this.width = this.filled.width
-      this.height = this.filled.height
-      return ret
-    }
-    let subwidth = maxwidth - 2 * PADDINGH
-    for (let c of this.children) {
-      c.setWidth(subwidth)
-    }
+  if (line.count > 0) {
+    pushline(line)
+  }
+  this.lines = lines
+  let changed = false
+  let width = maxw + 2 * PADDINGH
+  if (this.width !== width) {//floating point comparison. It would be nice to avoid this
+    this.width = width
+    changed = true
+  }
+  let height = line.y + line.height + PADDINGV
+  if (this.height !== height) {//floating point comparison. It would be nice to avoid this
+    this.height = width
+    changed = true
+  }
+  if (changed) this.drawbox()
+}
 
-    return this.childChanged()
-  }
-
-  SVGTextElement.prototype.setWidth = function(maxwidth) {
-    this.width = this.getComputedTextLength()
-    this.height = 10 //TODO: pick the right value
-  }
-  SVGGElement.prototype.setPos = function(x, y) {
-  }
+SVGTextElement.prototype.setWidth = function(maxwidth) {
+  this.width = this.getComputedTextLength()
+  this.height = 10 //TODO: pick the right value
+}
+SVGGElement.prototype.setPos = function() {
+  this.setAttribute("transform", `translate(${this.x},${this.y})`)
+}
+SVGTextElement.prototype.setPos = function() {
+  this.setAttribute("transform", `translate(${this.x},${this.y})`)
+}
