@@ -6,7 +6,10 @@
   <link rel="stylesheet" href="styles.css">
   <script src="../Parser.js">  </script>
   <script src="../hsluv-0.1.0.min.js">  </script>
-
+  <script src="Drawing.js"></script>
+  <script src="Layout.js"></script>
+  <script src="Paths.js"></script>
+</head>
 <body>
 
 <div id="manual">
@@ -46,5 +49,45 @@ Use the boxes at the top left to make a new definition with a particular type.
   </form>
 </div>
 <pre id="hsTerm"> _ code will go here when clicked on (TODO)</pre>
+<script>
+function quick(n,type){
+  try{
+    var parsedType=parseType(partition(type)[0])
+  }
+  catch(e){alert (e); throw e}
+  makeBox(n,parsedType)
+}
+function getLength(txt){//TODO: sanitize
+  testtext.innerHTML=txt
+  return testtext.getComputedTextLength()
+}
+
+GAME="Event->GameState->GameState"
+GEGSTO="(${GAME})->Event->GameState->"
+RULE=`((${GAME})->${GAME})`
+
+/*
+quick("when",`(${GEGSTO}Bool)->${RULE}->${RULE}`)
+quick("cardIs",`(Card->Bool)->${GEGSTO}Bool`)
+quick("Eight",`Rank`)
+quick("rank","Card->Rank")
+quick("==","Rank->Rank->Bool")
+quick("skipNextTurn",`${RULE}`)*/
+
+// try{
+quick("map","(Int->Int)->ListInt->ListInt")
+quick("+","Int->Int->Int")
+quick("negate","Int->Int")
+quick("xs","ListInt")
+quick("5","Int")
+/*}
+catch(e) {alert(e);throw e}//for debugging on mobile*/
+
+for(let i=1; i<svg.children.length; i++){
+  svg.children[i].xPos=0
+  svg.children[i].yPos=i*25
+  svg.children[i].setPos()
+}
+</script>
 </body>
 </html>

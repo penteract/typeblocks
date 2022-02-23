@@ -16,6 +16,7 @@ I can't easily find a way to do all of these, so there's some code
   height: 60%;
   overflow-y: scroll;
   overflow-x: auto;
+  cursor: default;
 }
 #imports{
   position: absolute;
@@ -42,6 +43,8 @@ html,body{
 }
 path{
   stroke-width: 0.6;
+  /*fill:none;
+  stroke:red;*/
 }
 #hsTerm{
   position: absolute;
@@ -66,4 +69,10 @@ path{
 }
 .dragging{
   z-index: 10;
+}
+text{
+  font-size: 10px;
+  stroke:none;
+  fill:initial;
+
 }

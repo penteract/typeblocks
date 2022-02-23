@@ -79,7 +79,7 @@ function redraw(dirty) {
           n.freewidth += n.children[i].freewidth + SPACINGH * (i > 1)
         }
       }
-      if (n.parentElement === svg) topNodes.append(n)
+      if (n.parentElement === svg) topNodes.push(n)
       return true
     })
   }
@@ -114,12 +114,13 @@ SVGGElement.prototype.redraw = function(maxwidth) {
   let maxw = 0
   // Add a finished line and set child positions
   let chcount = 1
+  let cur = this
   function pushline(l) {
     lines.push(l)
     if (maxw < l.width) maxw = l.width;
-    for (i = chcount; i < chcount + l.count; i++) {
-      let c = this.children[i]
-      c.y = l.y + ((l.height - height) / 2)
+    for (let i = chcount; i < chcount + l.count; i++) {
+      let c = cur.children[i]
+      c.yPos = l.y + ((l.height - c.height) / 2)
       c.setPos()
     }
     chcount += l.count
@@ -133,11 +134,11 @@ SVGGElement.prototype.redraw = function(maxwidth) {
         "x": PADDINGH, "y": line.y + line.height + SPACINGV,
         "width": c.width, "height": c.height, "count": 1
       }
-      c.x = PADDINGH
+      c.xPos = PADDINGH
     }
     else {
-      c.x = line.x + line.width + SPACINGH * (line.count !== 0)
-      line.width = c.x - line.x + c.width
+      c.xPos = line.x + line.width + SPACINGH * (line.count !== 0)
+      line.width = c.xPos - line.x + c.width
       if (c.height > line.height) line.height = c.height
       line.count += 1
     }
@@ -154,10 +155,10 @@ SVGGElement.prototype.redraw = function(maxwidth) {
   }
   let height = line.y + line.height + PADDINGV
   if (this.height !== height) {//floating point comparison. It would be nice to avoid this
-    this.height = width
+    this.height = height
     changed = true
   }
-  if (changed) this.drawbox()
+  if (changed) this.drawBox()
 }
 
 SVGTextElement.prototype.setWidth = function(maxwidth) {
@@ -165,8 +166,8 @@ SVGTextElement.prototype.setWidth = function(maxwidth) {
   this.height = 10 //TODO: pick the right value
 }
 SVGGElement.prototype.setPos = function() {
-  this.setAttribute("transform", `translate(${this.x},${this.y})`)
+  this.setAttribute("transform", `translate(${this.xPos},${this.yPos})`)
 }
 SVGTextElement.prototype.setPos = function() {
-  this.setAttribute("transform", `translate(${this.x},${this.y})`)
+  this.setAttribute("transform", `translate(${this.xPos},${this.yPos + 8})`)
 }
