@@ -32,7 +32,7 @@ I can't easily find a way to do all of these, so there's some code
 html,body{
   margin: 0px;
   padding:0px;
-  /* overflow:hidden; */
+  overflow:hidden;
 }
 .hidden{
   display: none;
@@ -53,11 +53,13 @@ path{
 }
 #manual{
   position:absolute;
-  right:5px;
+  right:0px;
   text-align:right;
   max-width:50%;
   color:grey;
   pointer-events: none;
+  overflow-y: scroll;
+  padding-right: 5px;
 }
 #reduceButton{
   position:absolute;
