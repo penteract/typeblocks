@@ -2,11 +2,14 @@
 /*
 Graphics related properties of a box:
 
-width: the width of the box as computed by the last call to childChanged
+freewidth: the width a box would be without line wrapping
+
+width: the width of the box as computed by the last call to redraw
 height: the height of the box ...
 lines: tracks the locations of the child nodes, wrapped into lines. A list of
   line objects which track the top left of the line (x and y),
   its size (width and height) and the number of nodes on the line (count)
+xPos,yPos: the top left corner of a box
 
 cols: the fill and border color of the box
 baseType: determines the shape of the box

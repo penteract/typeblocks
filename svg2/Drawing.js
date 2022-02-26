@@ -77,5 +77,6 @@ function makeBox(text, type) {
   return g
 }
 SVGGElement.prototype.drawBox = function() {
-  this.children[0].setAttribute("d", `M 0 0 h ${this.width} v ${this.height} h ${-this.width} Z`)
+  //this.children[0].setAttribute("d", `M 0 0 h ${this.width} v ${this.height} h ${-this.width} Z`)
+  this.children[0].setAttribute("d", simplePath(0, 0, this.width, this.height, this.baseType))
 }
