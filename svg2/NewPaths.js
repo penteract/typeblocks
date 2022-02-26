@@ -18,9 +18,9 @@ border graphics should be contained within the border region.
 
 
 relevant constants from Layout.js:┌
-const PADDINGH = 5
-const PADDINGV = 5
-font size is 10
+const PADDINGH = 8
+const PADDINGV = 8
+font size is 16
 
 
 Assumptions:

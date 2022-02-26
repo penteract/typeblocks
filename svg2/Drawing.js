@@ -5,7 +5,7 @@ SVGGElement.prototype.addText = function(text) {
   let txt = document.createElementNS(SVGNS, "text")
   txt.innerHTML = text
   txt.freewidth = txt.width = getLength(text)
-  txt.height = 10
+  txt.height = 16
   this.appendChild(txt)
 }
 let dirty = []
@@ -72,7 +72,7 @@ function makeBox(text, type) {
   let fill = [c, 100, 80] //hsluv.hsluvToHex([c,100,80]) //`hsl(${c},100%,50%)`
   let stroke = hsluv.hsluvToHex([c, 50, 50])//`hsl(${c},50%,70%)`
   dirty = []
-  let g = subBox(text, type, [fill, stroke], ["#DDD", "#BBB"], false, svg)
+  let g = subBox(text, type, [fill, stroke], ["#DDD", "#0004"], false, svg)
   redraw(dirty)
   return g
 }

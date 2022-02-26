@@ -16,8 +16,8 @@ baseType: determines the shape of the box
 
 */
 
-const MAXWIDTH = 400
-const SPACINGH = 5
+const MAXWIDTH = 640
+const SPACINGH = 8
 const PADDINGH = SPACINGH
 
 const SPACINGV = SPACINGH
@@ -166,11 +166,11 @@ SVGGElement.prototype.redraw = function(maxwidth) {
 
 SVGTextElement.prototype.setWidth = function(maxwidth) {
   this.width = this.getComputedTextLength()
-  this.height = 10 //TODO: pick the right value
+  this.height = PADDINGV * 2 //TODO: pick the right value
 }
 SVGGElement.prototype.setPos = function() {
   this.setAttribute("transform", `translate(${this.xPos},${this.yPos})`)
 }
 SVGTextElement.prototype.setPos = function() {
-  this.setAttribute("transform", `translate(${this.xPos},${this.yPos + 8})`)
+  this.setAttribute("transform", `translate(${this.xPos},${this.yPos + 12.8})`)
 }
