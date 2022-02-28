@@ -118,6 +118,7 @@ const shapes = [point, lump, square, ssym, tsym, tsym2, tsym3, csym]
 Should I use a shorter lisp-like syntax?
 "(L (-4 0) L (0 4) L (4 0)"
 "(L (-4 0) A (scale 4 4) 0 0 1 (4 0))"
+Better idea: actually parse svg paths and transform them intelligently
 */
 
 // Corner description:
@@ -126,6 +127,7 @@ Should I use a shorter lisp-like syntax?
 const corner = ["L", [0, -4], "L", [0, 0], "L", [4, 0]]
 const circled = ["L", [0, -4], "A", ["scale", 4, 4], "0 1 1", [4, 0]]
 const rounded = ["L", [0, -4], "A", ["scale", 4, 4], "0 0 1", [4, 0]]
+const cornershapes = [corner, circled, rounded]
 
 
 function simplePath(x, y, width, height, type) {
@@ -178,7 +180,7 @@ function mkCor(p1, p2, scale, type) {
   let dir = [[0.5, -0.5], [0.5, 0.5]].mm(p2.sub(p1))
   let midpoint = p2.sub(dir)
   dir = dir.div(norm(dir))
-  return followPath(corner, midpoint, dir, scale)
+  return followPath(cornershapes[0 | Math.random() * cornershapes.length], midpoint, dir, scale)
 }
 
 /*
