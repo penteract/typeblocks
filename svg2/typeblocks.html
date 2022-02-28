@@ -7,7 +7,7 @@
   <script src="../Parser.js">  </script>
   <script src="../hsluv-0.1.0.min.js">  </script>
   <script src="Utils.js"></script>
-  <script src="Paths.js"></script>
+  <script src="NewPaths.js"></script>
   <script src="Drawing.js"></script>
   <script src="Layout.js"></script>
 </head>
@@ -44,7 +44,7 @@ Use the boxes at the top left to make a new definition with a particular type.
 </div>
 <button id="reduceButton" onclick="reduce()">reduce</button>
 <div id="entry">
-  <form id="newNode" action="" onsubmit="newDef(newNodeName.value,newNodeType.value);return false">
+  <form id="newNode" action="" onsubmit="quick(newNodeName.value,newNodeType.value);return false">
     <input id="newNodeName" placeholder="S"> :: <input id="newNodeType" placeholder="(a->b->c)->(a->b)->a->c">
     <button type="submit" form="newNode">define</button>
   </form>

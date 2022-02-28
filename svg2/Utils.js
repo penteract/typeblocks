@@ -81,3 +81,15 @@ function isNearPerfectMatch(shape, hole) {
   }
   return pairs
 }
+
+Array.prototype.mul = function(x) { return this.map(y => y * x) }
+Array.prototype.div = function(x) { return this.map(y => y / x) }
+Array.prototype.add = function(v) { return this.map((y, i) => y + v[i]) }
+Array.prototype.sub = function(v) { return this.map((y, i) => y - v[i]) }
+Array.prototype.norm = function() { return Math.sqrt(this.reduce((a, b) => a + b * b, 0)) }
+function norm(v) {
+  return Math.sqrt(v.reduce((a, b) => a + b * b, 0))
+}
+Array.prototype.mm = function(v) {
+  return (this.map(row => row.map((x, i) => x * v[i]).reduce((a, b) => a + b, 0)))
+}
