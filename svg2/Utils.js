@@ -90,6 +90,12 @@ Array.prototype.norm = function() { return Math.sqrt(this.reduce((a, b) => a + b
 function norm(v) {
   return Math.sqrt(v.reduce((a, b) => a + b * b, 0))
 }
-Array.prototype.mm = function(v) {
-  return (this.map(row => row.map((x, i) => x * v[i]).reduce((a, b) => a + b, 0)))
+function det2(m) {// determinant of 2x2 matrix
+  return m[0][0] * m[1][1] - m[0][1] * m[1][0]
+}
+Array.prototype.mcol = function(v) {
+  return this.map(row => row.map((x, i) => x * v[i]).reduce((a, b) => a + b, 0))
+}
+Array.prototype.mm = function(m) {
+  return this.map(row => m[0].map((_, j) => row.map((x, i) => x * m[i][j]).reduce((a, b) => a + b, 0)))
 }

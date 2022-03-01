@@ -89,30 +89,21 @@ Procedural generation
 // path may be scaled
 
 function sym(halfpath) {
-  let front = ["L", [-4, 0]]
-  let back = [["L", [4, 0]]]
-  for (let instr of halfpath) {
-    let backpart = []
-    for (let i of instr) {
-      front.push(i)
-      if (Array.isArray(i) && i[0] != "scale") backpart.push(i.mul(-1))
-      else backpart.push(i)
-    }
-    back.push(backpart)
-  }
-  return front.concat(...back.reverse())
+  let p = parsePath("L -4 0 " + halfpath)
+  return parsePath(unparse(p) + " " + unparse(transformPath(flip(p), [[-1, 0, 0], [0, -1, 0]])))
 }
 
-const point = ["L", [-4, 0], "L", [0, -4], "L", [4, 0]]
-const lump = ["L", [-4, 0], "A", ["scale", 4, 4], "0 0 1", [4, 0]]
-const square = ["L", [-2, 0], "L", [-2, -4], "L", [2, -4], "L", [2, 0]]
-const ssym = sym([["L", [-4, -4]], ["L", [0, -4]]])
-const tsym = sym([["L", [-4, -4]]])
-const tsym2 = sym([["L", [0, -4]]])
-const tsym3 = sym([["L", [-2, -4]]])
-const csym = ["L", [-4, 0], "A", ["scale", 2, 4], "0 0 1", [0, 0], "A", ["scale", 2, 4], "0 0 0", [4, 0]]
+const point = parsePath("L -4 0 L 0 -4 L 4 0")
+const lump = parsePath("L -4 0 A 4 4 0 0 1 4 0")
+const square = parsePath("L -2 0 L -2 -4 L 2 -4 L 2 0")
+const ssym = sym("L -4 -4 L 0 -4")
+const tsym = sym("L -4 -4")
+const tsym2 = sym("L 0 -4")
+const tsym3 = sym("L -2 -4")
+const csym = parsePath("L -4 0 A 2 4 0 0 1 0 0 A 2 4 0 0 0 4 0")
 //sym([["A", ["scale", 2, 4], " 0 0 1 ", [0, 0]]])
-const shapes = [point, lump, square, ssym, tsym, tsym2, tsym3, csym]
+const down = parsePath("L -4 4 L 4 4")
+const shapes = [point, lump, square, csym, down, ssym, tsym, tsym2, tsym3]
 
 /*
 Should I use a shorter lisp-like syntax?
@@ -124,10 +115,12 @@ Better idea: actually parse svg paths and transform them intelligently
 // Corner description:
 // corners go from 0,4 to 4,0 not leaving the box -4,-4 -- 4,4
 
-const corner = ["L", [0, 4], "L", [0, 0], "L", [4, 0]]
-const circled = ["L", [0, 4], "A", ["scale", 4, 4], "0 1 1", [4, 0]]
-const rounded = ["L", [0, 4], "A", ["scale", 4, 4], "0 0 1", [4, 0]]
-const cornershapes = [corner, circled, rounded]
+const corner = parsePath("L 0 4 L 0 0 L 4 0")
+const circled = parsePath("L 0 4 A 4 4 0 1 1 4 0")
+const rounded = parsePath("L 0 4 A 4 4 0 0 1 4 0")
+const indent = parsePath("L 0 4 A 4 4 0 0 0 4 0")
+const stair = parsePath("L 0 4 L 4 4 L 4 0")
+const cornershapes = [corner, circled, indent, stair]
 
 
 function simplePath(x, y, width, height, type) {
@@ -173,35 +166,19 @@ function mkEdge(p1, p2, scale, type) {
   let midpoint = p1.add(p2).div(2)
   let dir = p2.sub(p1)
   dir = dir.div(norm(dir))
-  return followPath(shapes[0 | (Math.random() * shapes.length)], midpoint, dir, scale) + "L" + p2
+  return unparse(transformPath(shapes[0 | (Math.random() * shapes.length)], toMatrix(midpoint, dir, scale))) + "L" + p2
   //return "L" + p2
 }
 function mkCor(p1, p2, scale, type) {
-  let dir = [[0.5, -0.5], [0.5, 0.5]].mm(p2.sub(p1))
+  let dir = [[0.5, -0.5], [0.5, 0.5]].mcol(p2.sub(p1))
   let midpoint = p2.sub(dir)
   dir = dir.div(norm(dir))
-  return followPath(cornershapes[0 | Math.random() * cornershapes.length], midpoint, dir, scale)
+  return unparse(transformPath(cornershapes[0 | Math.random() * cornershapes.length], toMatrix(midpoint, dir, scale)))
 }
-
-/*
-*/
-function followPath(shape, translate, rotate, scale) {
-  let [dx, dy] = rotate.mul(scale)
-  let mat = [
+function toMatrix(translate, direction, scale) {
+  let [dx, dy] = direction.div(norm(direction)).mul(scale)
+  return [
     [dx, -dy, translate[0]],
     [dy, dx, translate[1]]
   ]
-  let pts = []
-  for (let p of shape) {
-    if (Array.isArray(p)) {
-      if (p[0] === "scale") {
-        let vec = p.slice(1).concat([0])
-        pts.push(mat.mm(vec).join(" "))
-      } else {
-        pts.push(mat.mm(p.concat([1])).join(" "))
-      }
-    }
-    else pts.push(p)
-  }
-  return pts.join(" ")
 }
