@@ -1,5 +1,4 @@
 "use strict";
-
 /*
 
 PADDINGH
@@ -84,15 +83,14 @@ Procedural generation
     - Nothing looks broken; it all scales reasonably
 */
 
-// Path description format:
+
+// Edge description format:
 // describe a path from -4,0 to 4,0 not leaving the box -4,-4 -- 4,4 which could be the top edge for a box
 // path may be scaled
-
 function sym(halfpath) {
   let p = parsePath("L -4 0 " + halfpath)
   return parsePath(unparse(p) + " " + unparse(transformPath(flip(p), [[-1, 0, 0], [0, -1, 0]])))
 }
-
 const point = parsePath("L -4 0 L 0 -4 L 4 0")
 const lump = parsePath("L -4 0 A 4 4 0 0 1 4 0")
 const square = parsePath("L -2 0 L -2 -4 L 2 -4 L 2 0")
@@ -101,16 +99,9 @@ const tsym = sym("L -4 -4")
 const tsym2 = sym("L 0 -4")
 const tsym3 = sym("L -2 -4")
 const csym = parsePath("L -4 0 A 2 4 0 0 1 0 0 A 2 4 0 0 0 4 0")
-//sym([["A", ["scale", 2, 4], " 0 0 1 ", [0, 0]]])
 const down = parsePath("L -4 4 L 4 4")
 const shapes = [point, lump, square, csym, down, ssym, tsym, tsym2, tsym3]
 
-/*
-Should I use a shorter lisp-like syntax?
-"(L (-4 0) L (0 4) L (4 0)"
-"(L (-4 0) A (scale 4 4) 0 0 1 (4 0))"
-Better idea: actually parse svg paths and transform them intelligently
-*/
 
 // Corner description:
 // corners go from 0,4 to 4,0 not leaving the box -4,-4 -- 4,4
@@ -124,9 +115,6 @@ const cornershapes = [corner, circled, indent, stair]
 
 
 function simplePath(x, y, width, height, type) {
-  /*let hscale = Math.min(width, PADDINGH * 4) / (PADDINGH * 4)  //scale for hoizontal edges
-  let vscale = Math.min(height, PADDINGV * 4) / (PADDINGV * 4) //scale for vertical edges
-  let cornerScale = Math.min(hscale, vscale)*/
   const MORESPACING = true
   let scale = Math.min(width, height, PADDINGH * 3) / (PADDINGH * 3)
   if (MORESPACING) scale = Math.min(width, height, PADDINGH * 4) / (PADDINGH * 4)
@@ -167,7 +155,6 @@ function mkEdge(p1, p2, scale, type) {
   let dir = p2.sub(p1)
   dir = dir.div(norm(dir))
   return unparse(transformPath(shapes[0 | (Math.random() * shapes.length)], toMatrix(midpoint, dir, scale))) + "L" + p2
-  //return "L" + p2
 }
 function mkCor(p1, p2, scale, type) {
   let dir = [[0.5, -0.5], [0.5, 0.5]].mcol(p2.sub(p1))
