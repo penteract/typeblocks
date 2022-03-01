@@ -103,13 +103,13 @@ function sym(halfpath) {
   return front.concat(...back.reverse())
 }
 
-const point = ["L", [-4, 0], "L", [0, 4], "L", [4, 0]]
+const point = ["L", [-4, 0], "L", [0, -4], "L", [4, 0]]
 const lump = ["L", [-4, 0], "A", ["scale", 4, 4], "0 0 1", [4, 0]]
-const square = ["L", [-2, 0], "L", [-2, 4], "L", [2, 4], "L", [2, 0]]
-const ssym = sym([["L", [-4, 4]], ["L", [0, 4]]])
-const tsym = sym([["L", [-4, 4]]])
-const tsym2 = sym([["L", [0, 4]]])
-const tsym3 = sym([["L", [-2, 4]]])
+const square = ["L", [-2, 0], "L", [-2, -4], "L", [2, -4], "L", [2, 0]]
+const ssym = sym([["L", [-4, -4]], ["L", [0, -4]]])
+const tsym = sym([["L", [-4, -4]]])
+const tsym2 = sym([["L", [0, -4]]])
+const tsym3 = sym([["L", [-2, -4]]])
 const csym = ["L", [-4, 0], "A", ["scale", 2, 4], "0 0 1", [0, 0], "A", ["scale", 2, 4], "0 0 0", [4, 0]]
 //sym([["A", ["scale", 2, 4], " 0 0 1 ", [0, 0]]])
 const shapes = [point, lump, square, ssym, tsym, tsym2, tsym3, csym]
@@ -122,11 +122,11 @@ Better idea: actually parse svg paths and transform them intelligently
 */
 
 // Corner description:
-// corners go from 0,-4 to 4,0 not leaving the box -4,-4 -- 4,4
+// corners go from 0,4 to 4,0 not leaving the box -4,-4 -- 4,4
 
-const corner = ["L", [0, -4], "L", [0, 0], "L", [4, 0]]
-const circled = ["L", [0, -4], "A", ["scale", 4, 4], "0 1 1", [4, 0]]
-const rounded = ["L", [0, -4], "A", ["scale", 4, 4], "0 0 1", [4, 0]]
+const corner = ["L", [0, 4], "L", [0, 0], "L", [4, 0]]
+const circled = ["L", [0, 4], "A", ["scale", 4, 4], "0 1 1", [4, 0]]
+const rounded = ["L", [0, 4], "A", ["scale", 4, 4], "0 0 1", [4, 0]]
 const cornershapes = [corner, circled, rounded]
 
 
@@ -188,8 +188,8 @@ function mkCor(p1, p2, scale, type) {
 function followPath(shape, translate, rotate, scale) {
   let [dx, dy] = rotate.mul(scale)
   let mat = [
-    [dx, dy, translate[0]],
-    [dy, -dx, translate[1]]
+    [dx, -dy, translate[0]],
+    [dy, dx, translate[1]]
   ]
   let pts = []
   for (let p of shape) {
