@@ -16,26 +16,13 @@ baseType: determines the shape of the box
 
 */
 
-const MAXWIDTH = 640
+const MAXWIDTH = 480
 const SPACINGH = 8
 const PADDINGH = SPACINGH
 
 const SPACINGV = SPACINGH
 const PADDINGV = SPACINGV
 
-
-SVGGElement.prototype.boxes = function*() {
-  for (let c of this.children) {
-    if (c.nodeName === this.nodeName) {
-      yield c;
-    }
-  }
-}
-SVGGElement.prototype.ascend = function(f) {
-  if (this !== svg && f(this)) {
-    this.parentElement.ascend(f)
-  }
-}
 
 
 /*
@@ -131,7 +118,7 @@ SVGGElement.prototype.redraw = function(maxwidth) {
 
   for (let c of this.children) if (c.nodeName.toLowerCase() != "path") {
     if (c.redraw) c.redraw(maxwidth - 2 * PADDINGH)
-    if (line.count > 0 && line.x + line.width + SPACINGH + c.width > this.maxwidth - PADDINGH) {
+    if (line.count > 0 && line.x + line.width + SPACINGH + c.width > maxwidth - PADDINGH) {
       pushline(line)
       line = {
         "x": PADDINGH, "y": line.y + line.height + SPACINGV,

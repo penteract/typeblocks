@@ -149,18 +149,20 @@ function simplePath(x, y, width, height, type) {
   }
   return path + " Z"
 }
-//Make an edge clockwises
+//Make an edge from p1 to p2 clockwise
 function mkEdge(p1, p2, scale, type) {
+  let path = shapes[hash(type) % shapes.length]
   let midpoint = p1.add(p2).div(2)
   let dir = p2.sub(p1)
   dir = dir.div(norm(dir))
-  return unparse(transformPath(shapes[0 | (Math.random() * shapes.length)], toMatrix(midpoint, dir, scale))) + "L" + p2
+  return unparse(transformPath(path, toMatrix(midpoint, dir, scale))) + "L" + p2
 }
 function mkCor(p1, p2, scale, type) {
+  let path = corner//cornershapes[0 | (Math.random() * cornershapes.length)]
   let dir = [[0.5, -0.5], [0.5, 0.5]].mcol(p2.sub(p1))
   let midpoint = p2.sub(dir)
   dir = dir.div(norm(dir))
-  return unparse(transformPath(cornershapes[0 | Math.random() * cornershapes.length], toMatrix(midpoint, dir, scale)))
+  return unparse(transformPath(path, toMatrix(midpoint, dir, scale)))
 }
 function toMatrix(translate, direction, scale) {
   let [dx, dy] = direction.div(norm(direction)).mul(scale)
