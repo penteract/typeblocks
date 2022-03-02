@@ -92,6 +92,7 @@ SVGGElement.prototype.redraw = function(maxwidth) {
   this.overflow = overflow
   this.dirty = 0
   if (this.filled) {
+    //TODO: make sure the hole becomes invisible
     this.filled.redraw(maxwidth)
     this.width = this.filled.width
     this.height = this.filled.height
@@ -160,4 +161,8 @@ SVGGElement.prototype.setPos = function() {
 }
 SVGTextElement.prototype.setPos = function() {
   this.setAttribute("transform", `translate(${this.xPos},${this.yPos + 12.8})`)
+}
+
+SVGGElement.prototype.drawBox = function() {
+  this.children[0].setAttribute("d", simplePath(0, 0, this.width, this.height, this.baseType))
 }

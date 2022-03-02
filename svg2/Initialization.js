@@ -1,13 +1,16 @@
 const SVGNS = "http://www.w3.org/2000/svg"
 
-// Add a text node during box construction
-SVGGElement.prototype.addText = function(text) {
-  let txt = document.createElementNS(SVGNS, "text")
-  txt.innerHTML = text
-  txt.freewidth = txt.width = getLength(text)
-  txt.height = 16
-  this.appendChild(txt)
+// Initialization
+function makeBox(text, type) {
+  let c = Math.random() * 360
+  let fill = [c, 100, 80] //hsluv.hsluvToHex([c,100,80]) //`hsl(${c},100%,50%)`
+  let stroke = hsluv.hsluvToHex([c, 50, 50])//`hsl(${c},50%,70%)`
+  dirty = []
+  let g = subBox(text, type, [fill, stroke], ["#DDD", "#0004"], false, svg)
+  redraw(dirty)
+  return g
 }
+
 let dirty = []
 function subBox(text, type, cols, otherCols, isHole, parent) {
   let [fill, stroke] = cols
@@ -44,16 +47,12 @@ function subBox(text, type, cols, otherCols, isHole, parent) {
   //Appearance
   g.style.fill = fill
   g.style.stroke = stroke
-  //g.style.borderImageSource = `url(data:image/svg+xml;base64,${btoa(borderSVG(type, fill, stroke))})`
-  //g.setxy(0, 0)
   if (!g.isHole) {
     g.draggable = true
   }
   if (typeof cols[0] != "string") {
     cols[0][2] += 5 //restore mutated value
   }
-  // Warning: borderImage is buggy in firefox in various ways.
-  // Consider reconstructing svg whenever the box's dimensions change
 
   //Structure
   g.scope = parent
@@ -66,17 +65,12 @@ function subBox(text, type, cols, otherCols, isHole, parent) {
   dirty.push(g)
   return g
 }
-//const everything=[]
-function makeBox(text, type) {
-  let c = Math.random() * 360
-  let fill = [c, 100, 80] //hsluv.hsluvToHex([c,100,80]) //`hsl(${c},100%,50%)`
-  let stroke = hsluv.hsluvToHex([c, 50, 50])//`hsl(${c},50%,70%)`
-  dirty = []
-  let g = subBox(text, type, [fill, stroke], ["#DDD", "#0004"], false, svg)
-  redraw(dirty)
-  return g
-}
-SVGGElement.prototype.drawBox = function() {
-  //this.children[0].setAttribute("d", `M 0 0 h ${this.width} v ${this.height} h ${-this.width} Z`)
-  this.children[0].setAttribute("d", simplePath(0, 0, this.width, this.height, this.baseType))
+
+// Add a text node during box construction
+SVGGElement.prototype.addText = function(text) {
+  let txt = document.createElementNS(SVGNS, "text")
+  txt.innerHTML = text
+  txt.freewidth = txt.width = getLength(text)
+  txt.height = 16
+  this.appendChild(txt)
 }
