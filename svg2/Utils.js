@@ -30,6 +30,18 @@ Array.prototype.mm = function(m) {
 }
 
 // Project Specific
+SVGGElement.prototype.getClientXY = function() {
+  let m = this.parentElement.getCTM()
+  return [this.xPos * m.a + this.yPos * m.c + m.e, this.xPos * m.b + this.yPos * m.d + m.f]
+}
+SVGGElement.prototype.setClientXY = function(x, y) {
+  let m = this.parentElement.getCTM().inverse()
+  this.setPos(x * m.a + y * m.c + m.e, x * m.b + y * m.d + m.f)
+}
+SVGGElement.prototype.changeClientXY = function(dx, dy) {
+  let m = this.parentElement.getCTM().inverse()
+  this.setPos(this.xPos + dx * m.a + dy * m.c, this.yPos + dx * m.b + dy * m.d)
+}
 
 function isArg(g) {
   return g.parentElement.filled === g
@@ -46,7 +58,7 @@ SVGGElement.prototype.boxes = function*() {
   }
 }
 SVGGElement.prototype.ascend = function(f) {
-  if (this !== svg && f(this)) {
+  if (this !== root && f(this)) {
     this.parentElement.ascend(f)
   }
 }

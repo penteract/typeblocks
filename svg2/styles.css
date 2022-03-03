@@ -1,4 +1,5 @@
 /*
+TODO: update comment (now using an svg, not divs)
 We want the following properties for the root (div) element:
 It should always fill the backgroud  (and register as the target of
   drop events when there's nothing above it).
@@ -10,7 +11,7 @@ If the elements inside do not extend below the screen,
 I can't easily find a way to do all of these, so there's some code
  which redirects drops on the backgroud to the root
 */
-#root{
+svg{
   position: absolute;
   width: 100%;
   height: 60%;

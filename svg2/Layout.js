@@ -28,7 +28,7 @@ const PADDINGV = SPACINGV
 /*
 redrawing process:
 while dragging, the layout should not shift
-  a temporary node gets added to the svg, and other nodes may change appearence
+  a temporary node gets added to the root, and other nodes may change appearence
   (eg become invisible) but may not change shape.
 upon release, the user action (move, copy, delete) gets processed and results in
 a change to the structure of the syntax tree. This change is completed before
@@ -69,7 +69,7 @@ function redraw(dirty) {
           n.freewidth += n.children[i].freewidth + SPACINGH * (i > 1)
         }
       }
-      if (n.parentElement === svg) topNodes.push(n)
+      if (n.parentElement === root) topNodes.push(n)
       return true
     })
   }
@@ -156,10 +156,20 @@ SVGTextElement.prototype.setWidth = function(maxwidth) {
   this.width = this.getComputedTextLength()
   this.height = PADDINGV * 2 //TODO: pick the right value
 }
-SVGGElement.prototype.setPos = function() {
+SVGGElement.prototype.setPos = function(x, y) {
+  if (x !== undefined) {
+    if (y === undefined) throw "0 or 2 arguments expected"
+    this.xPos = x
+    this.yPos = y
+  }
   this.setAttribute("transform", `translate(${this.xPos},${this.yPos})`)
 }
-SVGTextElement.prototype.setPos = function() {
+SVGTextElement.prototype.setPos = function(x, y) {
+  if (x !== undefined) {
+    if (y === undefined) throw "0 or 2 arguments expected"
+    this.xPos = x
+    this.yPos = y
+  }
   this.setAttribute("transform", `translate(${this.xPos},${this.yPos + 12.8})`)
 }
 

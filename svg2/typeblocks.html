@@ -23,9 +23,9 @@ Right click to delete nodes <br />
 Double click to force terms into holes or snap them out <br />
 Use the boxes at the top left to make a new definition with a particular type.
 </div>
-<svg id="root" viewBox="-10 -30 480 480" preserveAspectRatio="xMinYMin">
+<svg viewBox="-10 -30 480 480" preserveAspectRatio="xMinYMin">
 <text id="testtext" fill="none" font-size="16"> hello </text>
-<g id="svg" pointer-events="bounding-box">
+<g id="root" pointer-events="bounding-box">
  <rect x="-10000" y="-10000" width="20000" height="20000" fill="white" />
  <!-- If I implement zooming out and this isn't big enough, that might get hard to debug.
       The only reason I don't just use the svg is that that doesn't support .getCTM()-->
@@ -52,6 +52,8 @@ Use the boxes at the top left to make a new definition with a particular type.
   </form>
 </div>
 <pre id="hsTerm"> _ code will go here when clicked on (TODO)</pre>
+
+<script src="Events.js"></script><!-- Needs to be loaded after 'root' is created, but before any boxes are created -->
 <script>
 function quick(n,type){
   try{
@@ -86,10 +88,8 @@ quick("5","Int")
 /*}
 catch(e) {alert(e);throw e}//for debugging on mobile*/
 
-for(let i=1; i<svg.children.length; i++){
-  svg.children[i].xPos=0
-  svg.children[i].yPos=i*25
-  svg.children[i].setPos()
+for(let i=1; i<root.children.length; i++){
+  root.children[i].setPos(0,i*25)
 }
 </script>
 </body>
