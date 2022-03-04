@@ -42,6 +42,12 @@ html,body{
 .invisible{
   visibility: hidden;
 }
+.filled>g{ /*make other things in filled holes invisible*/
+  visibility: hidden;
+}
+.filled>.filling{
+  visibility: inherit;
+}
 path{
   stroke-width: 0.96;
   /*fill:none;

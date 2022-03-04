@@ -48,18 +48,19 @@ function redraw(dirty) {
   // begin by counting the number of dirty children so we can do this properly
   for (let d of dirty) {
     d.ascend(function(n) {
-      n.dirty += 1
-      return n.dirty == 1;// go up if it's the first time we've visited this node
+      n.dirt += 1
+      return n.dirt == 1;// go up if it's the first time we've visited this node
     })
   }
   // Now visit dirty nodes once each in topological order (bottom up) to determine free widths
   let topNodes = []
   for (let d of dirty) {
     d.ascend(function(n) {
-      if (n.dirty > 1) {
-        n.dirty -= 1
+      n.dirt -= 1
+      if (n.dirt > 0) {
         return false
       }
+      n.dirty = true
       if (n.filled) {
         n.freewidth = n.filled.freewidth
       }
@@ -86,70 +87,70 @@ needed.
 */
 SVGGElement.prototype.redraw = function(maxwidth) {
   let overflow = Math.max(0, this.freewidth - maxwidth)
-  if (overflow == this.overflow && this.dirty == 0) {
+  if (overflow == this.overflow && !this.dirty) {
     return;
   }
   this.overflow = overflow
-  this.dirty = 0
+  this.dirty = false
+  let boxSizeChanged = false
+  let newWidth, newHeight
   if (this.filled) {
-    //TODO: make sure the hole becomes invisible
     this.filled.redraw(maxwidth)
-    this.width = this.filled.width
-    this.height = this.filled.height
-    return;
-  }
-
-  // track the place that new things get put
-  let line = { "x": PADDINGH, "y": PADDINGV, "width": 0, "height": 0, "count": 0 }
-  let lines = []
-  let maxw = 0
-  // Add a finished line and set child positions
-  let chcount = 1
-  let cur = this
-  function pushline(l) {
-    lines.push(l)
-    if (maxw < l.width) maxw = l.width;
-    for (let i = chcount; i < chcount + l.count; i++) {
-      let c = cur.children[i]
-      c.yPos = l.y + ((l.height - c.height) / 2)
-      c.setPos()
-    }
-    chcount += l.count
-  }
-
-  for (let c of this.children) if (c.nodeName.toLowerCase() != "path") {
-    if (c.redraw) c.redraw(maxwidth - 2 * PADDINGH)
-    if (line.count > 0 && line.x + line.width + SPACINGH + c.width > maxwidth - PADDINGH) {
-      pushline(line)
-      line = {
-        "x": PADDINGH, "y": line.y + line.height + SPACINGV,
-        "width": c.width, "height": c.height, "count": 1
+    this.filled.setPos(0, 0)
+    newWidth = this.filled.width
+    newHeight = this.filled.height
+  } else {
+    // track the place that new things get put
+    let line = { "x": PADDINGH, "y": PADDINGV, "width": 0, "height": 0, "count": 0 }
+    let lines = []
+    let maxw = 0
+    // Add a finished line and set child positions
+    let chcount = 1
+    let cur = this
+    function pushline(l) {
+      lines.push(l)
+      if (maxw < l.width) maxw = l.width;
+      for (let i = chcount; i < chcount + l.count; i++) {
+        let c = cur.children[i]
+        c.yPos = l.y + ((l.height - c.height) / 2)
+        c.setPos()
       }
-      c.xPos = PADDINGH
+      chcount += l.count
     }
-    else {
-      c.xPos = line.x + line.width + SPACINGH * (line.count !== 0)
-      line.width = c.xPos - line.x + c.width
-      if (c.height > line.height) line.height = c.height
-      line.count += 1
+
+    for (let c of this.children) if (c.nodeName.toLowerCase() != "path") {
+      if (c.redraw) c.redraw(maxwidth - 2 * PADDINGH)
+      if (line.count > 0 && line.x + line.width + SPACINGH + c.width > maxwidth - PADDINGH) {
+        pushline(line)
+        line = {
+          "x": PADDINGH, "y": line.y + line.height + SPACINGV,
+          "width": c.width, "height": c.height, "count": 1
+        }
+        c.xPos = PADDINGH
+      }
+      else {
+        c.xPos = line.x + line.width + SPACINGH * (line.count !== 0)
+        line.width = c.xPos - line.x + c.width
+        if (c.height > line.height) line.height = c.height
+        line.count += 1
+      }
     }
+    if (line.count > 0) {
+      pushline(line)
+    }
+    this.lines = lines
+    newWidth = maxw + 2 * PADDINGH
+    newHeight = line.y + line.height + PADDINGV
   }
-  if (line.count > 0) {
-    pushline(line)
+  if (this.width !== newWidth) {//floating point comparison. It would be nice to avoid this
+    this.width = newWidth
+    boxSizeChanged = true
   }
-  this.lines = lines
-  let changed = false
-  let width = maxw + 2 * PADDINGH
-  if (this.width !== width) {//floating point comparison. It would be nice to avoid this
-    this.width = width
-    changed = true
+  if (this.height !== newHeight) {//floating point comparison. It would be nice to avoid this
+    this.height = newHeight
+    boxSizeChanged = true
   }
-  let height = line.y + line.height + PADDINGV
-  if (this.height !== height) {//floating point comparison. It would be nice to avoid this
-    this.height = height
-    changed = true
-  }
-  if (changed) this.drawBox()
+  if (boxSizeChanged) this.drawBox()
 }
 
 SVGTextElement.prototype.setWidth = function(maxwidth) {
@@ -175,4 +176,22 @@ SVGTextElement.prototype.setPos = function(x, y) {
 
 SVGGElement.prototype.drawBox = function() {
   this.children[0].setAttribute("d", simplePath(0, 0, this.width, this.height, this.baseType))
+}
+
+// Return the node  before which something at (x,y) should be inserted
+// If it should be inserted at the end, return null
+function getInsertLocation(hole, x, y) {
+  let chIndex = 1 // Ignore first child which should be the path
+  for (let line of hole.lines) {
+    if (chIndex > hole.children.length) return null
+    if (y < line.y) return hole.children[chIndex]
+    if (y < line.y + line.height)
+      for (let i = chIndex; i < chIndex + line.count; i++) {
+        let c = hole.children[i]
+        if (x < c.xPos + c.width / 2) return c
+      }
+    chIndex += line.count
+  }
+  return null
+
 }

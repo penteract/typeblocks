@@ -29,10 +29,20 @@ Array.prototype.mm = function(m) {
   return this.map(row => m[0].map((_, j) => row.map((x, i) => x * m[i][j]).reduce((a, b) => a + b, 0)))
 }
 
+const SVGNS = "http://www.w3.org/2000/svg"
+
+function createSVGElement(tag) {
+  return document.createElementNS(SVGNS, tag)
+}
+
 // Project Specific
 SVGGElement.prototype.getClientXY = function() {
   let m = this.parentElement.getCTM()
   return [this.xPos * m.a + this.yPos * m.c + m.e, this.xPos * m.b + this.yPos * m.d + m.f]
+}
+SVGGElement.prototype.toLocalCoords = function(x, y) {
+  let m = this.getCTM().inverse()
+  return [x * m.a + y * m.c + m.e, x * m.b + y * m.d + m.f]
 }
 SVGGElement.prototype.setClientXY = function(x, y) {
   let m = this.parentElement.getCTM().inverse()

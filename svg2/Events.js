@@ -1,8 +1,9 @@
 "use strict";
 // Event handlers
 var dragging = false
-var draggingData = undefined
+var original = undefined // the box which was duplicated to make 'dragging'
 var position = undefined
+var copying = undefined
 function startDrag(target) {
   return function(e) {
     let g = target
@@ -16,18 +17,17 @@ function startDrag(target) {
       position = [e.x, e.y]
       //console.log(e)
       if (dragging === false) {
-        // TODO: sort out duplication properly (always duplicate and conditionally hide)
-        if (e.ctrlKey) {
-          g = g.duplicate()
+        dragging = g.duplicate()
+        original = g
+        copying = e.ctrlKey
+        if (!copying) {
+          g.classList.add("invisible")
         }
-        dragging = g
-        // svg2 z-index not yet implemented in firefox
-        // If it was, this would be much easier
-        draggingData = [g.parentElement, g.nextSibling, dragging.getClientXY()]
-
-        g.classList.add("dragging")
-        root.appendChild(g)
-        g.setClientXY(...draggingData[2])
+        root.parentElement.style.cursor = copying ? "copy" : "grabbing"
+        dragging.classList.add("dragging")
+        root.appendChild(dragging)
+        // TODO: find a cleaner way to allow top-level terms to move freely
+        dragging.setClientXY(...g.getClientXY())
       }
       else console.log("spurious", g, e)
     }
@@ -59,6 +59,19 @@ function drag(e) {
   //}catch(e){alert(e);throw e}
   //else console.log("spurious move",g)
 }
+function checkCtrl(e) {
+  if (dragging) {
+    if (copying != e.ctrlKey) {
+      copying = e.ctrlKey
+      if (copying) {
+        original.classList.remove("invisible")
+      } else {
+        original.classList.add("invisible")
+      }
+      root.parentElement.style.cursor = copying ? "copy" : "grabbing"
+    }
+  }
+}
 function endDrag(e) {
   //try{
   if (e.touches) {
@@ -67,20 +80,37 @@ function endDrag(e) {
   }
   //console.log("main",e)
   if (dragging) {
-    dragging.classList.remove("dragging")
-    dragging.classList.add("hidden")
-    var over = document.elementFromPoint(e.x, e.y)
-    dragging.classList.remove("hidden")
-    var moved = false
-    draggingData[0].insertBefore(dragging, draggingData[1])
-    if (over) {
-      //TODO: check if the node was occupying a hole and if so,
-      //check if it should snap back and if not, redraw the hole it came from
-      var slot = over.parentElement
-      moved = false // dragInto(dragging, slot)
+    original.classList.remove("invisible")
+    root.parentElement.style.cursor = ""
+    let savedPos = undefined
+    if (e.ctrlKey) {
+      // put it in the right place (ensures scopes are valid)
+      original.parentElement.insertBefore(dragging, original)
+      dragging.classList.remove("dragging")
     }
-    if (!moved && draggingData[0] !== root) {
-      dragging.setClientXY(...draggingData[2])
+    else {
+      // we don't need a copy, move the original
+      savedPos = [dragging.xPos, dragging.yPos]
+      original.setPos()
+      dragging.remove()
+      dragging = original
+    }
+    dragging.classList.add("hidden")
+    let over = document.elementFromPoint(e.x, e.y)
+    dragging.classList.remove("hidden")
+    if (over) {
+      let slot = over.parentElement
+      let success = dragInto(dragging, slot, [e.x, e.y], e.ctrlKey ? "copy" : "move")
+      if (!success && e.ctrlKey) {
+        dragging.delete()
+      }
+      else if (savedPos && dragging.parentElement === root && slot === root) {
+        dragging.setPos(...savedPos)
+      }
+      redraw(dirty)
+      dirty = []
+    } else {
+      console.log("Not over anything")
     }
     dragging = false
   }
@@ -93,9 +123,12 @@ root.addEventListener("mousemove", drag)
 root.addEventListener("touchmove", drag)
 root.addEventListener("mouseup", endDrag)
 root.addEventListener("touchend", endDrag)
-root.addEventListener("mouseleave", endDrag)
+//root.addEventListener("mouseleave", endDrag)
 // I'm sorry for doing this - I only want to supress context menu when the right
 // click is deleting something, but the mousedown handler won't let me do that
 // and the context menu handler doesn't run for the element that's deleted.
 root.addEventListener("contextmenu", hideMenu)
+
+document.addEventListener("keydown", checkCtrl)
+document.addEventListener("keyup", checkCtrl)
 
