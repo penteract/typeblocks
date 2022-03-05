@@ -32,9 +32,11 @@ function startDrag(target) {
       else console.log("spurious", g, e)
     }
     if (e.button === 2) {
-      e.preventDefault()
-      e.stopPropagation()
-      g.delete()
+      if (!dragging) {
+        e.preventDefault()
+        e.stopPropagation()
+        g.delete()
+      }
       //Why do none of these prevent the contextmenu event?
       return false
     }
@@ -73,11 +75,15 @@ function checkCtrl(e) {
   }
 }
 function endDrag(e) {
+  console.log(e.button, e.buttons, e)
+
   //try{
   if (e.touches) {
     e.x = e.changedTouches[0].clientX
     e.y = e.changedTouches[0].clientY
   }
+  //if it's not a touch event, only end the drag if the left mouse button was the one released
+  else if (e.button !== 0) return;
   //console.log("main",e)
   if (dragging) {
     original.classList.remove("invisible")
@@ -102,7 +108,7 @@ function endDrag(e) {
       let slot = over.parentElement
       let success = dragInto(dragging, slot, [e.x, e.y], e.ctrlKey ? "copy" : "move")
       if (!success && e.ctrlKey) {
-        dragging.delete()
+        dragging.remove()
       }
       else if (savedPos && dragging.parentElement === root && slot === root) {
         dragging.setPos(...savedPos)
