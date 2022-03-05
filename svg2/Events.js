@@ -36,6 +36,8 @@ function startDrag(target) {
         e.preventDefault()
         e.stopPropagation()
         g.delete()
+        redraw(dirty)
+        dirty = []
       }
       //Why do none of these prevent the contextmenu event?
       return false
@@ -75,8 +77,6 @@ function checkCtrl(e) {
   }
 }
 function endDrag(e) {
-  console.log(e.button, e.buttons, e)
-
   //try{
   if (e.touches) {
     e.x = e.changedTouches[0].clientX
@@ -115,6 +115,13 @@ function endDrag(e) {
       }
       redraw(dirty)
       dirty = []
+      // print the term that the dragged thing is part of
+      let top = undefined
+      if (dragging.parentElement) {
+        dragging.ascend(n => top = n)
+        console.log(top)
+        hsTerm.innerText = printReduced(top)
+      }
     } else {
       console.log("Not over anything")
     }
