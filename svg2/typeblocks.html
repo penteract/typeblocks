@@ -10,6 +10,7 @@
   <script src="PathTransform.js"></script>
   <script src="NewPaths.js"></script>
   <script src="Initialization.js"></script>
+  <script src="Multiplicity.js"></script>
   <script src="Layout.js"></script>
   <script src="Actions.js"></script>
   <script src="Printing.js"></script>
@@ -48,7 +49,7 @@ Use the boxes at the top left to make a new definition with a particular type.
 </div>
 <button id="reduceButton" onclick="reduce()">reduce</button>
 <div id="entry">
-  <form id="newNode" action="" onsubmit="quick(newNodeName.value,newNodeType.value);return false">
+  <form id="newNode" action="" onsubmit="makeDefn(newNodeName.value,parseType(partition(newNodeType.value)[0]));return false">
     <input id="newNodeName" placeholder="S"> :: <input id="newNodeType" placeholder="(a->b->c)->(a->b)->a->c">
     <button type="submit" form="newNode">define</button>
   </form>

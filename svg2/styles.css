@@ -88,3 +88,11 @@ text{
 g:hover>path{
   stroke-width:1.5;
 }
+.defn{
+  fill: white;
+  stroke:black;
+}
+.line{
+  fill:none;
+  stroke:none;
+}

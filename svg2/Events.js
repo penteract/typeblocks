@@ -17,10 +17,10 @@ function startDrag(target) {
       position = [e.x, e.y]
       //console.log(e)
       if (dragging === false) {
-        dragging = g.duplicate()
+        copying = g.isLHS || (e.ctrlKey && !isDefn(g))
+        dragging = isDefn(g) ? g : g.duplicate()
         original = g
-        copying = e.ctrlKey
-        if (!copying) {
+        if (!copying && !isDefn(g)) {
           g.classList.add("invisible")
         }
         root.parentElement.style.cursor = copying ? "copy" : "grabbing"
@@ -65,8 +65,9 @@ function drag(e) {
 }
 function checkCtrl(e) {
   if (dragging) {
-    if (copying != e.ctrlKey) {
-      copying = e.ctrlKey
+    let newCopying = original.isLHS || (e.ctrlKey && !isDefn(dragging))
+    if (copying != newCopying) {
+      copying = newCopying
       if (copying) {
         original.classList.remove("invisible")
       } else {
@@ -89,7 +90,11 @@ function endDrag(e) {
     original.classList.remove("invisible")
     root.parentElement.style.cursor = ""
     let savedPos = undefined
-    if (e.ctrlKey) {
+    copying = original.isLHS || (e.ctrlKey && !isDefn(dragging))
+    if (isDefn(dragging)) {
+      dragging.classList.remove("dragging")
+    }
+    else if (copying) {
       // put it in the right place (ensures scopes are valid)
       original.parentElement.insertBefore(dragging, original)
       dragging.classList.remove("dragging")
@@ -106,21 +111,23 @@ function endDrag(e) {
     dragging.classList.remove("hidden")
     if (over) {
       let slot = over.parentElement
-      let success = dragInto(dragging, slot, [e.x, e.y], e.ctrlKey ? "copy" : "move")
-      if (!success && e.ctrlKey) {
-        dragging.remove()
+      if (!isDefn(dragging)) {
+        let success = dragInto(dragging, slot, [e.x, e.y], copying ? "copy" : "move")
+        if (!success && copying) {
+          dragging.remove()
+        }
+        else if (savedPos && dragging.parentElement === root && slot === root) {
+          dragging.setPos(...savedPos)
+        }
+        redraw(dirty)
+        dirty = []
+        // print the term that the dragged thing is part of
       }
-      else if (savedPos && dragging.parentElement === root && slot === root) {
-        dragging.setPos(...savedPos)
-      }
-      redraw(dirty)
-      dirty = []
-      // print the term that the dragged thing is part of
       let top = undefined
       if (dragging.parentElement) {
         dragging.ascend(n => top = n)
         console.log(top)
-        hsTerm.innerText = printReduced(top)
+        hsTerm.innerText = printTerm(top)
       }
     } else {
       console.log("Not over anything")

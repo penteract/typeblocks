@@ -99,6 +99,19 @@ SVGGElement.prototype.redraw = function(maxwidth) {
     this.filled.setPos(0, 0)
     newWidth = this.filled.width
     newHeight = this.filled.height
+  } else if (isDefn(this)) {
+    let y = PADDINGV
+    let maxw = 0
+    for (let line of this.boxes()) {
+      line.redraw(maxwidth - 2 * PADDINGH)
+      if (line.width > maxw) maxw = line.width
+      line.setPos(PADDINGH, y)
+      y += line.height + PADDINGV
+    }
+    newWidth = maxw + 2 * PADDINGH
+    newHeight = y + PADDINGV
+    this.baseType = " defn "
+    //this.drawBox()
   } else {
     // track the place that new things get put
     let line = { "x": PADDINGH, "y": PADDINGV, "width": 0, "height": 0, "count": 0 }

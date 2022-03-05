@@ -72,7 +72,10 @@ SVGGElement.prototype.ascend = function(f) {
     this.parentElement.ascend(f)
   }
 }
-
+SVGGElement.prototype.visit = function(f) {
+  f(this)
+  for (let c of this.boxes()) c.visit(f)
+}
 
 //Type stuff
 //Strong match: exact match

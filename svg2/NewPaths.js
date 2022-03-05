@@ -91,6 +91,7 @@ function sym(halfpath) {
   let p = parsePath("L -4 0 " + halfpath)
   return parsePath(unparse(p) + " " + unparse(transformPath(flip(p), [[-1, 0, 0], [0, -1, 0]])))
 }
+const straightEdge = parsePath("L -4 0 L 4 0")
 const point = parsePath("L -4 0 L 0 -4 L 4 0")
 const lump = parsePath("L -4 0 A 4 4 0 0 1 4 0")
 const square = parsePath("L -2 0 L -2 -4 L 2 -4 L 2 0")
@@ -152,6 +153,9 @@ function simplePath(x, y, width, height, type) {
 //Make an edge from p1 to p2 clockwise
 function mkEdge(p1, p2, scale, type) {
   let path = shapes[hash(type) % shapes.length]
+  if (type == " defn ") {
+    path = straightEdge
+  }
   let midpoint = p1.add(p2).div(2)
   let dir = p2.sub(p1)
   dir = dir.div(norm(dir))
