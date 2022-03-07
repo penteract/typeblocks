@@ -69,12 +69,14 @@ SVGGElement.prototype.boxes = function*() {
 }
 SVGGElement.prototype.ascend = function(f) {
   if (this !== root && f(this)) {
+    if (this.parentElement === null) console.log(this)
     this.parentElement.ascend(f)
   }
 }
 SVGGElement.prototype.visit = function(f) {
   f(this)
-  for (let c of this.boxes()) c.visit(f)
+  let subNodes = [...this.boxes()]
+  for (let c of subNodes) c.visit(f)
 }
 
 //Type stuff

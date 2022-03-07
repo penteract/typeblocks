@@ -46,6 +46,7 @@ n.parentElement.overflow changes)
 // dirty is a list of nodes, each of which is moved or vacated
 function redraw(dirty) {
   // begin by counting the number of dirty children so we can do this properly
+  dirty = dirty.filter(n => !n.toBeDeleted)
   for (let d of dirty) {
     d.ascend(function(n) {
       n.dirt += 1

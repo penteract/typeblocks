@@ -87,7 +87,7 @@ function subBox(text, type, cols, otherCols, isHole, parent, noDrag) {
     var [arg, type] = type
     if (text == "ifThenElse") { g.addText(["if", " then", " otherwise"][numOwned]) }
     let ch = subBox("", arg, otherCols, cols, !isHole, g, noDrag)
-    ch.scopeIndex = numOwned++
+    ch.scopeIndex = numOwned++ // For indexing into g.mapsto during evaluation
     if (g.children.length == 2 && text && isInfix(text)) { g.addText(text) }
   }
   g.baseType = type

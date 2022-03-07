@@ -4,17 +4,6 @@
   <meta charset="utf-8">
   <title>TypeBlocks</title>
   <link rel="stylesheet" href="styles.css">
-  <script src="../Parser.js">  </script>
-  <script src="../hsluv-0.1.0.min.js">  </script>
-  <script src="Utils.js"></script>
-  <script src="PathTransform.js"></script>
-  <script src="NewPaths.js"></script>
-  <script src="Initialization.js"></script>
-  <script src="Multiplicity.js"></script>
-  <script src="Layout.js"></script>
-  <script src="Actions.js"></script>
-  <script src="Printing.js"></script>
-  <script src="Tests.js"></script>
 </head>
 <body>
 
@@ -29,7 +18,7 @@ Use the boxes at the top left to make a new definition with a particular type.
 <svg viewBox="-10 -30 480 480" preserveAspectRatio="xMinYMin">
 <text id="testtext" fill="none" font-size="16"> hello </text>
 <g id="root" pointer-events="bounding-box">
- <rect x="-10000" y="-10000" width="20000" height="20000" fill="white" />
+ <rect x="-10000" y="-10000" width="20000" height="20000" fill="#FFF0" />
  <!-- If I implement zooming out and this isn't big enough, that might get hard to debug.
       The only reason I don't just use the svg is that that doesn't support .getCTM()-->
 </g>
@@ -55,15 +44,37 @@ Use the boxes at the top left to make a new definition with a particular type.
   </form>
 </div>
 <pre id="hsTerm"> _ code will go here when clicked on (TODO)</pre>
+<script src="../Parser.js">  </script>
+<script src="../hsluv-0.1.0.min.js">  </script>
+<script src="Utils.js"></script>
+<script src="Initialization.js"></script>
 
+    <script src="PathTransform.js"></script>
+  <script src="NewPaths.js"></script>
+<script src="Layout.js"></script>
+
+  <script src="Multiplicity.js"></script>
+  <script src="Actions.js"></script>
 <script src="Events.js"></script><!-- Needs to be loaded after 'root' is created, but before any boxes are created -->
+
+<script src="Printing.js"></script>
+
+  <script src="../Builtins.js"></script>
+<script src="Evaluation.js"></script>
+
+<script src="Tests.js"></script>
+
 <script>
 // If the line below isn't needed, why does everyone use document.getElementById?
 //root=document.getElementById("root")
 
 root.filled=true //Not true, but we don't want anything to think it can become the global argument
 root.isHole=true
-
+function getLength(txt){//TODO: sanitize
+  testtext.innerHTML=txt
+  return testtext.getComputedTextLength()
+}
+/*
 function quick(n,type){
   try{
     var parsedType=parseType(partition(type)[0])
@@ -71,35 +82,88 @@ function quick(n,type){
   catch(e){alert (e); throw e}
   makeBox(n,parsedType)
 }
-function getLength(txt){//TODO: sanitize
-  testtext.innerHTML=txt
-  return testtext.getComputedTextLength()
-}
 
 GAME="Event->GameState->GameState"
 GEGSTO="(${GAME})->Event->GameState->"
 RULE=`((${GAME})->${GAME})`
 
-/*
 quick("when",`(${GEGSTO}Bool)->${RULE}->${RULE}`)
 quick("cardIs",`(Card->Bool)->${GEGSTO}Bool`)
 quick("Eight",`Rank`)
 quick("rank","Card->Rank")
 quick("==","Rank->Rank->Bool")
-quick("skipNextTurn",`${RULE}`)*/
+quick("skipNextTurn",`${RULE}`)
 
-// try{
 quick("map","(Int->Int)->ListInt->ListInt")
 quick("+","Int->Int->Int")
 quick("negate","Int->Int")
 quick("xs","ListInt")
 quick("5","Int")
-/*}
-catch(e) {alert(e);throw e}//for debugging on mobile*/
-
-for(let i=1; i<root.children.length; i++){
-  root.children[i].setPos(0,i*25)
+*/
+function newDef(n,type){
+  //try{
+    var parsedType=parseType(partition(type)[0])
+    return makeDefn(n,parsedType)
+  /*}
+  catch(e){alert (e); throw e}
+  return makeDefn(n,parsedType)*/
 }
+//try{
+  let d = newDef("thrice","(Int->Int)->Int->Int")
+  let r = d.children[1].rhs
+  let f1 = r.children[1]
+  let f2 = f1.duplicate()
+  let f3 = f1.duplicate()
+  function putIn (a,b){
+    makeFloating(a,b.children[1])
+    fillOrUnfill(a)
+  }
+  putIn(r.children[2],f1)
+  putIn(f1,f2)
+  putIn(f2,f3)
+  fillOrUnfill(f3)/*
+}
+catch(e) {alert(e);throw e}//for debugging on mobile
+*/
+
+function reduce(){
+  console.log("reduce")
+  let ch = root.children
+  let n = root.children.length-1
+  while(n>0 && isDefn(ch[n])){
+    n-=1
+  }
+  if (n<=0) return;
+  console.log("starting")
+  ch[n].evl((x)=>false)
+  redraw(dirty)
+  dirty=[]
+}
+
+for (let k in builtins){
+  ;[type,defn] = builtins[k]
+  let parsedType=parseType(partition(type)[0])
+  //let g = makeBox(k,parsedType)
+  let c = Math.random()*360
+  let fill = [c,100,80] //hsluv.hsluvToHex([c,100,80]) //`hsl(${c},100%,50%)`
+  let stroke =  hsluv.hsluvToHex([c,50,50])//`hsl(${c},50%,70%)`
+  let g = makeBox(k,parsedType,[fill,stroke],["#DDD","#BBB"],false,root)
+  //g.colors = [fill,stroke]
+  g.defn = defn
+  root.appendChild(g)
+  /*
+  g.visit(n => {
+    n.isLHS=true
+    n.draggable = (n===g)
+  })*/
+
+}
+makeBox("1","Int").isConstructor=true
+for(let i=1; i<root.children.length; i++){
+  root.children[i].setPos(0,((i-1)*35))
+}
+let p = newDef("F","Int->Int")
+
 </script>
 </body>
 </html>
