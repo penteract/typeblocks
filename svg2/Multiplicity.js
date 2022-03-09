@@ -6,18 +6,14 @@ Without using these methods, all terms constructed would be linear
 
 SVGGElement.prototype.duplicate = function(newPar) {
   if (this.isLHS) {// just make a brand new box with the right type, colors and scope
-    // TODO : check
-    //let hide = false
     if (newPar === undefined) {
       newPar = this.scope
-      //hide = true
     }
     let cols = [this.style.fill, this.style.stroke]
     let g = subBox(this.text, this.type, cols, ["#DDD", "#BBB"], false, newPar)
     if (!this.isHole) g.defn = this.defn
     g.scopeIndex = this.scopeIndex
-    redraw(dirty)
-    dirty = []
+    redrawDirty()
     return g
   }
 

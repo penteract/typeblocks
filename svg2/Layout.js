@@ -42,9 +42,9 @@ overflow = max(0, freewidth-maxwidth) has changed since the last redraw
 (theorem: if n.overflow changes, then n.parentElement.dirty or
 n.parentElement.overflow changes)
 */
-
+let dirty = []
 // dirty is a list of nodes, each of which is moved or vacated
-function redraw(dirty) {
+function redrawDirty() {
   // begin by counting the number of dirty children so we can do this properly
   dirty = dirty.filter(n => !n.toBeDeleted)
   for (let d of dirty) {
@@ -79,6 +79,7 @@ function redraw(dirty) {
   for (let t of topNodes) {
     t.redraw(MAXWIDTH)
   }
+  dirty = []
 }
 
 

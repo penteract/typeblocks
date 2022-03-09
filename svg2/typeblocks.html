@@ -136,8 +136,7 @@ function reduce(){
   if (n<=0) return;
   console.log("starting")
   ch[n].evl((x)=>false)
-  redraw(dirty)
-  dirty=[]
+  redrawDirty()
 }
 
 for (let k in builtins){

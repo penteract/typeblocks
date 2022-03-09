@@ -36,8 +36,7 @@ function startDrag(target) {
         e.preventDefault()
         e.stopPropagation()
         g.delete()
-        redraw(dirty)
-        dirty = []
+        redrawDirty()
       }
       //Why do none of these prevent the contextmenu event?
       return false
@@ -119,8 +118,7 @@ function endDrag(e) {
         else if (savedPos && dragging.parentElement === root && slot === root) {
           dragging.setPos(...savedPos)
         }
-        redraw(dirty)
-        dirty = []
+        redrawDirty()
         // print the term that the dragged thing is part of
       }
       let top = undefined

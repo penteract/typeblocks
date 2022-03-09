@@ -40,8 +40,7 @@ function makeDefn(text, type) {
   defn.scope = root
   root.appendChild(defn)
   defn.setPos(0, 0)
-  redraw(dirty)
-  dirty = []
+  redrawDirty()
 
   return defn
 }
@@ -51,13 +50,11 @@ function makeBox(text, type) {
   let fill = [c, 100, 80] //hsluv.hsluvToHex([c,100,80]) //`hsl(${c},100%,50%)`
   let stroke = hsluv.hsluvToHex([c, 50, 50])//`hsl(${c},50%,70%)`
   let g = subBox(text, type, [fill, stroke], ["#DDD", "#0004"], false, root)
-  redraw(dirty)
-  dirty = []
+  redrawDirty()
   g.setPos(0, 0)
   return g
 }
 
-let dirty = []
 function subBox(text, type, cols, otherCols, isHole, parent, noDrag) {
   let [fill, stroke] = cols
   let g = createSVGElement("g")
