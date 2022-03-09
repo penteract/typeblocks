@@ -110,7 +110,7 @@ SVGGElement.prototype.redraw = function(maxwidth) {
       y += line.height + PADDINGV
     }
     newWidth = maxw + 2 * PADDINGH
-    newHeight = y + PADDINGV
+    newHeight = y
     this.baseType = " defn "
     //this.drawBox()
   } else {
