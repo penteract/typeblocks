@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<!--For testing SVG construction techniques -->
+<head>
+  <meta charset="utf-8">
+  <title>SVGTEST</title>
+
+  <style>
+/*svg{
+  position:fixed;
+  width: 100%;
+  height: 100%;
+  cursor: default;
+}
+html,body{
+  margin: 0px;
+  padding:0px;
+  // overflow:hidden;
+}*/
+</style>
+</head>
+<body>
+<br />
+  <svg id="svg" viewBox="0 0 400 400" width="900px" height="900px" >
+  <g>
+    <path d="M 10 10 C 10 10 10 10 10 10 L 20 20 L 0 20 " stroke=red fill=black>
+      <!--<animate id=anim attributeName="d" repeatCount="indefinite"
+      values = "M 10 10 C 0 20 0 20 40 20; M 10 10 C 40 20 40 20 0 20; M 40 20 C 0 20 0 20 10 10"
+      dur="3s" />-->
+    </path>
+  </g>
+  <g>
+    <path id="snd" d="M 10 10 L 20 20 L 0 20 " stroke=red fill=none>
+    </path>
+  </g>
+  <g>
+    <path id="thrd" d="M 10 10 L 20 20 L 0 20 " stroke=blue fill=none>
+      <animate id=anim2 attributeName="d" repeatCount="indefinite"
+      dur="3s" />
+    </path>
+      <path id="frth" d="M 10 10 L 20 20 L 0 20 " stroke=green fill=none>
+        <animate id=anim3 attributeName="d" repeatCount="indefinite"
+        dur="3s" />
+      </path>
+  </g>
+  </svg>
+  <script src="../svg2/Utils.js"></script>
+  <script src="../svg2/PathTransform.js"></script>
+  <script src="../svg2/NewPaths.js"></script>
+  <script type="text/javascript">
+// Theoretical function that would describe the ideal path over time
+// -4<x<4
+const Λ=3
+function wave(x,t){
+  return 4*Math.sin(x/Λ*(2*Math.PI)-t)*Math.sin((x+4)/8*Math.PI)**2 // t may be multiplied by wave speed, and a phase adjusting constant may be added
+  //sin(t)**2 = 1-cos(2*t)/2
+  //==4*Math.sin(x/Λ*(2*Math.PI)+t)*(1-Math.cos((x+4)/4*Math.PI)/2)
+}
+// d wave(x,t) / dx
+function dwave(x,t){
+  let a = 4*Math.cos(x/Λ*(2*Math.PI)-t)*((1-Math.cos((x+4)/4*Math.PI))/2)/Λ*(2*Math.PI)
+  +       4*Math.sin(x/Λ*(2*Math.PI)-t)*(Math.sin((x+4)/4*Math.PI)/2)/4*Math.PI
+  return a
+}
+
+
+//0.7
+//4.1
+//7.0
+//10.1
+//13.0
+
+
+function zeros(t){// The values of x for which wave(x,t) is zero
+  // x*Λ*(2*Math.PI)-t is an integer multiple of PI
+  // x*2/Λ-t/Math.PI is an integer (n)
+  // x = (n+t/Math.PI)*Λ/2
+  t/=Math.PI
+  let result = []
+  let minn = (-4*2/Λ-t)|0
+  let n = minn
+  while (n<=4*2/Λ-t){
+    let x = (n+t)*Λ/2
+    if(x>3.99){
+      break;
+    }
+    if (x<-3.99){
+      minn+=1
+    }
+    else{
+      result.push(x)
+    }
+    n += 1
+  }
+  return [result,minn,n]
+}
+let pz = zeros(0)
+let p2pi = zeros(2*Math.PI)
+function wavePath(t){
+  // 0<t<2*Math.PI
+  // maximum number of points at the start/end: 3
+  path = "L -4 0"
+  zs = zeros(t)
+
+  for(let i=0; i < zs[1]-pz[1]+2; i++){
+    path += " C -4 0 -4 0 -4 0"
+  }
+  function mkGrad(x0,x1){
+    // return a control point between x0 and x1 (they should both be zeros of wave(x,t))(closer to x0)
+    let Δx = x1-x0
+    let ymid = wave(x0+Δx/3,t)
+    let dy = dwave(x0,t)
+    let dx
+    if (Math.abs(dy)<0.001) dx = Δx/2
+    else dx = (ymid*1.5)/dy
+    if (Math.abs(dx)>Math.abs(Δx)/2) dx=Δx/2
+    return [x0+dx, dy*dx]
+  }
+  let z0 = zs[0][0]
+  path += ` C ${(z0+4)/2-4} 0`
+  let prevx =-4
+  let i=0
+  let zi = zs[0][i]
+  zs[0].push(4)
+  while (i<zs[0].length-1){
+    let [dx,dy] = mkGrad(zi,prevx)
+    path+=` ${dx} ${dy} ${zi} 0`
+    prevx =zi
+    zi = zs[0][++i]
+    ;[dx,dy] = mkGrad(prevx,zi)
+    path += ` C ${dx} ${dy}`
+  }
+  path+=` ${(prevx-4)/2+4} 0 4 0`
+  for(let i=0; i < pz[2]-zs[2]; i++){
+    path += " C 4 0 4 0 4 0"
+  }
+  return path
+}
+let pths = ""
+for (i=0;i<=2*Math.PI+0.001;i+=2*Math.PI/8){
+  let w = wavePath(i)
+  pths+= "M 0 100 "+unparse(transformPath(parsePath(w),[[10,0,60],[0,10,100]]))+" L 120 100;"
+}
+anim2.setAttribute("values",pths)
+pths = ""
+for (i=0;i<=2*Math.PI+0.001;i+=2*Math.PI/8){
+  let w = wavePath(i)
+  pths+= "M 0 100 "+unparse(transformPath(parsePath(w),[[10,-5,60],[0,10,100]]))+" L 120 100;"
+}
+anim3.setAttribute("values",pths)
+let t = 0
+draw = function(){
+  let pth = "M 0 100"
+  let pth2 = "M 0 100"
+  for(let i=0;i<80;i++){
+    k = wave(i/10-4,t)
+    k2 = dwave(i/10-4,t)
+    pth += ` L ${i+20} ${k*10+100}`
+    pth2 += ` L ${i+20} ${k2*10+100}`
+  }
+  pth+="L 120 100"
+  pth2+="L 120 100"
+  snd.setAttribute("d",pth)
+  //thrd.setAttribute("d",pth2)
+  //let w = wavePath(t)
+  //let p = unparse(transformPath(parsePath(w),[[10,0,60],[0,10,100]]))
+  //thrd.setAttribute("d","M 0 100 "+p+" L 120 100")
+  t+=(2*Math.PI/148)
+}
+//setInterval(draw,20)
+//draw()
+
+console.log(zeros(1))
+    //p = parsePath("L -4 0 C 4 0")
+  </script>
+
+</body>
+</html>
