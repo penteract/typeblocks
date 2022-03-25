@@ -69,6 +69,7 @@ SVGPathElement.prototype.duplicate = function(newPar) {
   for (let prop of ["d"]) {
     p.setAttribute(prop, this.getAttribute(prop))
   }
+  p.innerHTML=this.innerHTML
   newPar.appendChild(p)
 }
 SVGTextElement.prototype.duplicate = function(newPar) {

@@ -189,10 +189,6 @@ SVGTextElement.prototype.setPos = function(x, y) {
   this.setAttribute("transform", `translate(${this.xPos},${this.yPos + 12.8})`)
 }
 
-SVGGElement.prototype.drawBox = function() {
-  this.children[0].setAttribute("d", simplePath(0, 0, this.width, this.height, this.baseType))
-}
-
 // Return the node  before which something at (x,y) should be inserted
 // If it should be inserted at the end, return null
 function getInsertLocation(hole, x, y) {

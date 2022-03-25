@@ -28,12 +28,22 @@ The border graphics will be an SVG path that encloses the content
 Options for conveying meaning:
 Color (currently used to indicate what belongs to what, but imperfectly)
 animation (polymorphism?)
+  This has now been implemented, but looks pretty bad
+    (too small to see clearly
+    ,dramatic increase in power use
+    ,whether something is being hovered over can now change without the mouse moving)
+  one alternative is to substitue in all valid concrete types sequentially
+    This makes sense with typeclasses - cycle through instances.
+      This can be done to give a sequence in which each concrete type matching the typeclass appears infinitly often,
+        even though there may be infinitely many such concrete types
+      With multiple typeclasses, is there a better idea than generating from 1 and testing against others?
+      How to handle typeclass combinations with no instances?
 stylistic differences (eg curves vs straight edges and sharp corners)
 Loops in the border indicating polymorphic types that may be arrow types (and so may have holes)
   these should be in the bottom right corner
 Base types should have rotational symmetry (order 4 when the box is square)
 
-Descisions to make:
+Decisions to make:
 what should be a 'default' border?
 - minimal rectangle around content (non-holes have jigsaw protrusions)
     - problematic if the content has size 0
@@ -114,8 +124,25 @@ const indent = parsePath("L 0 4 A 4 4 0 0 0 4 0")
 const stair = parsePath("L 0 4 L 4 4 L 4 0")
 const cornershapes = [corner, circled, indent, stair]
 
+SVGGElement.prototype.drawBox = function() {
+let pathEl = this.children[0]
+  let type = this.baseType
+  if (this.baseType == " defn ") {
+    pathEl.setAttribute("d",simplePath(0, 0, this.width, this.height, straightEdge, corner))
+    return;
+  }
+  //TODO: Intellegently assign shapes to types
+  //let path = shapes[hash(type) % shapes.length]
+  let ps = animatedPaths(4)
+  let vals = ""
+  for (let p of ps){
+    vals += simplePath(0, 0, this.width, this.height, parsePath(p), corner) + ";"
+  }
+  pathEl.innerHTML=`<animate dur="1s" attributeName="d" repeatCount="indefinite" values="${vals}"/>`
 
-function simplePath(x, y, width, height, type) {
+}
+
+function simplePath(x, y, width, height, edgePath, corPath) {
   const MORESPACING = true
   let scale = Math.min(width, height, PADDINGH * 3) / (PADDINGH * 3)
   if (MORESPACING) scale = Math.min(width, height, PADDINGH * 4) / (PADDINGH * 4)
@@ -145,24 +172,19 @@ function simplePath(x, y, width, height, type) {
   }
   let path = "M" + pts(0)
   for (let i = 0; i < 8; i += 2) {
-    path += mkEdge(pts(i), pts(i + 1), scale, type)
-    path += mkCor(pts(i + 1), pts(i + 2), scale, type)
+    path += mkEdge(pts(i), pts(i + 1), scale, edgePath)
+    path += mkCor(pts(i + 1), pts(i + 2), scale, corPath)
   }
   return path + " Z"
 }
 //Make an edge from p1 to p2 clockwise
-function mkEdge(p1, p2, scale, type) {
-  let path = shapes[hash(type) % shapes.length]
-  if (type == " defn ") {
-    path = straightEdge
-  }
+function mkEdge(p1, p2, scale, path) {
   let midpoint = p1.add(p2).div(2)
   let dir = p2.sub(p1)
   dir = dir.div(norm(dir))
   return unparse(transformPath(path, toMatrix(midpoint, dir, scale))) + "L" + p2
 }
-function mkCor(p1, p2, scale, type) {
-  let path = corner//cornershapes[0 | (Math.random() * cornershapes.length)]
+function mkCor(p1, p2, scale, path) {
   let dir = [[0.5, -0.5], [0.5, 0.5]].mcol(p2.sub(p1))
   let midpoint = p2.sub(dir)
   dir = dir.div(norm(dir))
