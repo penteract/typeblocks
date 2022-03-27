@@ -131,15 +131,22 @@ let pathEl = this.children[0]
     pathEl.setAttribute("d",simplePath(0, 0, this.width, this.height, straightEdge, corner))
     return;
   }
-  //TODO: Intellegently assign shapes to types
-  //let path = shapes[hash(type) % shapes.length]
-  let ps = animatedPaths(4)
-  let vals = ""
-  for (let p of ps){
-    vals += simplePath(0, 0, this.width, this.height, parsePath(p), corner) + ";"
+  else if(type[0]==type[0].toLowerCase()){
+    let h = hash(type)
+    let ps = animatedPaths([2,4,8][h%3])
+    h=(h/3)|0
+    let skew = ((h%5)-2)/2
+    let vals = ""
+    for (let p of ps){
+      let parsed = parsePath(p)
+      parsed = transformPath(parsed,[[1,skew,0],[0,1,0]])
+      vals += simplePath(0, 0, this.width, this.height, parsed, corner) + ";"
+    }
+    pathEl.innerHTML=`<animate dur="1s" attributeName="d" repeatCount="indefinite" values="${vals}"/>`
+  }else{
+    let path = shapes[hash(type) % shapes.length]
+    pathEl.setAttribute("d",simplePath(0, 0, this.width, this.height, path, corner))
   }
-  pathEl.innerHTML=`<animate dur="1s" attributeName="d" repeatCount="indefinite" values="${vals}"/>`
-
 }
 
 function simplePath(x, y, width, height, edgePath, corPath) {
