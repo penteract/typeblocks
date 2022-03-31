@@ -51,6 +51,11 @@ function dragInto(argument, hole, pointerPos, dropEffect) {
     else console.log("can't copy definitions");
     return false;
   }
+  if (hole.isLHS){
+    console.log("can't (yet) put anything inside LHS")
+    //TODO: Allow constructors in LHS
+    return false;
+  }
 
   // Find out how to move the argument into the hole (if appropriate)
   let cmd = getMoveCommand(argument, hole, pointerPos)

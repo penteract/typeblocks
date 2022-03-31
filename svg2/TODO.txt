@@ -13,7 +13,7 @@ What should be the point at which hitboxes are tested for dropping?
     This is done by Scratch
   give some indication about where it will be dropped if the mouse is released
 
-Bugfix: prevent dragging into LHS3
+//Bugfix: prevent dragging into LHS
 
 //dragging an argument into its (filled) hole should make it floating in the hole
 // procedurally generate borders (needs some improvement)
