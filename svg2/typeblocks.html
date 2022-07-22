@@ -75,7 +75,6 @@ function getLength(txt){//TODO: sanitize
   testtext.innerHTML=txt
   return testtext.getComputedTextLength()
 }
-/*
 function quick(n,type){
   try{
     var parsedType=parseType(partition(type)[0])
@@ -83,9 +82,9 @@ function quick(n,type){
   catch(e){alert (e); throw e}
   makeBox(n,parsedType)
 }
-
+/*
 GAME="Event->GameState->GameState"
-GEGSTO="(${GAME})->Event->GameState->"
+GEGSTO=`(${GAME})->Event->GameState->`
 RULE=`((${GAME})->${GAME})`
 
 quick("when",`(${GEGSTO}Bool)->${RULE}->${RULE}`)
@@ -93,14 +92,14 @@ quick("cardIs",`(Card->Bool)->${GEGSTO}Bool`)
 quick("Eight",`Rank`)
 quick("rank","Card->Rank")
 quick("==","Rank->Rank->Bool")
-quick("skipNextTurn",`${RULE}`)
-
+quick("skipNextTurn",`${RULE}`)*/
+/*
 quick("map","(Int->Int)->ListInt->ListInt")
 quick("+","Int->Int->Int")
 quick("negate","Int->Int")
 quick("xs","ListInt")
-quick("5","Int")
-*/
+quick("5","Int")*/
+
 function newDef(n,type){
   //try{
     var parsedType=parseType(partition(type)[0])

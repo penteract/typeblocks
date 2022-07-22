@@ -109,6 +109,13 @@ undo/redo
 do something with data type declarations
 get polymorphic types working
   Frames (aka explicit type signatures)?
+  Hindley-Milner doesn't work (particularly when combined with autofill) -
+    if you drag a box (x :: a) into the hole of a box (y :: (Bool->Char)->Int ), how do you indicate whether
+    you mean (y x) or (y (\z -> x)) (i.e. a=(Bool->Char) or a=Char)?
+    There doesn't seem to be a nice way to do this without lots of fiddling
+      Part of the problem is that we want to be able to display partially constructed terms nicely
+    Rolf's suggestion:
+      If there's ambiguity, show previews of the possibilities and offer a choice
 integrate with Haskell
 think about what to do when something changes type
   Make things that don't fit float?
