@@ -11,7 +11,7 @@ If the elements inside do not extend below the screen,
 I can't easily find a way to do all of these, so there's some code
  which redirects drops on the backgroud to the root
 */
-svg{
+#mainsvg{
   position: absolute;
   width: 60%;
   height: 100%;
@@ -28,8 +28,13 @@ svg{
   overflow-x: scroll;
   writing-mode: vertical-lr;
 }
-#imports div{
+#imports svg{
   writing-mode: horizontal-tb;
+}
+.import{
+  width: 100px;
+  height: 50px;
+  display: block;
 }
 html,body{
   margin: 0px;

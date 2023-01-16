@@ -51,8 +51,13 @@ necessary parts.
 
 ## The data associated with a node
 The key data structure is the syntax tree which coincides with the DOM tree. We
-will call such elements boxes (these are `div` elements in some versions, `g`
-elements when the whole thing is an SVG)
+will call the elements of the DOM tree which form the syntax tree 'boxes'
+(these are `div` elements in some versions, `g` elements when the whole thing
+is an SVG)
+
+Since this is an editor, we need to work with incomplete syntax trees, so nodes
+can have 'holes' which may be empty, or act as scratchpad containing multiple
+other terms in the associated scope.
 
 properties of non definition boxes:
 

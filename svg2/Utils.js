@@ -141,3 +141,8 @@ function getHoles(g) {
   }
   return result
 }
+
+function getLength(txt){//TODO: sanitize
+  testtext.innerHTML=txt
+  return testtext.getComputedTextLength()
+}

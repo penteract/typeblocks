@@ -15,7 +15,7 @@ Right click to delete nodes <br />
 Double click to force terms into holes or snap them out <br />
 Use the boxes at the top left to make a new definition with a particular type.
 </div>
-<svg viewBox="-10 -30 480 480" preserveAspectRatio="xMinYMin">
+<svg viewBox="-10 -30 480 480" preserveAspectRatio="xMinYMin" id="mainsvg">
 <text id="testtext" fill="none" font-size="16"> hello </text>
 <g id="root" pointer-events="bounding-box">
  <rect x="-10000" y="-10000" width="20000" height="20000" fill="#FFF0" />
@@ -61,6 +61,7 @@ Use the boxes at the top left to make a new definition with a particular type.
 <script src="Printing.js"></script>
 
   <script src="../Builtins.js"></script>
+<script src="Imports.js"></script>
 <script src="Evaluation.js"></script>
 
 <script src="Tests.js"></script>
@@ -71,10 +72,7 @@ Use the boxes at the top left to make a new definition with a particular type.
 
 root.filled=true //Not true, but we don't want anything to think it can become the global argument
 root.isHole=true
-function getLength(txt){//TODO: sanitize
-  testtext.innerHTML=txt
-  return testtext.getComputedTextLength()
-}
+
 function quick(n,type){
   try{
     var parsedType=parseType(partition(type)[0])
