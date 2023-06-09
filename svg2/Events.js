@@ -76,6 +76,7 @@ function checkCtrl(e) {
     }
   }
 }
+
 function endDrag(e) {
   //try{
   if (e.touches) {
@@ -124,7 +125,6 @@ function endDrag(e) {
       let top = undefined
       if (dragging.parentElement) {
         dragging.ascend(n => top = n)
-        console.log(top)
         hsTerm.innerText = printTerm(top)
       }
     } else {

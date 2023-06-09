@@ -62,15 +62,7 @@ function redrawDirty() {
         return false
       }
       n.dirty = true
-      if (n.filled) {
-        n.freewidth = n.filled.freewidth
-      }
-      else {
-        n.freewidth = PADDINGH * 2
-        for (let i = 1; i < n.children.length; i++) {
-          n.freewidth += n.children[i].freewidth + SPACINGH * (i > 1)
-        }
-      }
+      calcFreeWidth(n)
       if (n.parentElement === root) topNodes.push(n)
       return true
     })
@@ -80,6 +72,18 @@ function redrawDirty() {
     t.redraw(MAXWIDTH)
   }
   dirty = []
+}
+
+function calcFreeWidth(n){
+  if (n.filled) {
+    n.freewidth = n.filled.freewidth
+  }
+  else {
+    n.freewidth = PADDINGH * 2
+    for (let i = 1; i < n.children.length; i++) {
+      n.freewidth += n.children[i].freewidth + SPACINGH * (i > 1)
+    }
+  }
 }
 
 

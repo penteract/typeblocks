@@ -10,10 +10,18 @@ SVGGElement.prototype.duplicate = function(newPar) {
       newPar = this.scope
     }
     let cols = [this.style.fill, this.style.stroke]
+    redrawDirty() // We don't want to redraw the newly created boxes normally
     let g = subBox(this.text, this.type, cols, ["#DDD", "#BBB"], false, newPar)
+    // newly created nodes have been added in order (deepest first)
+    for (let n of dirty){
+      calcFreeWidth(n)
+    }
+    dirty=[]
     if (!this.isHole) g.defn = this.defn
     g.scopeIndex = this.scopeIndex
-    redrawDirty()
+    // overflow = Math.max(0, this.freewidth - maxwidth)
+    // maxwidth = this.freewidth - this.overflow
+    g.redraw(this.freewidth - this.overflow)
     return g
   }
 

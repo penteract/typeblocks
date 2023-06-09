@@ -104,6 +104,8 @@ portability:
 libraries
  - sidebar (with tabs?) to take things from
 
+indicate errors in type parsing (currently an extra ')' causes it to ignore the remainder of the type)
+
 Longer term:
 undo/redo
 do something with data type declarations
@@ -116,6 +118,18 @@ get polymorphic types working
       Part of the problem is that we want to be able to display partially constructed terms nicely
     Rolf's suggestion:
       If there's ambiguity, show previews of the possibilities and offer a choice
+  Church encodings (need higher rank types)?
+    (see README about pairs)
+      Continuing that line of thought, perhaps there is a 3D visualisation in which
+      multiple antiholes could be stacked behind each other (they could be thought
+      of as being 'in parallel'). This would have the effect of product and sum
+      types appearing different depending on whether they're being used or defined
+      (assuming adjacent antiholes are stacked along the z direction, but adjacent
+      holes are lined up along x, a function which takes a pair would have 2 holes
+      next to each other, indicating both need to be filled, while a function
+      returning a pair would have the component boxes stacked behind each other).
+      This would suffer from the drawback that things don't match the holes they
+      fill as closely as they do otherwise.
 integrate with Haskell
 think about what to do when something changes type
   Make things that don't fit float?
