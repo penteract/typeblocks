@@ -91,6 +91,7 @@ e3 = liftA2 (\e2 t -> Node (defaultData{texts=[(0,t),(2,t)]}) [e2,e2,e2]) e1  (m
 
 mainLoop r s w bxs tx = do
   withCairoTexture tx $ do
+    selectFontFace ("DejaVu Sans"::String) FontSlantNormal FontWeightNormal
     setSourceRGBA 0.5 0.5 0.5 1
     paint
     setSourceRGBA 1 1 1 1

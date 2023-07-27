@@ -25,6 +25,7 @@ makeText s = do
 
 setSourceCol :: Col -> Render ()
 setSourceCol (r,g,b) = setSourceRGB r g b
+
 data BoxData = Box {
       texts :: [(Int, TextBox)]
     , borderCol:: Col
@@ -96,4 +97,4 @@ getShape :: TypeName -> BoxShape
 getShape nm = shapes !! (ord (head nm)`mod` length shapes)
 
 mkLine :: BoxTree -> BoxTree -> BoxTree
-mkLine l r = addText (1,"|->") (Node defaultData [l,r])
+mkLine l r = addText (1,"↦") (Node defaultData [l,r])

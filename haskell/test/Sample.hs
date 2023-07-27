@@ -2,6 +2,9 @@ module Sample where
 
 f :: Int -> Int
 f x = f x
+
+g :: (String -> Int) -> String -> Int
+g x y = x y
 {-
 g :: (String -> Int) -> String -> Int
 g x y = x y

@@ -25,7 +25,7 @@ data FontInfo = FI {
 }
 
 renderTree :: FontInfo -> BoxTree -> Render ()
-renderTree fi = renderRTree . drawTree fi maxWidth
+renderTree fi = (\ t -> renderRTree t >> translate 0 (snd (size t)) ) . drawTree fi maxWidth
 
 -- | box drawing instructions, subboxes with offsets, width and height
 data RTree = RTree {
