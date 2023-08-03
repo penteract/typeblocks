@@ -17,6 +17,9 @@ build-type:     Simple
 library
   exposed-modules:
       BoxTree
+      BoxTypes
+      BoxTypesFolds
+      BoxTypesParsing
       Colors
       Graphics
       Lib
