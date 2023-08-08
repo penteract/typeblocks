@@ -1,5 +1,5 @@
-#Architecture
-##Why I'm using the DOM tree to track information
+# Architecture
+## Why I'm using the DOM tree to track information
 If program source code is text, then best practice for program analysis
 (including typechecking, interpreting, compilation) is to turn the source into
 an AST as soon as possible, then do all operations on that AST. This separation
@@ -21,8 +21,8 @@ type system, but the alternative would be to have a pair of similar data
 structures which would introduce numerous opportunities for them to become out
 of sync.
 
-##Divs or SVGs
-###Advantages of Divs
+## Divs or SVGs
+### Advantages of Divs
 Browsers have done most of the fancy display stuff I care about, like text
 wrapping and automatically resizing  parent containers when the content of an
 inner one changes. The system for wrapping nested containers is better than what
@@ -32,18 +32,18 @@ lower level languages and they can afford to put more effort in.
 
 Divs also support the Drag and Drop API and CSS z-index.
 
-###Advantages of SVGs
+### Advantages of SVGs
 Making the background an SVG with bits to modify gives pretty complete control
 over what everything looks like, and is more consistent across browsers/devices.
 
-###History and Current Status
+### History and Current Status
 Initially I started with SVGs, but then switched to divs because I didn't want
 to implement a layout engine. I'm now trying to return to SVGs, mostly for
 animation, but also for a bit more control when drawing borders (I had been
 using border-image-repeat, which is inconsistent across browsers and is not
 perfectly implemented anywhere).
 
-###SVGs and Divs?
+### SVGs and Divs?
 It would be possible to use divs with attached SVGs which redraw themselves on
 reflow after the associated divs have worked out what size they should be.
 It's not clear how easy it is to listen for that event and only change the
