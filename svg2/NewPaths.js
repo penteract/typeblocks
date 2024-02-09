@@ -124,6 +124,17 @@ const indent = parsePath("L 0 4 A 4 4 0 0 0 4 0")
 const stair = parsePath("L 0 4 L 4 4 L 4 0")
 const cornershapes = [corner, circled, indent, stair]
 
+
+function sym2(halfpath) {
+  let p = parsePath(halfpath)
+  return parsePath(unparse(p) + " " + unparse(transformPath(flip(p), [[0, 1, 0], [1, 0, 0]])))
+}
+
+// a corner for a polymorphic type that might represent an antihole
+const maybeantihole = sym2("L 0 4 C 0 3 -1 2 1 1 C 3 0 8 2 5 5")
+
+const themaybeantihole = sym2("L 1 1 C 3 0 6 2 4 4")
+
 SVGGElement.prototype.drawBox = function() {
 let pathEl = this.children[0]
   let type = this.baseType
@@ -140,16 +151,21 @@ let pathEl = this.children[0]
     for (let p of ps){
       let parsed = parsePath(p)
       parsed = transformPath(parsed,[[1,skew,0],[0,1,0]])
-      vals += simplePath(0, 0, this.width, this.height, parsed, corner) + ";"
+      vals += lessSimplePath(0, 0, this.width, this.height, [parsed,parsed,parsed,parsed], [corner,maybeantihole,corner,corner]) + ";"
     }
     pathEl.innerHTML=`<animate dur="1s" attributeName="d" repeatCount="indefinite" values="${vals}"/>`
   }else{
     let path = shapes[hash(type) % shapes.length]
+    //let corpath = cornershapes[hash(type) % cornershapes.length]
     pathEl.setAttribute("d",simplePath(0, 0, this.width, this.height, path, corner))
   }
 }
 
+
 function simplePath(x, y, width, height, edgePath, corPath) {
+  return lessSimplePath(x,y,width,height,[edgePath,edgePath,edgePath,edgePath],[corPath,corPath,corPath,corPath])
+}
+function lessSimplePath(x, y, width, height, edgePaths, corPaths) {
   const MORESPACING = true
   let scale = Math.min(width, height, PADDINGH * 3) / (PADDINGH * 3)
   if (MORESPACING) scale = Math.min(width, height, PADDINGH * 4) / (PADDINGH * 4)
@@ -179,8 +195,9 @@ function simplePath(x, y, width, height, edgePath, corPath) {
   }
   let path = "M" + pts(0)
   for (let i = 0; i < 8; i += 2) {
-    path += mkEdge(pts(i), pts(i + 1), scale, edgePath)
-    path += mkCor(pts(i + 1), pts(i + 2), scale, corPath)
+    console.log(i/2)
+    path += mkEdge(pts(i), pts(i + 1), scale, edgePaths[i/2])
+    path += mkCor(pts(i + 1), pts(i + 2), scale, corPaths[i/2])
   }
   return path + " Z"
 }

@@ -55,6 +55,7 @@ html,body{
 }
 path{
   stroke-width: 0.96;
+  fill-rule: evenodd;
   /*fill:none;
   stroke:red;*/
 }

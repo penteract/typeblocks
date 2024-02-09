@@ -107,7 +107,8 @@ function newDef(n,type){
   return makeDefn(n,parsedType)*/
 }
 //try{
-  let d = newDef("thrice","(Int->Int)->Int->Int")
+  //let d = newDef("thrice","(Int->Int)->Int->Int")
+  let d = newDef("thrice","(a->a)->a->a")
   let r = d.children[1].rhs
   let f1 = r.children[1]
   let f2 = f1.duplicate()
