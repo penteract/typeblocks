@@ -63,7 +63,7 @@ function redrawDirty() {
       }
       n.dirty = true
       calcFreeWidth(n)
-      if (n.parentElement === root) topNodes.push(n)
+      if (n.parentElement.isTopLevel) topNodes.push(n)
       return true
     })
   }

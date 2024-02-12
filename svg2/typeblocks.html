@@ -15,9 +15,9 @@ Right click to delete nodes <br />
 Double click to force terms into holes or snap them out <br />
 Use the boxes at the top left to make a new definition with a particular type.
 </div>
-<svg viewBox="-10 -30 480 480" preserveAspectRatio="xMinYMin" id="mainsvg">
+<svg viewBox="-120 -20 580 480" preserveAspectRatio="xMinYMin" id="mainsvg">
 <text id="testtext" fill="none" font-size="16"> hello </text>
-<g id="root" pointer-events="bounding-box">
+<g id="root">
  <rect x="-10000" y="-10000" width="20000" height="20000" fill="#FFF0" />
  <!-- If I implement zooming out and this isn't big enough, that might get hard to debug.
       The only reason I don't just use the svg is that that doesn't support .getCTM()-->
@@ -31,6 +31,9 @@ Use the boxes at the top left to make a new definition with a particular type.
    stroke="green" stroke-width="1" fill-rule="evenodd"/>
   <path d="M 20 20 L 100 100 L 100 20 Z M 40 30 L 90 80 L 90 30 Z"
    stroke="green" stroke-width="1" fill="blue" fill-rule="evenodd" />-->
+<g id="imports">
+  <rect x="-10000" y="-10000" width="10100" height="20000" fill="#AAA" />
+</g>
 </svg>
 <!--<div id="root">
 </div>-->
@@ -61,7 +64,7 @@ Use the boxes at the top left to make a new definition with a particular type.
 <script src="Printing.js"></script>
 
   <script src="../Builtins.js"></script>
-<!--<script src="Imports.js"></script>-->
+  <!-- imports would go here, but we need to set root.isTopLevel first-->
 <script src="Evaluation.js"></script>
 
 <script src="Tests.js"></script>
@@ -72,6 +75,8 @@ Use the boxes at the top left to make a new definition with a particular type.
 
 root.filled=true //Not true, but we don't want anything to think it can become the global argument
 root.isHole=true
+root.isTopLevel=true
+imports.isTopLevel=true
 
 function quick(n,type){
   try{
@@ -107,20 +112,21 @@ function newDef(n,type){
   return makeDefn(n,parsedType)*/
 }
 //try{
-  //let d = newDef("thrice","(Int->Int)->Int->Int")
-  let d = newDef("thrice","(a->a)->a->a")
+  let d = newDef("thrice","(Int->Int)->Int->Int")
+  //let d = newDef("thrice","(a->a)->a->a")
   let r = d.children[1].rhs
   let f1 = r.children[1]
   let f2 = f1.duplicate()
   let f3 = f1.duplicate()
   function putIn (a,b){
     makeFloating(a,b.children[1])
-    fillOrUnfill(a)
+    fillHole(a, a.parentElement)
   }
   putIn(r.children[2],f1)
   putIn(f1,f2)
   putIn(f2,f3)
-  fillOrUnfill(f3)/*
+  fillHole(f3, f3.parentElement)
+  /*
 }
 catch(e) {alert(e);throw e}//for debugging on mobile
 */
@@ -138,30 +144,13 @@ function reduce(){
   redrawDirty()
 }
 
-for (let k in builtins){
-  ;[type,defn] = builtins[k]
-  let parsedType=parseType(partition(type)[0])
-  //let g = makeBox(k,parsedType)
-  let c = Math.random()*360
-  let fill = [c,100,80] //hsluv.hsluvToHex([c,100,80]) //`hsl(${c},100%,50%)`
-  let stroke =  hsluv.hsluvToHex([c,50,50])//`hsl(${c},50%,70%)`
-  let g = makeBox(k,parsedType,[fill,stroke],["#DDD","#BBB"],false,root)
-  //g.colors = [fill,stroke]
-  g.defn = defn
-  root.appendChild(g)
-  /*
-  g.visit(n => {
-    n.isLHS=true
-    n.draggable = (n===g)
-  })*/
-
-}
 makeBox("1","Int").isConstructor=true
+let p = newDef("F","Int->Int")
 for(let i=1; i<root.children.length; i++){
   root.children[i].setPos(0,((i-1)*35))
 }
-let p = newDef("F","Int->Int")
 
 </script>
+<script src="Imports.js"></script>
 </body>
 </html>

@@ -3,9 +3,10 @@ relates to Initialization.js
 
 Without using these methods, all terms constructed would be linear
 */
+EPSILON=0.001
 
 SVGGElement.prototype.duplicate = function(newPar) {
-  if (this.isLHS) {// just make a brand new box with the right type, colors and scope
+  if (isFixed(this)) {// just make a brand new box with the right type, colors and scope
     if (newPar === undefined) {
       newPar = this.scope
     }
@@ -21,7 +22,9 @@ SVGGElement.prototype.duplicate = function(newPar) {
     g.scopeIndex = this.scopeIndex
     // overflow = Math.max(0, this.freewidth - maxwidth)
     // maxwidth = this.freewidth - this.overflow
-    g.redraw(this.freewidth - this.overflow)
+    g.redraw(this.freewidth - this.overflow + EPSILON) // I'm not completely sure why EPSILON is needed.
+      //Floating point imprecision could explain it, but it wasn't necessary until making an imports div.
+      //CSS transforms might be linked.
     return g
   }
 
@@ -41,13 +44,13 @@ SVGGElement.prototype.duplicate = function(newPar) {
     g.scope = newPar
     let climbing = this.parentElement
     while (climbing !== this.scope) {
-      if (climbing === root) throw "Climbed too far"
+      if (climbing.isTopLevel) throw "Climbed too far"
       climbing = climbing.parentElement
       g.scope = g.scope.parentElement
     }
   }
   //Deal with most of the properties
-  //Not copied: isLHS (once copied, it is no longer LHS), some things related to layout
+  //Not copied: isLHS/isImport (once copied, it is no longer LHS), some things related to layout
   for (let prop of [
     "type", "text", "isHole", "baseType", "scopeIndex", "numOwned", "defn", "isConstructor",
     "xPos", "yPos", "freewidth", "width", "height", "overflow", "lines", "dirty", "dirt"]) {

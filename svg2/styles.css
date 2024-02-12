@@ -20,21 +20,7 @@ I can't easily find a way to do all of these, so there's some code
   cursor: default;
 }
 #imports{
-  position: absolute;
-  width: 40%;
-  height: 100%;
-  right: 0px;
-  background: #EEE;
-  overflow-x: scroll;
-  writing-mode: vertical-lr;
-}
-#imports svg{
-  writing-mode: horizontal-tb;
-}
-.import{
-  width: 100px;
-  height: 50px;
-  display: block;
+  transform:translateX(-100px);
 }
 html,body{
   margin: 0px;

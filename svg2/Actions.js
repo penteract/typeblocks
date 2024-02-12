@@ -1,13 +1,13 @@
 "use strict";
 function deleteNode(g) {
-  if (!(g.isHole || g.isLHS)) {
+  if (!(g.isHole || isFixed(g))) {
     g.delete()
     return true
   }
 }
-
+/*
 function fillOrUnfill(g) {
-  if (g.isLHS) {
+  if (isFixed(g)) {
     return
   }
   if (g.isHole) {
@@ -26,7 +26,7 @@ function fillOrUnfill(g) {
     && checkMatch(g.parentElement.type, g.type)) {
     fillHole(g, g.parentElement)
   }
-}
+}*/
 
 // Returns true if the action fails
 function dragInto(argument, hole, pointerPos, dropEffect) {
@@ -54,6 +54,8 @@ function dragInto(argument, hole, pointerPos, dropEffect) {
   if (hole.isLHS){
     console.log("can't (yet) put anything inside LHS")
     //TODO: Allow constructors in LHS
+    return false;
+  } else if (isFixed(hole)){// Currently this is just testing isImport, which is covered by the root.contains test
     return false;
   }
 
@@ -138,7 +140,7 @@ function tryToFillHole(arg, hole, pointerPos) {
 }
 
 // Do the work of taking something out of where it came from and putting it (floating) somewhere else
-// returns true unless the
+// returns true unless nothing changed
 function makeFloating(g, target, location) {
   if (!target.isHole) throw "Things should only float in holes"
   let before = null

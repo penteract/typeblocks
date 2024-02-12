@@ -4,6 +4,7 @@
 let retType = undefined // for ret
 SVGGElement.prototype.evl = function(callback) {
   if (this.isHole) {
+    this.children[0].style.stroke="#A00"
     throw "shouldn't try to evaluate a hole (probably unfilled hole being passed to builtin)"
   }
   let defn = this.defn

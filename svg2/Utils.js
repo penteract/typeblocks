@@ -59,6 +59,9 @@ function isArg(g) {
 function isDefn(g) {//TODO: update for svgs
   return g.classList.contains("defn")
 }
+function isFixed(g){
+  return g.isLHS || g.isImport
+}
 
 SVGGElement.prototype.boxes = function*() {
   for (let c of this.children) {
@@ -68,7 +71,7 @@ SVGGElement.prototype.boxes = function*() {
   }
 }
 SVGGElement.prototype.ascend = function(f) {
-  if (this !== root && f(this)) {
+  if (!this.isTopLevel && f(this)) {
     if (this.parentElement === null) console.log(this)
     this.parentElement.ascend(f)
   }

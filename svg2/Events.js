@@ -17,7 +17,7 @@ function startDrag(target) {
       position = [e.x, e.y]
       //console.log(e)
       if (dragging === false) {
-        copying = g.isLHS || (e.ctrlKey && !isDefn(g))
+        copying = isFixed(g) || (e.ctrlKey && !isDefn(g))
         dragging = isDefn(g) ? g : g.duplicate()
         original = g
         if (!copying && !isDefn(g)) {
@@ -64,7 +64,7 @@ function drag(e) {
 }
 function checkCtrl(e) {
   if (dragging) {
-    let newCopying = original.isLHS || (e.ctrlKey && !isDefn(dragging))
+    let newCopying = isFixed(original) || (e.ctrlKey && !isDefn(dragging))
     if (copying != newCopying) {
       copying = newCopying
       if (copying) {
@@ -90,7 +90,7 @@ function endDrag(e) {
     original.classList.remove("invisible")
     root.parentElement.style.cursor = ""
     let savedPos = undefined
-    copying = original.isLHS || (e.ctrlKey && !isDefn(dragging))
+    copying = isFixed(original) || (e.ctrlKey && !isDefn(dragging))
     if (isDefn(dragging)) {
       dragging.classList.remove("dragging")
     }
@@ -125,7 +125,7 @@ function endDrag(e) {
       let top = undefined
       if (dragging.parentElement) {
         dragging.ascend(n => top = n)
-        hsTerm.innerText = printTerm(top)
+        hsTerm.innerHTML = printTerm(top) // consider de-escaping the term, then modifying innerText here. Should currently be safe.
       }
     } else {
       console.log("Not over anything")

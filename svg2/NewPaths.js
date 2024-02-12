@@ -80,7 +80,6 @@ Options for graphics:
 Finite list of hand-constructed shapes
   - This might not be bad for builtin types when the shapes have some meaning
     - eg shape that looks like square brackets for lists
-  - Has the advantage of producing things
 Procedural generation
   - can lead to similar looking things
     such similarity would have no semantic relevance
@@ -131,9 +130,9 @@ function sym2(halfpath) {
 }
 
 // a corner for a polymorphic type that might represent an antihole
-const maybeantihole = sym2("L 0 4 C 0 3 -1 2 1 1 C 3 0 8 2 5 5")
+const maybeantihole = sym2("L 0 4 C 0 3.5 -7 5 1 1 C 3 0 8 2 5 5")
 
-const themaybeantihole = sym2("L 1 1 C 3 0 6 2 4 4")
+const themaybeantihole = sym2("L 1 1 C 3 0 8 2 5 5")
 
 SVGGElement.prototype.drawBox = function() {
 let pathEl = this.children[0]
@@ -195,7 +194,6 @@ function lessSimplePath(x, y, width, height, edgePaths, corPaths) {
   }
   let path = "M" + pts(0)
   for (let i = 0; i < 8; i += 2) {
-    console.log(i/2)
     path += mkEdge(pts(i), pts(i + 1), scale, edgePaths[i/2])
     path += mkCor(pts(i + 1), pts(i + 2), scale, corPaths[i/2])
   }

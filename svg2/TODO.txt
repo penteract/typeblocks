@@ -20,6 +20,7 @@ What should be the point at which hitboxes are tested for dropping?
 
 //ctrl-click to copy
 //right-click to delete
+  Bugfix: delete definitions properly
 delete key to delete?
   how do I get deleted arguments back?
   idea: don't allow deleting, just double-click to force an argument into a hole
@@ -52,10 +53,11 @@ let blocks
   pattern matching
 datatype declarations
 
-pane of known identifiers
+//pane of known identifiers
   tabs for different modules
   should this include functions or datatypes defined in the current module?
     should it be the only place datatype declarations are visible?
+  Don't let the pane interfere so much with dragging terms
 
 //evaluation (single step)
   animated (due to the need to recursively eliminate anonymous variables, this is not straightforward)
@@ -92,9 +94,6 @@ hide/shrink parts of more complicated types.
 portability:
   Test in browsers other than firefox
     - I've been deliberately ignoring this
-    - Would need to stop using border-image
-       (make svgs when needed - might want to do this anyway
-          given what a pain border-image is)
   Touchscreens (incl. phones/tablets
     - These were the original motivation
     - Drag and drop API
@@ -105,6 +104,13 @@ libraries
  - sidebar (with tabs?) to take things from
 
 indicate errors in type parsing (currently an extra ')' causes it to ignore the remainder of the type)
+
+Make things take less space
+  Consider leaving the bottom edge of all types flat to save vertical space
+    Would need to rethink vertical centering of lines, could look ugly
+    reduces the available space for clearly different and/or complicated types
+      could make other edges wider to compensate
+  see also: zoom/pan
 
 Longer term:
 undo/redo
