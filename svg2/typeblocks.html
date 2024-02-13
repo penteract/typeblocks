@@ -144,12 +144,12 @@ function reduce(){
   redrawDirty()
 }
 
-makeBox("1","Int").isConstructor=true
 let p = newDef("F","Int->Int")
-for(let i=1; i<root.children.length; i++){
-  root.children[i].setPos(0,((i-1)*35))
+makeBox("1","Int").isConstructor=true
+for(let i=1,h=0; i<root.children.length; i++){
+  root.children[i].setPos(0,h)
+  h+=root.children[i].height+SPACINGV/2
 }
-
 </script>
 <script src="Imports.js"></script>
 </body>

@@ -14,8 +14,7 @@ for (let k in builtins){
   g.redraw(100)
   //console.log(g,g.type)
 }
-let h=0
-for(let i=1; i<imports.children.length; i++){
+for(let i=1,h=0; i<imports.children.length; i++){
   imports.children[i].setPos(0,h)
   h+=imports.children[i].height+SPACINGV/2
 }
