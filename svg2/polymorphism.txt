@@ -1,0 +1,27 @@
+For now let's just worry about rank-1 polymorphism (and not worry if it ends up restricted to Hindley-milner polymorphism, but think about adding type annotations so it works in Haskell).
+
+There are 2 contexts where something with a polymorphic type can be manipulated:
+ - the argument to a definition in the body of that definition
+   - here it acts like a base type distinct from all others. It does not admit further constraints.
+   - We could say that attempting to constrain it changes the function type to be non-polymorphic.
+ - As part of a polymorphic function defined elsewhere
+ - If we allow higher rank types, type variables in each situation exchange behaviour according to rank parity
+
+A polymorphic type variable is scoped to a named function box.
+ - (In turn, that function is attached to a definition, or it may be an RHS)
+ - The type variable is quantified as part of the type of that function. 
+   - and at the outermost layer since we're sticking to rank 1 types
+
+Putting something into a variable-shaped hole, or putting a variable shaped box into something creates a constraint
+ - The constraint applies to all instances of the variable within its scope
+ - if the set of constraints become unsatisfiable, that action is invalid
+ - if the variable's scope is a definition, that action is be invalid
+ - undoing that operation should remove the constraint
+ - All boxes associated with that type variable should update their outline according to constraints
+
+It should be possible to manually add a constraint that something is a function type
+ - by clicking on the corner
+ - It should be possible to remove this constraint byt deleting the last instance of the introduced anonymous variable
+
+Consider definitions beginning as polymorphic, but becoming as concrete as necessary
+ - changing the type of a definition after it has been used would involve keeping track of all references to it.
