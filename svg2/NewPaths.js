@@ -136,8 +136,8 @@ const themaybeantihole = sym2("L 1 1 C 3 0 8 2 5 5")
 
 SVGGElement.prototype.drawBox = function() {
 let pathEl = this.children[0]
-  let type = this.baseType
-  if (this.baseType == " defn ") {
+  let type = this.displayType
+  if (type == " defn ") {
     pathEl.setAttribute("d",simplePath(0, 0, this.width, this.height, straightEdge, corner))
     return;
   }

@@ -8,13 +8,13 @@ function makeDraggable(g) {
 function makeDefn(text, type) {
   let defn = createSVGElement("g")
   defn.appendChild(createSVGElement("path"))
-  defn.baseType = " defn "
+  defn.displayType = " defn "
   defn.classList.add("defn")
   defn.classList.add("box")
   makeDraggable(defn)
   let line = createSVGElement("g")
   line.appendChild(createSVGElement("path"))
-  line.baseType = " line "// hack for display
+  line.displayType = " line "
   defn.appendChild(line)
   line.classList.add("line")
   // colors
@@ -79,15 +79,14 @@ function subBox(text, type, cols, otherCols, isHole, parent, noDrag) {
 
   //Children
   let numOwned = 0
-  while (!isBase(type)) {
-    assertEq(type.length, 2)
-    var [arg, type] = type
+  while (isFn(type)) {
+    var [arg, type] = extractFn(type)
     if (text == "ifThenElse") { g.addText(["if", " then", " otherwise"][numOwned]) }
     let ch = subBox("", arg, otherCols, cols, !isHole, g, noDrag)
     ch.scopeIndex = numOwned++ // For indexing into g.mapsto during evaluation
     if (g.children.length == 2 && text && isInfix(text)) { g.addText(text) }
   }
-  g.baseType = type
+  g.displayType = type.name
   g.numOwned = numOwned
   if (numOwned !== [...g.boxes()].length)
     throw `numOwned (${numOwned}) should be the number of subboxes at creation ${[...g.boxes()].length}`

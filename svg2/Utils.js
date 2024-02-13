@@ -104,7 +104,7 @@ function decompose(t) {//given a type, return a pair consisting of a list of arg
 }
 //check if a shape as currently filled lines up perfectly with a hole (and the things floating in it)
 function isPerfectMatch(shape, hole) {
-  if (shape.baseType !== hole.baseType) return false
+  if (shape.displayType !== hole.displayType) return false
   let innerHoles = getHoles(shape)
   let pairs = [[shape, hole]]
   let i = 0
@@ -121,7 +121,7 @@ function isPerfectMatch(shape, hole) {
 //check if a final segment of a shape's holes line up with a final segment of a hole's floating terms
 //Note: this is not recursive - for children it calls isPerfectMatch
 function isNearPerfectMatch(shape, hole) {
-  if (shape.baseType !== hole.baseType) return false
+  if (shape.displayType !== hole.displayType) return false
   let innerHoles = getHoles(shape)
   let pairs = [[shape, hole]]
   let i = innerHoles.length - 1

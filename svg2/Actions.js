@@ -129,7 +129,7 @@ function getMoveCommand(argument, hole, pointerPosition) {
 // stuff that is no longer in scope, but dealing with complicated cases correctly
 function tryToFillHole(arg, hole, pointerPos) {
   //detatch(arg)//hopefully
-  if (arg.baseType != hole.baseType)
+  if (arg.displayType != hole.displayType)//TODO:polymorphism
     return makeFloating(arg, hole, pointerPos);
   //return makeFloating(arg,hole,pointerPos);
   return fillHole(arg, hole)

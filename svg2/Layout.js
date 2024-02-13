@@ -12,7 +12,7 @@ lines: tracks the locations of the child nodes, wrapped into lines. A list of
 xPos,yPos: the top left corner of a box
 
 cols: the fill and border color of the box
-baseType: determines the shape of the box
+displayType: determines the shape of the box
 
 */
 
@@ -116,7 +116,7 @@ SVGGElement.prototype.redraw = function(maxwidth) {
     }
     newWidth = maxw + 2 * PADDINGH
     newHeight = y
-    this.baseType = " defn "
+    this.displayType = " defn "
     //this.drawBox()
   } else {
     // track the place that new things get put

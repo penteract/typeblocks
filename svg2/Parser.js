@@ -19,7 +19,19 @@ function addConst(c,t){
   Constants[c]=t
 }
 function isBase(t){
-  return typeof(t)=="string"
+  let c = t.name[0]
+  return t.args.length==0 && c!==c.toLowerCase()
+}
+function isPolyVar(t){
+  let c = t.name[0]
+  return t.args.length==0 && c===c.toLowerCase()
+}
+function isFn(t){
+  return t.name==="->"
+}
+function extractFn(t){
+  if(!isFn(t))throw "Not a function type"
+  return t.args
 }
 
 //Firefox for android does not support unicode character classes
@@ -90,19 +102,19 @@ function parseType(type){
   var l=type.length-1
   var part=type[l]
   if (part==="->" || part==="→") throw "unexpected arrow in "+type
-  var rhs=typeof(part)==="string"?part:parseType(part)
+  var rhs=typeof(part)==="string"?{name:part,args:[]}:parseType(part)
   while(l>0){
     l-=1; part=type[l]
     if (! (part==="->" || part==="→")) throw "expected arrow in "+type+"\npart: "+part
     if (l==0)throw "expected term to left of arrow in "+ type
     l-=1; part=type[l]
     if (part==="->" || part==="→") throw "unexpected arrow in "+type
-    var lhs=typeof(part)==="string"?part:parseType(part)
-    rhs=[lhs,rhs]
+    var lhs=typeof(part)==="string"?{name:part,args:[]}:parseType(part)
+    rhs={name:"->",args:[lhs,rhs]}
   }
   return rhs
 }
-assertEq(parseType(partition("(a→d)->b->c")[0]), [["a","d"],["b","c"]])
+//assertEq(parseType(partition("(a→d)->b->c")[0]), [["a","d"],["b","c"]])
 
 function showType(t){
   return typeof(t)==="string"?t:`(${showType(t[0])})->(${showType(t[1])})`

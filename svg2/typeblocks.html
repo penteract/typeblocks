@@ -145,7 +145,7 @@ function reduce(){
 }
 
 let p = newDef("F","Int->Int")
-makeBox("1","Int").isConstructor=true
+makeBox("1",{name:"Int",args:[]}).isConstructor=true
 for(let i=1,h=0; i<root.children.length; i++){
   root.children[i].setPos(0,h)
   h+=root.children[i].height+SPACINGV/2
