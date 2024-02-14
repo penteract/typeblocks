@@ -12,6 +12,7 @@ function makeDefn(text, type) {
   defn.classList.add("defn")
   defn.classList.add("box")
   makeDraggable(defn)
+  defn.tyVars={}
   let line = createSVGElement("g")
   line.appendChild(createSVGElement("path"))
   line.displayType = " line "
@@ -25,9 +26,9 @@ function makeDefn(text, type) {
   let opFill = [op, 100, 80]
   let opStroke = hsluv.hsluvToHex([op, 50, 50])
 
-  line.lhs = subBox(text, type, [fill, stroke], [opFill, opStroke], false, line, true)
+  line.lhs = subBox(text, type, [fill, stroke], [opFill, opStroke], false, line, true, defn)
   line.addText("↦")//consider ⟼
-  line.rhs = subBox("", type, ["#DDD", "#BBB"], [opFill, opStroke], true, line)
+  line.rhs = subBox("", type, ["#DDD", "#BBB"], [opFill, opStroke], true, line, false, defn)
   for (let ch of line.lhs.boxes()) {
     ch.scope = line.rhs
     makeDraggable(ch)
@@ -55,7 +56,7 @@ function makeBox(text, type) {
   return g
 }
 
-function subBox(text, type, cols, otherCols, isHole, parent, noDrag) {
+function subBox(text, type, cols, otherCols, isHole, parent, noDrag, typeScope) {
   let [fill, stroke] = cols
   let g = createSVGElement("g")
   g.appendChild(createSVGElement("path"))
@@ -74,15 +75,23 @@ function subBox(text, type, cols, otherCols, isHole, parent, noDrag) {
   //g.classList.add("box")
   if (text == "ifThenElse") { } else
     if (text && (!isInfix(text) || isBase(type))) { g.addText(text) }
-  g.type = type
   g.text = text
+  if (typeScope===undefined){
+    g.tyVars={}
+  }
+  if(isPolyVar(type)){
+    
+  }
+  g.type = type
 
+  typeScope ??= g
+  g.typeScope = typeScope
   //Children
   let numOwned = 0
   while (isFn(type)) {
     var [arg, type] = extractFn(type)
     if (text == "ifThenElse") { g.addText(["if", " then", " otherwise"][numOwned]) }
-    let ch = subBox("", arg, otherCols, cols, !isHole, g, noDrag)
+    let ch = subBox("", arg, otherCols, cols, !isHole, g, noDrag, typeScope)
     ch.scopeIndex = numOwned++ // For indexing into g.mapsto during evaluation
     if (g.children.length == 2 && text && isInfix(text)) { g.addText(text) }
   }
@@ -101,8 +110,7 @@ function subBox(text, type, cols, otherCols, isHole, parent, noDrag) {
   g.scope = parent
   parent.appendChild(g)
   if (!noDrag && !g.isHole) {
-    g.addEventListener("touchstart", startDrag(g))
-    g.addEventListener("mousedown", startDrag(g))
+    makeDraggable(g)
   }
   //parent.floating.push(g)
   //everything.push(g)

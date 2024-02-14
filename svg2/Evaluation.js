@@ -38,7 +38,7 @@ SVGGElement.prototype.evl = function(callback) {
       args.push(hole.filled ? hole.filled : hole)
     }
     let savedRetType = retType
-    retType = this.displayType//TODO:polymorphism
+    retType = {name:this.displayType,args:[]}//TODO:polymorphism
     let newTerm = defn(...args)
     retType = savedRetType
     if (newTerm) {

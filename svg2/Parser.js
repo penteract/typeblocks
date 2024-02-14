@@ -22,9 +22,9 @@ function isBase(t){
   let c = t.name[0]
   return t.args.length==0 && c!==c.toLowerCase()
 }
-function isPolyVar(t){
+function isPolyVar(t){//Return true if the type is a type variable of kind *
   let c = t.name[0]
-  return t.args.length==0 && c===c.toLowerCase()
+  return t.args.length==0 && c!==c.toLowerCase()
 }
 function isFn(t){
   return t.name==="->"
@@ -32,6 +32,11 @@ function isFn(t){
 function extractFn(t){
   if(!isFn(t))throw "Not a function type"
   return t.args
+}
+function* extractVars(t){
+  let c = t.name[0]
+  if (c!==c.toUpperCase()){yield t.name}
+  for(let arg of t.args) {for(let x in extractVars(arg)) {yield x}}
 }
 
 //Firefox for android does not support unicode character classes

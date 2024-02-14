@@ -12,14 +12,15 @@ SVGGElement.prototype.duplicate = function(newPar) {
     }
     let cols = [this.style.fill, this.style.stroke]
     redrawDirty() // We don't want to redraw the newly created boxes normally
-    let g = subBox(this.text, this.type, cols, ["#DDD", "#BBB"], false, newPar)
+    // Only need to worry about typeScope here if we're copying a hole in an LHS
+    let g = subBox(this.text, this.type, cols, ["#DDD", "#BBB"], false, newPar,false,this.isHole?this.typeScope:undefined)
     // newly created nodes have been added in order (deepest first)
     for (let n of dirty){
       calcFreeWidth(n)
     }
     dirty=[]
     if (!this.isHole) g.defn = this.defn
-    g.scopeIndex = this.scopeIndex
+    if(this.isHole) {g.scopeIndex = this.scopeIndex}
     // overflow = Math.max(0, this.freewidth - maxwidth)
     // maxwidth = this.freewidth - this.overflow
     g.redraw(this.freewidth - this.overflow + EPSILON) // I'm not completely sure why EPSILON is needed.
@@ -33,22 +34,25 @@ SVGGElement.prototype.duplicate = function(newPar) {
     newPar = this.parentElement
   }
   newPar.appendChild(g)
-  // Deal with scope
-  if (this.scope.contains(newPar)) {
-    g.scope = this.scope
-  }
-  else {
-    // Our (this's) scope has already been duplicated.
-    // The duplicated scope should be as many levels above g
-    // as our scope is above us
-    g.scope = newPar
-    let climbing = this.parentElement
-    while (climbing !== this.scope) {
-      if (climbing.isTopLevel) throw "Climbed too far"
-      climbing = climbing.parentElement
-      g.scope = g.scope.parentElement
+  // Deal with scope and typeScope
+  for (let prop of ["scope","typeScope"]){
+    if (this[prop].contains(newPar)) {
+      g[prop] = this[prop]
+    }
+    else {
+      // Our (this's) [type]scope has already been duplicated.
+      // The duplicated scope should be as many levels above g
+      // as our scope is above us
+      g[prop] = g
+      let climbing = this
+      while (climbing !== this[prop]) {
+        if (climbing.isTopLevel) throw "Climbed too far"
+        climbing = climbing.parentElement
+        g[prop] = g[prop].parentElement
+      }
     }
   }
+
   //Deal with most of the properties
   //Not copied: isLHS/isImport (once copied, it is no longer LHS), some things related to layout
   for (let prop of [
