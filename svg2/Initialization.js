@@ -79,9 +79,6 @@ function subBox(text, type, cols, otherCols, isHole, parent, noDrag, typeScope) 
   if (typeScope===undefined){
     g.tyVars={}
   }
-  if(isPolyVar(type)){
-    
-  }
   g.type = type
 
   typeScope ??= g
@@ -96,6 +93,8 @@ function subBox(text, type, cols, otherCols, isHole, parent, noDrag, typeScope) 
     if (g.children.length == 2 && text && isInfix(text)) { g.addText(text) }
   }
   g.displayType = type.name
+  g.boxType=mkBoxType(type,g)
+
   g.numOwned = numOwned
   if (numOwned !== [...g.boxes()].length)
     throw `numOwned (${numOwned}) should be the number of subboxes at creation ${[...g.boxes()].length}`

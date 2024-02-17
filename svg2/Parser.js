@@ -2,43 +2,6 @@
 function assertEq(a,b){
   if (a!==b && JSON.stringify(a)!==JSON.stringify(b)) throw ("not Equal: "+a+" and "+b)
 }
-
-// Data structure of an expression
-// data Term = App Term Term | Const String | Variable String | AppL Term [String] Term
-
-//data Type = Base String | Arrow Type Type
-//            "Type"      | [Type,Type]
-
-const Types = {} // Set of base types
-const Constants = {} //dictionary giving Types
-
-function addType(t){
-  Types[t]=true
-}
-function addConst(c,t){
-  Constants[c]=t
-}
-function isBase(t){
-  let c = t.name[0]
-  return t.args.length==0 && c!==c.toLowerCase()
-}
-function isPolyVar(t){//Return true if the type is a type variable of kind *
-  let c = t.name[0]
-  return t.args.length==0 && c!==c.toLowerCase()
-}
-function isFn(t){
-  return t.name==="->"
-}
-function extractFn(t){
-  if(!isFn(t))throw "Not a function type"
-  return t.args
-}
-function* extractVars(t){
-  let c = t.name[0]
-  if (c!==c.toUpperCase()){yield t.name}
-  for(let arg of t.args) {for(let x in extractVars(arg)) {yield x}}
-}
-
 //Firefox for android does not support unicode character classes
 //token = /(\p{Z}+)|(\()|(\))|((?:(?![\(\)])(?:\p{M}|\p{S}|\p{P}))+)|((?:\p{L}|\p{N})+)/u
 
@@ -84,6 +47,16 @@ function parseLine(line){
   if (line.startsWith("data "))
     return parseData(line.slice(5).trim())
 }
+/*TODO: datatypes
+const Types = {} // Set of base types
+const Constants = {} //dictionary giving Types
+
+function addType(t){
+  Types[t]=true
+}
+function addConst(c,t){
+  Constants[c]=t
+}
 function parseData(data){
   d = data.split("=")
   if(d.length!=2) throw ("expected something of the form a = b\nreceived: "+data);
@@ -100,7 +73,7 @@ function parseData(data){
     typ.push(head)
     addConst(thing[0],parseType(typ))
   }
-}
+}*/
 function parseType(type){
   //Parse the result of partition as a type
   if (type.length<1) throw ("empty component type in "+type)
@@ -120,7 +93,3 @@ function parseType(type){
   return rhs
 }
 //assertEq(parseType(partition("(a→d)->b->c")[0]), [["a","d"],["b","c"]])
-
-function showType(t){
-  return typeof(t)==="string"?t:`(${showType(t[0])})->(${showType(t[1])})`
-}

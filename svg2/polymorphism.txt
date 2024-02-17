@@ -5,7 +5,10 @@ There are 2 contexts where something with a polymorphic type can be manipulated:
    - here it acts like a base type distinct from all others. It does not admit further constraints.
    - We could say that attempting to constrain it changes the function type to be non-polymorphic.
  - As part of a polymorphic function defined elsewhere
+
  - If we allow higher rank types, type variables in each situation exchange behaviour according to rank parity
+ - GHC calls instances of the first case rigid type variables
+
 
 A polymorphic type variable is scoped to a named function box.
  - (In turn, that function is attached to a definition, or it may be an RHS)
@@ -25,3 +28,49 @@ It should be possible to manually add a constraint that something is a function 
 
 Consider definitions beginning as polymorphic, but becoming as concrete as necessary
  - changing the type of a definition after it has been used would involve keeping track of all references to it.
+
+Implementation 1:
+  There is a graph of type variables (and base types)
+  Edges mean unification and correspond to a box filling a hole.
+  
+  Sometimes there should be an edge from a type variable to an arrow type.
+    This can be dealt wtih by creating a temporary variable for the extra argument
+      All other places with the corresponding type would need to be updated (This is possible, or unification would fail)
+      If that argument is no longer needed, it should be removed
+        "no longer needed" means all holes with the new type are empty and all antiholes are deleted?
+             (or they are paired and filling each other, so undoing is relatively easy)
+           What should be done about hidden ones?
+           What should be done when one 
+    This might be handled differently in implementation 2
+  
+
+Actions that should be handled:
+Filling an otherwise empty hole with a block of unconstrained polymorphic type should set all instances of that type variable to the shape of the hole
+similarly for filling a box with no holes of non-polymorphic type into a hole of polymorphic type
+
+Filling an unfilled, but non-empty hole with a box of polymorphic type should unify the type of that box with the function type of the hole.
+filling a box with some holes into a hole of polymorphic type should unify the outer type with the implicit function type
+  ? What is the implicit function type of  (_ (F (\ x -> _ (x _))) :: X) Where F has type ((A->B)->C)->D.
+    The options are (((A->B)->C)->D)->X or ((B->C)->A->D)->X.
+    The first seems better, but requires acknowledging that holes form a tree rather than just a sequence.
+      Note that there is a function (((B->C)->A->D)->X )->(((A->B)->C)->D)->X but not necessarily the other way round
+
+
+When a type variable a gets unified with a function type, a fresh pair of variables b->c should be created and associated with a, with b labelled as temporary.
+This needs to propogate to other variables unified with a, which should create their own fresh type variables (that immediately get unified with b and c), and new boxes must be created.
+When a box of shape b is moved or deleted, there should be a necessity check, ensuring that there is a non-temporary type variable or a concrete type connected to b in the unification graph.
+If not, all the temporary variables in the connected component get deleted and the corresponding boxes removed.
+Variables that have been replaced by a fresh pair are no longer part of the 
+  Option 2: a should be replaced by b->a. This makes correctness less obvious, but means there's less cleaning up to do if b is later removed.
+
+
+
+Unfilling a block from a hole should undo the act of filling it.
+
+
+
+
+
+Implementation 2:
+  TODO: consider type constructors, such as [a], (a,b), m Int
+  This structure is no longer a simple graph of type variables, since box outlines may be more complicated than that

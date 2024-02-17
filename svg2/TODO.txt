@@ -58,6 +58,8 @@ datatype declarations
   should this include functions or datatypes defined in the current module?
     should it be the only place datatype declarations are visible?
   Don't let the pane interfere so much with dragging terms
+  Bugfix: items from the pane get incorrectly wrapped when being copied at certain zoom levels
+    (observed at 110%, but only when the window is taller than it is wide?)
 
 //evaluation (single step)
   animated (due to the need to recursively eliminate anonymous variables, this is not straightforward)

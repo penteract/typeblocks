@@ -274,4 +274,17 @@ their holes before trying t
 and result in
 > fn (\ fn0 -> inner (\ inner0 -> fn0 (\ fn1v0 fn1v1 -> inner0 fn1v1 fn1v0)))
 (η-equivalent to 'fn inner'
+
+
+polymorphic tricky case:
+f :: Int -> a
+x :: (Bool -> b) -> Bool
+
+What should happen when f is dragged into x's hole?
+
+Int->a cannot be unified with Bool->b,
+ but since we can leave some holes unfilled/arguments unused,
+ unifying Int->a with b,  or a with Bool->b are both possible options.
+This means just picking the maximum suffix that works no longer uniquely determines a strategy.
+
 */

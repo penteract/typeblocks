@@ -52,9 +52,12 @@ SVGGElement.prototype.duplicate = function(newPar) {
       }
     }
   }
-
+  if(g.typeScope===g){
+    g.tyVars={}
+  }
+  g.boxType = mkBoxType(this.boxType,g)
   //Deal with most of the properties
-  //Not copied: isLHS/isImport (once copied, it is no longer LHS), some things related to layout
+  //Not copied: isLHS/isImport (once copied, it is no longer LHS; also those shouldn't be here), some things related to layout
   for (let prop of [
     "type", "text", "isHole", "displayType", "scopeIndex", "numOwned", "defn", "isConstructor",
     "xPos", "yPos", "freewidth", "width", "height", "overflow", "lines", "dirty", "dirt"]) {
@@ -75,6 +78,7 @@ SVGGElement.prototype.duplicate = function(newPar) {
     let dupnode = node.duplicate(g)
     if (this.filled === node) {
       g.filled = dupnode
+      //TODO: unify types
     }
   }
   return g
