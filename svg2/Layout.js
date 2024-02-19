@@ -92,8 +92,20 @@ Recomputes layout for a box if it needs updating. Descends into children where
 needed.
 */
 SVGGElement.prototype.redraw = function(maxwidth) {
+  let displayTypeChanged = false
+  if(this.boxType){
+    let ty = this.boxType
+    if(isPolyVar(ty)){
+      ty=getCanon(ty.var)
+    }
+    if(this.displayType !== (ty.name || ty.vname)){
+      this.displayType = (ty.name || ty.vname)
+      displayTypeChanged=true
+    }
+  }
+
   let overflow = Math.max(0, this.freewidth - maxwidth)
-  if (overflow == this.overflow && !this.dirty) {
+  if (overflow == this.overflow && !this.dirty && !displayTypeChanged) {
     return;
   }
   this.overflow = overflow
@@ -169,7 +181,7 @@ SVGGElement.prototype.redraw = function(maxwidth) {
     this.height = newHeight
     boxSizeChanged = true
   }
-  if (boxSizeChanged) this.drawBox()
+  if (boxSizeChanged || displayTypeChanged) this.drawBox()
 }
 
 SVGTextElement.prototype.setWidth = function(maxwidth) {

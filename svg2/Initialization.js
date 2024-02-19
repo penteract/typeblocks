@@ -12,7 +12,7 @@ function makeDefn(text, type) {
   defn.classList.add("defn")
   defn.classList.add("box")
   makeDraggable(defn)
-  defn.tyVars={}
+  initTypeScope(defn)//defn.tyVars={}
   let line = createSVGElement("g")
   line.appendChild(createSVGElement("path"))
   line.displayType = " line "
@@ -72,12 +72,14 @@ function subBox(text, type, cols, otherCols, isHole, parent, noDrag, typeScope) 
     // identical colors for recognising when things are from the same
     // top level object
   }
+  g.cols=structuredClone(cols)
+  g.otherCols=structuredClone(otherCols)
   //g.classList.add("box")
   if (text == "ifThenElse") { } else
     if (text && (!isInfix(text) || isBase(type))) { g.addText(text) }
   g.text = text
   if (typeScope===undefined){
-    g.tyVars={}
+    initTypeScope(g)//g.tyVars={}
   }
   g.type = type
 

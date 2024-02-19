@@ -156,6 +156,7 @@ let pathEl = this.children[0]
   }else{
     let path = shapes[hash(type) % shapes.length]
     //let corpath = cornershapes[hash(type) % cornershapes.length]
+    pathEl.innerHTML=""// Remove animation
     pathEl.setAttribute("d",simplePath(0, 0, this.width, this.height, path, corner))
   }
 }

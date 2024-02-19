@@ -59,7 +59,7 @@ SVGGElement.prototype.duplicate = function(newPar) {
   //Deal with most of the properties
   //Not copied: isLHS/isImport (once copied, it is no longer LHS; also those shouldn't be here), some things related to layout
   for (let prop of [
-    "type", "text", "isHole", "displayType", "scopeIndex", "numOwned", "defn", "isConstructor",
+    "type", "text", "isHole", "displayType", "scopeIndex", "numOwned", "defn", "isConstructor", "tmpCount",
     "xPos", "yPos", "freewidth", "width", "height", "overflow", "lines", "dirty", "dirt"]) {
     g[prop] = this[prop]
   } for (let prop of ["fill", "stroke"]) {

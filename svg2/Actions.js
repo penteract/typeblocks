@@ -128,9 +128,10 @@ function getMoveCommand(argument, hole, pointerPosition) {
 // See if a term can fit a hole perfectly, taking into account
 // stuff that is no longer in scope, but dealing with complicated cases correctly
 function tryToFillHole(arg, hole, pointerPos) {
-  //detatch(arg)//hopefully
-  if (arg.displayType != hole.displayType)//TODO:polymorphism
-    return makeFloating(arg, hole, pointerPos);
+  // start by making it floating in the hole it should end up in, so that we break type constraints that don't need to apply
+  let r = makeFloating(arg, hole, pointerPos);
+  //This also puts it in the right positon for the case that typechecking fails.
+
   //return makeFloating(arg,hole,pointerPos);
   return fillHole(arg, hole)
   /*hole.appendChild(arg)
@@ -168,10 +169,14 @@ function makeFloating(g, target, location) {
   else if (target === g.scope) {
     findfirst((ch) => ch.scope === target && ch.scopeIndex > g.scopeIndex)
   }
+  //If something moves, need to check hereditarily that everything is still in scope
+  let oldPar = g.parentElement
   detach(g)
   target.insertBefore(g, before)
-  for (let ch of g.boxes()) {
-    checkScope(ch)
+  if (!oldPar.contains(target)){//if this was true, we don't need to check recursively
+    for (let ch of g.boxes()) {
+      checkScope(ch)
+    }
   }
   //g.setxy(0, 0)
   return true // It moved
@@ -181,30 +186,69 @@ function makeFloating(g, target, location) {
 // future Strategy: If there is an unambiguous ordered bijection between (((a subset of the argument's holes) and (the hole's arguments)) ^or^ ((the argument's holes) and (a subset of the hole's arguments)) then go for it; otherwise, if the final types line up, stick with that.
 //   a bijection is ambiguous if there is another one that does not involve a strict subset of chosen argument set
 
-// Do the work of moving filling a hole with an argument
+// work out if something can be put into a hole, and if so, do it
 function fillHole(argument, hole) {
-  //If something moves, need to check hereditarily that everything is still in scope
-  let oldPar = argument.parentElement
-  detach(argument)
-  hole.appendChild(argument)
-  if (!oldPar.contains(hole)) {//If it does, we don't need to check recursively
-    checkScope(argument)
-  }//doing this before matching types hopefully saves some headaches
+  // assumes argument has been 
   //We need to detach it again because "isNearPerfectMatch" uses the DOM tree
+  let oldSib = argument.nextSibling
   hole.removeChild(argument)
+  let atype = buildType(argument)
+  let htype = buildType(hole)
+  let m = tryToUnify(atype,htype)
+  if(!m){
+    hole.insertBefore(argument,oldSib)
+    return false;
+  }
+  function getU(x){
+    if(x instanceof TyVar)x=getCanon(x)
+    if(!(x instanceof TyVar)) return x
+    if(!m.has(x)) return x;//throw "Why is this being called on something not in the set"
+    let k = m.get(x)
+    if(k!==x){
+      let r=getU(k)
+      m.set(x,r)
+      return r
+    }
+    return x
+  }
+  function doUnify(tv,t){
+    while(isFn(t)){
+      let a = createArg(tv)
+      doUnify(a.var,getU(t.args[0]))
+      t=t.args[1]
+      if(isPolyVar(t)){t=getU(t.var)}
+    }
+    tv.ufds=t // The deeper parts of unification were already handled by tryToUnify
+  }
+  for(let tv of m.keys()){
+    if(!tv.uses) {throw "Type variables expected as keys";}
+    let t = getU(tv)
+    if(t!==tv) doUnify(tv,t)
+  }
+  let visited=new Set()
+  for(let tv of m.keys()){
+    traverseComponent(tv,
+      function (g){
+        dirty.push(g)
+      }
+      ,visited
+    )
+  }
   let match = isNearPerfectMatch(argument, hole)
+  if(!match) throw "Match unexpectedly failed"
   for (let i = 0; i < match.length; i++) {
     let s = match[i][0]
     let h = match[i][1]
     if (i > 0) detach(s) // match[0]  is [argument,hole]
-    h.classList.add("filled")
+    else{dirty.push(s)}
+    dofill(s,h)
+    /*h.classList.add("filled")
     h.filled = s
     s.classList.add("filling")
-    h.appendChild(s) // There might be an argument for prepending here
+    h.appendChild(s) // There might be an argument for prepending here*/
   }
   return true
 }
-
 
 
 function checkScope(g) {
@@ -256,6 +300,12 @@ function unfill(g) {
   arg.classList.remove("filling")
   g.removeChild(arg)
   g.filled = false
+}
+function dofill(argument,hole){
+  hole.classList.add("filled")
+  hole.filled = argument
+  argument.classList.add("filling")
+  hole.appendChild(argument) 
 }
 
 
