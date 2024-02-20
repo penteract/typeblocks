@@ -103,7 +103,7 @@ function endDrag(e) {
       // we don't need a copy, move the original
       savedPos = [dragging.xPos, dragging.yPos]
       original.setPos()
-      dragging.remove()
+      dragging.delete(undefined,true)
       dragging = original
     }
     dragging.classList.add("hidden")
@@ -114,7 +114,7 @@ function endDrag(e) {
       if (!isDefn(dragging)) {
         let success = dragInto(dragging, slot, [e.x, e.y], copying ? "copy" : "move")
         if (!success && copying) {
-          dragging.remove()
+          dragging.delete()
         }
         else if (savedPos && dragging.parentElement === root && slot === root) {
           dragging.setPos(...savedPos)

@@ -102,9 +102,9 @@ SVGTextElement.prototype.duplicate = function(newPar) {
   t.innerHTML = this.innerHTML
 }
 
-SVGGElement.prototype.delete = function(started) {
+SVGGElement.prototype.delete = function(started,quickDelete) {
   // Child node is responsible for removing self from parent
-  if (started === undefined) {
+  if (started === undefined || quickDelete) {
     this.toBeDeleted = true
   }
   else if (this.scope.toBeDeleted) {
@@ -134,14 +134,18 @@ SVGGElement.prototype.delete = function(started) {
     }
   }
   for (let ch of Array.from(this.boxes())) {
-    ch.delete(true)
+    ch.delete(true,quickDelete)
   }
 
   if (this.toBeDeleted) {
     if (this.filled) throw "Trying to delete something that's not empty(filled)"
     for (let x of this.boxes()) throw "Trying to delete something that's not empty"
-    detach(this, "g")
-    this.remove() //does this do anything?
+    if(isPolyVar(this.boxType)){
+      this.boxType.var.uses.delete(this)
+      if(!quickDelete && this.boxType.var.tmp){checkNeeded(this.boxType.var)}
+    }
+    if(!quickDelete)detach(this)
+    this.remove() //does this do anything if detatch happened?
   }
   else {
     if (snapTo !== this.parentElement) {

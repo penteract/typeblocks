@@ -66,9 +66,9 @@ function dragInto(argument, hole, pointerPos, dropEffect) {
   // save some data that may be helpful for repositioning
   //let savedpos = argument.getPageXY()
 
-  /*if (dropEffect == "copy") {
-    argument = argument.duplicate()
-  }*/
+  if (dropEffect == "copy") {
+    dirty.push(argument)
+  }
   let fn = cmd[0]
   cmd[0] = argument
   let moved = fn(...cmd)// moved within the syntax tree
@@ -133,7 +133,8 @@ function tryToFillHole(arg, hole, pointerPos) {
   //This also puts it in the right positon for the case that typechecking fails.
 
   //return makeFloating(arg,hole,pointerPos);
-  return fillHole(arg, hole)
+  fillHole(arg, hole)
+  return true;
   /*hole.appendChild(arg)
   for(let ch of Array(...arg.children).reverse()){
     if
@@ -234,7 +235,7 @@ function fillHole(argument, hole) {
       ,visited
     )
   }
-  let match = isNearPerfectMatch(argument, hole)
+  let match = isPerfectMatch(argument, hole)
   if(!match) throw "Match unexpectedly failed"
   for (let i = 0; i < match.length; i++) {
     let s = match[i][0]
