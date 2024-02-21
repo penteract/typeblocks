@@ -69,10 +69,10 @@ function mkBoxType(t,box){
   return newTy
 }
 
-// Test whether 
+// Test whether a pair of types are identical, given for previous unification
 function tyEq(t1,t2){
-  if(isPolyVar(t1)){t1=getCanon(t1.var)}
-  if(isPolyVar(t2)){t2=getCanon(t2.var)}
+  t1=canonize(t1)
+  t2=canonize(t2)
   if((t1 instanceof TyVar) !== (t2 instanceof TyVar)) return false
   if(t1 instanceof TyVar) return t1===t2
   if (t1.name!==t2.name) return false
@@ -91,6 +91,12 @@ function getCanon(tv){
     return r
   }
   else {return nx}
+}
+// I'm not doing just making this part of getCanon in the hope that it catches some type errors
+function canonize(ty){ 
+  if(ty instanceof TyVar) return getCanon(ty)
+  if(isPolyVar(ty))return getCanon(ty.var)
+  return ty
 }
 
 function tryToUnify(t1,t2){
@@ -230,3 +236,8 @@ function printType(t){
   else return t.name
 }
 //TODO: disconnections
+
+// see if a temporary type variable is still needed
+function checkNeeded(box){
+
+}

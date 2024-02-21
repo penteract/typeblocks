@@ -201,7 +201,7 @@ function fillHole(argument, hole) {
     return false;
   }
   function getU(x){
-    if(x instanceof TyVar)x=getCanon(x)
+    x=canonize(x)
     if(!(x instanceof TyVar)) return x
     if(!m.has(x)) return x;//throw "Why is this being called on something not in the set"
     let k = m.get(x)
@@ -220,6 +220,7 @@ function fillHole(argument, hole) {
       if(isPolyVar(t)){t=getU(t.var)}
     }
     tv.ufds=t // The deeper parts of unification were already handled by tryToUnify
+    if(t.name && isPolyVar(t)) throw "how did a non-canonized thing get here?"
   }
   for(let tv of m.keys()){
     if(!tv.uses) {throw "Type variables expected as keys";}

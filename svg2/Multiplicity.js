@@ -59,7 +59,7 @@ SVGGElement.prototype.duplicate = function(newPar) {
   //Deal with most of the properties
   //Not copied: isLHS/isImport (once copied, it is no longer LHS; also those shouldn't be here), some things related to layout
   for (let prop of [
-    "type", "text", "isHole", "displayType", "scopeIndex", "numOwned", "defn", "isConstructor", "tmpCount",
+    "type", "text", "isHole", "displayType", "scopeIndex", "numOwned", "defn", "isConstructor", "tmpCount", "cols", "otherCols",
     "xPos", "yPos", "freewidth", "width", "height", "overflow", "lines", "dirty", "dirt"]) {
     g[prop] = this[prop]
   } for (let prop of ["fill", "stroke"]) {
@@ -144,8 +144,10 @@ SVGGElement.prototype.delete = function(started,quickDelete) {
       this.boxType.var.uses.delete(this)
       if(!quickDelete && this.boxType.var.tmp){checkNeeded(this.boxType.var)}
     }
-    if(!quickDelete)detach(this)
-    this.remove() //does this do anything if detatch happened?
+    detach(this)
+    //if(!quickDelete)detach(this)
+    //else if(this.parentElement.filled===this) this.parentElement.filled=undefined
+    //this.remove() //does this do anything if detatch happened?
   }
   else {
     if (snapTo !== this.parentElement) {
