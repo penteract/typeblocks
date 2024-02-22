@@ -70,8 +70,7 @@ SVGGElement.prototype.duplicate = function(newPar) {
   for (let c of ["filled", "filling", "hole", "box"]) {
     if (this.classList.contains(c)) g.classList.add(c)
   }
-  if (!g.isHole) g.addEventListener("touchstart", startDrag(g))
-  if (!g.isHole) g.addEventListener("mousedown", startDrag(g))
+  if (!g.isHole) makeDraggable(g)
 
   // Deal with the children
   for (let node of this.children) {
@@ -140,11 +139,11 @@ SVGGElement.prototype.delete = function(started,quickDelete) {
   if (this.toBeDeleted) {
     if (this.filled) throw "Trying to delete something that's not empty(filled)"
     for (let x of this.boxes()) throw "Trying to delete something that's not empty"
+    detach(this)
     if(isPolyVar(this.boxType)){
       this.boxType.var.uses.delete(this)
       if(!quickDelete && this.boxType.var.tmp){checkNeeded(this.boxType.var)}
     }
-    detach(this)
     //if(!quickDelete)detach(this)
     //else if(this.parentElement.filled===this) this.parentElement.filled=undefined
     //this.remove() //does this do anything if detatch happened?

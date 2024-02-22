@@ -102,7 +102,7 @@ function canonize(ty){
 function tryToUnify(t1,t2){
   let ufds = new Map()
   function getU(x){
-    if(x instanceof TyVar)x=getCanon(x)
+    x=canonize(x)
     if(!(x instanceof TyVar)) return x
     if(!ufds.has(x)){ufds.set(x,x)}
     let k = ufds.get(x)
@@ -117,18 +117,14 @@ function tryToUnify(t1,t2){
     if(tv===ty) {return true}
     else if (!(ty instanceof TyVar)){
       for (let t of ty.args){
-        if(isPolyVar(t)){t = getU(t.var)}
+        t = getU(t)
         if(occurs(tv,t)){return true}
       }
     }
   }
   function unify(t1,t2){
-    if(isPolyVar(t1)){
-      t1 = getU(t1.var)
-    }
-    if(isPolyVar(t2)){
-      t2 = getU(t2.var)
-    }
+    t1 = getU(t1)
+    t2 = getU(t2)
     if(t1 instanceof TyVar){
       if(t1!==t2){
         if(occurs(t1,t2)) {console.log(t1,t2); return false}
@@ -189,7 +185,7 @@ function createArg(tv,visited,handled){
       createArg(conn.typeScope, conn.boxType.name, visited,handled)//TODO: consider polymorphic variables here
     }
     let ch = subBox("", freshVar, g.otherCols, g.cols, !g.isHole, g, g.isLHS, scope)
-    if(g===g.parentElement.lhs){makeDraggable(ch)}
+    if(g===g.parentElement?.lhs){makeDraggable(ch)}
     ch.scopeIndex = g.numOwned++
     handled.set(g,ch)
     dirty.push(ch)
@@ -206,21 +202,25 @@ function createArg(tv,visited,handled){
   }
   return freshVar
 }
+//visit each edge of a connected component in the concrete type unification graph
+// callback is called on every occurence of each type variable in the component, 
+// with the filling/filled paired element as the second argument if the box is filling/filled
 function traverseComponent(tv, callback, visited){
   if(!visited){visited = new Set()}
   if(visited.has(tv))return;
   visited.add(tv)
   for(let g of tv.uses){
     let conn = g.parentElement?.filled===g?g.parentElement:g.filled
-    callback(g,conn)
+    let r
+    if(r=callback(g,conn))return r
     if(conn && isPolyVar(conn.boxType)){
-      traverseComponent(conn.boxType.var, callback, visited)
+      if(r=traverseComponent(conn.boxType.var, callback, visited))return r
     }
   }
 }
 
 /*
-Given a box, 
+Given a box, return the implicit type of of the concrete term it is part of, taking account of internal holes
 */
 function buildType(g){
   let ty = g.boxType
@@ -235,7 +235,63 @@ function printType(t){
   }
   else return t.name
 }
-//TODO: disconnections
+// disconnections
+function disconnectTypes(atype, htype){
+  // We don't need to worry about these being arrow types
+  let atv = atype.var
+  let htv = htype.var
+  // TODO(Type constructors): (if types get fancier, this check gets more complicated; possibly skip it altogether)
+  if (!atv && !htv) return // If they aren't type variables, no need to worry 
+  let [tv,ot] = atv?[atv,htype]:[htv,atype]
+  let tvparts = new Set([tv])
+  let nontvParts = new Set()
+  if(!traverseComponent(tv, function(g,conn){
+    if(conn){
+      if(shallowEq(conn.boxType,ot))return true
+      if(conn.boxType?.var)tvparts.add(conn.boxType.var)
+      else nontvParts.add(conn.boxType)
+    }
+  })){
+    let k
+    for(let ty of nontvParts){
+      k??=ty
+      if (k.name!==ty.name) throw "Bad component"
+    }
+    k??=tv
+    for(let v of tvparts){v.ufds=k}
+    if(ot.var){
+      tvparts = new Set([ot.var])
+      nontvParts.clear()
+      traverseComponent(tv, function(g,conn){
+        if(conn){
+          if(conn.boxType?.var)tvparts.add(conn.boxType.var)
+          else nontvParts.add(conn.boxType)
+        }
+      })
+      k=undefined
+      for(let v of nontvParts){
+        k??=v
+        if (k.name!==v.name) throw "Bad component"
+      }
+      k??=ot.var
+      for(let v of tvparts){v.ufds=k}
+    }
+  }
+  // If the other type is in the component anyway, no action is necessary
+}
+// Determine if types are equal while the ufds graph may be invalid
+function shallowEq(ty1,ty2){
+  if(ty1.var){
+    return ty1.var===ty2.var
+  }
+  if(ty2.var) return false
+  if (ty1.name!==ty2.name) return false
+  if (ty1.args.length!==ty2.args.length) return false
+  for(let i = 0;i<ty1.args.length;i++){
+    if(!shallowEq(ty1.args[i],ty2.args[i])) return false
+  }
+  return true
+}
 
 // see if a temporary type variable is still needed
 function checkNeeded(box){

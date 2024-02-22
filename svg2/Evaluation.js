@@ -128,4 +128,5 @@ function deleteAll(x) {
   x.visit((n) => {
     n.toBeDeleted = true// stops it from being redrawn
   })
+  //TODO: type stuff
 }

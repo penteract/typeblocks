@@ -189,9 +189,9 @@ function makeFloating(g, target, location) {
 
 // work out if something can be put into a hole, and if so, do it
 function fillHole(argument, hole) {
-  // assumes argument has been 
-  //We need to detach it again because "isNearPerfectMatch" uses the DOM tree
+  // Type checking
   let oldSib = argument.nextSibling
+  //We need to detach it again because "isNearPerfectMatch" uses the DOM tree
   hole.removeChild(argument)
   let atype = buildType(argument)
   let htype = buildType(hole)
@@ -200,6 +200,8 @@ function fillHole(argument, hole) {
     hole.insertBefore(argument,oldSib)
     return false;
   }
+  // Unification:
+  //Consider doing all unification in isPerfectMatch, so that doFill and detach are the only places where the ufds pointers get mutated
   function getU(x){
     x=canonize(x)
     if(!(x instanceof TyVar)) return x
@@ -216,8 +218,7 @@ function fillHole(argument, hole) {
     while(isFn(t)){
       let a = createArg(tv)
       doUnify(a.var,getU(t.args[0]))
-      t=t.args[1]
-      if(isPolyVar(t)){t=getU(t.var)}
+      t=getU(t.args[1])
     }
     tv.ufds=t // The deeper parts of unification were already handled by tryToUnify
     if(t.name && isPolyVar(t)) throw "how did a non-canonized thing get here?"
@@ -236,6 +237,7 @@ function fillHole(argument, hole) {
       ,visited
     )
   }
+  // Term construction
   let match = isPerfectMatch(argument, hole)
   if(!match) throw "Match unexpectedly failed"
   for (let i = 0; i < match.length; i++) {
@@ -302,6 +304,7 @@ function unfill(g) {
   arg.classList.remove("filling")
   g.removeChild(arg)
   g.filled = false
+  disconnectTypes(g.boxType,arg.boxType)
 }
 function dofill(argument,hole){
   hole.classList.add("filled")
