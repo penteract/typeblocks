@@ -116,7 +116,6 @@ Make things take less space
 
 polymorphism
   bugfix: get evaluation working when type variables have been unified with arrow types
-  bugfix: redo type inference after copying a term (or think carefully about how much type inference needs doing)
   // change types when boxes are dragged into polymorphic holes and polymorphic boxes into holes
     Find a better way of determining type alignment (autofill)
   //when detached, recompute as much of the broken graph edge as necessary

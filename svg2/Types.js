@@ -23,6 +23,53 @@ class TyVar{
     this.vname=name
   }
 }
+function getCanon(tv){
+  let nx = tv.ufds
+  if(tv===nx)return tv;
+  if(tv.ufds instanceof TyVar){
+    let r = getCanon(nx)
+    tv.ufds = r
+    return r
+  }
+  else {return nx}
+}
+// I'm not just making this part of getCanon in the hope that it catches some type errors and for what might be a bit of efficiency
+function canonize(ty){
+  if(ty instanceof TyVar) return getCanon(ty)
+  if(isPolyVar(ty))return getCanon(ty.var)
+  return ty
+}
+function unify(t1,t2){
+  t1 = canonize(t1)
+  t2 = canonize(t2)
+  if(t1 instanceof TyVar){
+    if(t1!==t2){
+      if(occurs(t1,t2)) {console.log(t1,t2); return false}
+      t1.ufds=t2
+    }
+  }
+  else if (t2 instanceof TyVar){
+    if(occurs(t2,t1)) {console.log(t2,t1); return false}
+    t2.ufds=t1
+  }
+  else{
+    if(t1.name!==t2.name) {return false}
+    if(t1.args.length!==t2.args.length) {return false}
+    for(let i=0; i<t1.args.length; i++){
+      if(!unify(t2.args[i],t1.args[i])){return false}
+    }
+  }
+  return true
+}
+function occurs(tv,ty){
+  if(tv===ty) {return true}
+  else if (!(ty instanceof TyVar)){
+    for (let t of ty.args){
+      t = canonize(t)
+      if(occurs(tv,t)){return true}
+    }
+  }
+}
 
 function isBase(t){
   let c = t.name[0]
@@ -82,22 +129,6 @@ function tyEq(t1,t2){
   }
   return true
 }
-function getCanon(tv){
-  let nx = tv.ufds 
-  if(tv===nx)return tv;
-  if(tv.ufds instanceof TyVar){
-    let r = getCanon(nx)
-    tv.ufds = r
-    return r
-  }
-  else {return nx}
-}
-// I'm not doing just making this part of getCanon in the hope that it catches some type errors
-function canonize(ty){ 
-  if(ty instanceof TyVar) return getCanon(ty)
-  if(isPolyVar(ty))return getCanon(ty.var)
-  return ty
-}
 
 function tryToUnify(t1,t2){
   let ufds = new Map()
@@ -113,38 +144,38 @@ function tryToUnify(t1,t2){
     }
     return x
   }
-  function occurs(tv,ty){
+  function occurs_try(tv,ty){
     if(tv===ty) {return true}
     else if (!(ty instanceof TyVar)){
       for (let t of ty.args){
         t = getU(t)
-        if(occurs(tv,t)){return true}
+        if(occurs_try(tv,t)){return true}
       }
     }
   }
-  function unify(t1,t2){
+  function unify_try(t1,t2){
     t1 = getU(t1)
     t2 = getU(t2)
     if(t1 instanceof TyVar){
       if(t1!==t2){
-        if(occurs(t1,t2)) {console.log(t1,t2); return false}
+        if(occurs_try(t1,t2)) {console.log(t1,t2); return false}
         ufds.set(t1,t2)
       }
     }
     else if (t2 instanceof TyVar){
-      if(occurs(t2,t1)) {console.log(t2,t1); return false}
+      if(occurs_try(t2,t1)) {console.log(t2,t1); return false}
       ufds.set(t2,t1)
     }
     else{
       if(t1.name!==t2.name) {return false}
       if(t1.args.length!==t2.args.length) {return false}
       for(let i=0; i<t1.args.length; i++){
-        if(!unify(t2.args[i],t1.args[i])){return false}
+        if(!unify_try(t2.args[i],t1.args[i])){return false}
       }
     }
     return true
   }
-  if(unify(t1,t2)){
+  if(unify_try(t1,t2)){
     return ufds
   }else{
     return false;

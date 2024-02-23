@@ -77,7 +77,7 @@ SVGGElement.prototype.duplicate = function(newPar) {
     let dupnode = node.duplicate(g)
     if (this.filled === node) {
       g.filled = dupnode
-      //TODO: unify types
+      if(!unify(g.boxType,dupnode.boxType))throw "duplicating a well-typed term should be well-typed"
     }
   }
   return g
