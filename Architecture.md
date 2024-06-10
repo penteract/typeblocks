@@ -79,5 +79,19 @@ properties of non definition boxes:
               to the hole). If it is defined, all other children are hidden
               until it becomes undefined.
 
+Type related properties of boxes:
+ - `typeScope` : The scope with respect to which type variables should be
+                 interpreted. Should be a definition or a non-LHS text
+                 containing box.
+ - `type` : The type of a box without names having been converted to `TyVar`
+            objects. A "just parsed" representation.
+ - `boxType` : The outer type/return type of a box. Not a function type.
+               Type variables in here contain `TyVar` references.
+ - `displayType` : Used for rendering - a string representing the outer type of
+                   a box, accounting for unification/type inference.
+ - `tyVars` : A list of type variables that have this box as type scope
 
-
+`TyVar` class:
+ - `uses` : The set of boxes which use this type variable in their boxType
+ - `ufds` : A link forming a "union-find-disjoint-sets" data structure,
+            to support type inference of polymorphic types.
