@@ -2,6 +2,7 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE DeriveGeneric #-}
 module BoxTypes where
 
 import Control.Arrow
@@ -9,8 +10,8 @@ import Data.Char
 import Data.Maybe(fromJust)
 {-
 import Data.Typeable
-import Data.Data
-import GHC.Generics-}
+import Data.Data-}
+import GHC.Generics
 
 import Graphics.Rendering.Cairo
 
@@ -19,26 +20,32 @@ import Paths
 
 type Field = String
 
-data DefnBox l = Defn l [(LHSBox l,HoleBox l)] | Builtin l (ExprBox l) | Lambda l (ExprBox l) deriving (Show,Functor, Foldable, Traversable)
-data LHSBox l = Operator l [PatternBox l] deriving (Show,Functor,Foldable,Traversable)
-data PatternBox l = Var l [LHSAntiHoleBox l] | Constructor l [PatternBox l] deriving (Show,Functor,Foldable,Traversable)
-data LHSHoleBox l = LHSHole l [LHSAntiHoleBox l] deriving (Show,Functor,Foldable,Traversable)
-data LHSAntiHoleBox l = LHSAntiHole l [LHSHoleBox l] deriving (Show,Functor,Foldable,Traversable)
-data HoleBox l = Filled l (ExprBox l) [ExprBox l] | Hole l [ExprBox l] deriving (Show,Functor,Foldable,Traversable)
+data DefnBox l = Defn l [(LHSBox l,HoleBox l)] | Builtin l (ExprBox l) | Lambda l (ExprBox l) deriving (Show,Functor, Foldable, Traversable,Generic)
+data LHSBox l = Operator l [PatternBox l] deriving (Show,Functor,Foldable,Traversable,Generic)
+data PatternBox l = Var l [LHSAntiHoleBox l] | Constructor l [PatternBox l] deriving (Show,Functor,Foldable,Traversable,Generic)
+data LHSHoleBox l = LHSHole l [LHSAntiHoleBox l] deriving (Show,Functor,Foldable,Traversable,Generic)
+data LHSAntiHoleBox l = LHSAntiHole l [LHSHoleBox l] deriving (Show,Functor,Foldable,Traversable,Generic)
+data HoleBox l = Filled l (ExprBox l) [ExprBox l] | Hole l [ExprBox l] deriving (Show,Functor,Foldable,Traversable,Generic)
 data ExprBox l = Symbol l [HoleBox l]
                  | Case l [(PatternBox l,HoleBox l)]
                  | Let l [DefnBox l] (HoleBox l)
                  | Setter l (ExprBox l) Field (ExprBox l)
-                                                 deriving (Show,Functor, Foldable, Traversable)
+                                                 deriving (Show,Functor, Foldable, Traversable,Generic)
+
+-- generics
+
+-- plate :: ExprBox l -> (HoleBox l -> ExprBox l) -> ExprBox l
+-- alterChildren = undefined
+
 {-
 data Travarsor d l p lh lah h e = Traversor{
     defn_tr :: DefnBD -> Travarsor d l p lh lah h e -> d
     lhs_tr ::
     }
         -}
-class Ann m where
-    getAnn :: m a -> a
-    modifyAnn :: (a->a) -> m a -> m a
+class Ann box where
+    getAnn :: box a -> a
+    modifyAnn :: (a->a) -> box a -> box a
 
 
 instance Ann DefnBox where
@@ -189,6 +196,7 @@ addText (n,s) = modifyAnn (\xd -> xd{texts=(n,TextBox s (16*fromIntegral (length
 mkLocalDefn :: ExprBD -> DefnBD
 mkLocalDefn e = Lambda defaultData e
 
+defnBox = Defn defaultData
 {-
 --TODO: calculate length properly
 addText :: (Int,String) -> BoxTree -> BoxTree
@@ -197,7 +205,7 @@ addText (n,s) = modifyRoot (\b -> b{texts=(n,TextBox s (16*fromIntegral (length 
 
 -- I could enforce syntax rules at the type level, and use somthing like Language.Haskell.TH.Syntax.Exp or Language.Haskell.Exts.Syntax.Dec, but zippers over them would be a pain, and they would enforce the appearence of Haskell code too strongly.
 -- Another option would be to use GHC.Core.Expr (using GHC.HsToCore.deSugar), which would be very helpful for making the representation amenable to evaluation, but conflicts with niceness of display, makes it further from source files, might have trouble with representing programs during the process of construction, is too tied to evaluation details and still doesn't wouldn't be exactly represented (e.g. f vs (\ x -> f x))
---defnBox = Node defaultData
+
 
 
 

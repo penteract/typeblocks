@@ -16,7 +16,7 @@ import SDL
 import SDL.Cairo
 import Graphics.Rendering.Cairo
 import Graphics.Rendering.Cairo.Matrix(Matrix(..))
-import Graphics
+import CairoGraphics
 import BoxTree
 import Paths
 import Parsing

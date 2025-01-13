@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.35.1.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -20,8 +20,8 @@ library
       BoxTypes
       BoxTypesFolds
       BoxTypesParsing
+      CairoGraphics
       Colors
-      Graphics
       Lib
       Parsing
       Paths
@@ -34,10 +34,12 @@ library
     , cairo
     , colour
     , containers
+    , gloss
     , haskell-src-exts
     , hint
     , hsluv-haskell
     , rosezipper
+    , syb
   default-language: Haskell2010
 
 executable typeblocks-exe
@@ -52,6 +54,7 @@ executable typeblocks-exe
     , cairo
     , colour
     , containers
+    , gloss
     , haskell-src-exts
     , hint
     , hsluv-haskell
@@ -60,6 +63,7 @@ executable typeblocks-exe
     , rosezipper
     , sdl2
     , sdl2-cairo
+    , syb
     , typeblocks
   default-language: Haskell2010
 
@@ -74,13 +78,16 @@ test-suite typeblocks-test
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      GLUT
+    , base >=4.7 && <5
     , cairo
     , colour
     , containers
+    , gloss
     , haskell-src-exts
     , hint
     , hsluv-haskell
     , rosezipper
+    , syb
     , typeblocks
   default-language: Haskell2010

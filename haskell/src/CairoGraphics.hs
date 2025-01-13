@@ -1,4 +1,4 @@
-module Graphics where
+module CairoGraphics where
 
 --import Linear (V4(..))
 import Graphics.Rendering.Cairo

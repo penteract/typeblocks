@@ -22,7 +22,7 @@ sup = seq . unsafePerformIO . print
 
 
 -- Not the state monad, because when we add things, we usually only want to apply it to subparts and don't want to mutate it when returning
-type Env a = [(String,DefnBox)] -> a
+type Env a = [(String,DefnBD)] -> a
 
 getExpr :: String -> Env ExprBD
 getExpr nm env = case lookup nm env of
@@ -30,9 +30,9 @@ getExpr nm env = case lookup nm env of
                       Just (Builtin _ e) -> e
                       Just (Defn _ ((lhs,_):_)) -> lhsToExpr lhs
 
-type ModCache = Map.Map String [(String,DefnBox)]
+type ModCache = Map.Map String [(String,DefnBD)]
 
-moduleToBoxes :: Language.Haskell.Exts.Syntax.Module l -> ModCache -> IO (ModCache,[(String,DefnBox)])
+moduleToBoxes :: Language.Haskell.Exts.Syntax.Module l -> ModCache -> IO (ModCache,[(String,DefnBD)])
 moduleToBoxes (Module _ _ _ imps ds) knownModules = do
     (c', env)<- getImps (preludeDecl:imps) knownModules []
     return (c', dsToBoxes ds env)
@@ -71,7 +71,7 @@ getType (Data _ xs) = concat <$> mapM (getType . Fun) xs
 -- x,y :: Int (multiple type signatures on one line is possible)
 
 dsToBoxes :: [Decl l] -> Env [(String,DefnBD)]
-dsToBoxes ds env = [(name, defnToBox (typ.rootLabel =<< lookup name typeSigs) clauses (typeSigs ++ env)) | (name,clauses) <- defns]
+dsToBoxes ds env = [(name, defnToBox (typ . getAnn =<< lookup name typeSigs) clauses (env)) | (name,clauses) <- defns]
     where
         typeSigs = [(prettyPrint n, addText (0,prettyPrint n) $ typeToAntihole (toType t)) | (TypeSig _ ns t) <- ds, n<-ns]
         defns = [ (getName (head ms), ms) | FunBind _ ms <- ds]
@@ -126,8 +126,10 @@ rawBox (HS.Var _ (UnQual _ (HS.Symbol _ nm))) args env = let (BX.Symbol xd args'
 rawBox (App _ a b) args env = (rawBox a ((\h -> addthings h b (map (second incDepths) env)):args ) env)
 rawBox s args env = error (show $ return () <$> s)
 
+-- fills top-level holes recursively without doing proper checks that things work
 simpleFill :: HoleBD -> ExprBD -> HoleBD
-simpleFill (Hole hxd hChs) (HS.Symbol argLab aChs) = Filled hxd [HS.Symbol argLab (simpleFillHoles aChs hChs)]
+simpleFill (Hole hxd hChs) (BX.Symbol bxd aChs) = Filled hxd (BX.Symbol bxd $ simpleFillHoles aChs hChs) []
+--simpleFill (Hole hxd hChs) (HS.Symbol argLab aChs) = Filled hxd [HS.Symbol argLab (simpleFillHoles aChs hChs)]
 
 simpleFillHoles :: [HoleBD] -> [ExprBD] -> [HoleBD]
 simpleFillHoles ((Filled hxd f rest):hs) as = (Filled hxd f rest):simpleFillHoles hs as
@@ -140,10 +142,10 @@ simpleFillHoles' ((Filled xd arg others):hs) (a:as) =  (Filled xd arg others) : 
 simpleFillHoles' ((Hole xd others):hs) (a:as) = a (incDepths (Hole xd others)) : simpleFillHoles' hs as
 
 incDepths :: Functor f => f BoxData -> f BoxData
-incDepths = incDepthsN 0
-    where incDepthsN :: Int -> BoxTree -> BoxTree
-          incDepthsN n (Node lab chs) = let newScope= fmap (\sc -> if sc<=n then sc+1 else sc) (scope lab)
-                                        in Node lab{scope = newScope} (map (incDepthsN (n+1)) chs)
+incDepths = undefined -- incDepthsN 0
+--     where incDepthsN :: Int -> BoxTree -> BoxTree
+--           incDepthsN n (Node lab chs) = let newScope= fmap (\sc -> if sc<=n then sc+1 else sc) (scope lab)
+--                                         in Node lab{scope = newScope} (map (incDepthsN (n+1)) chs)
 
 -- implicts = [PVar undefined . Ident undefined $ "imp_"++show i | i<-[0..]]
 
@@ -156,6 +158,9 @@ eatArgs pats t = foldl' (\ (Hole lab (ch:chs), bs) (PVar _ (Ident _ s)) -> (Hole
 eatArgs pats t = let (t',bindings,n) = foldl' (\ (Node lab (ch:chs), bs, n) (PVar _ (Ident _ s)) -> (,,) ) (t,[],0) pats
                  in incArgIndices (length bindings - length pats) t'-}
 
+match = undefined
+unLHS = undefined
+                 {-
 match :: [Pat l] -> BoxTree -> (BoxTree,[(String,BoxTree)])
 match pats (Node b args) = (Node b argBoxes, typings)
     where
@@ -166,5 +171,5 @@ match pats (Node b args) = (Node b argBoxes, typings)
 
 unLHS :: BoxTree -> BoxTree
 unLHS bx = bx -- undo formatting due to being an LHS (make holes grey
-
+-}
 --typesigs xs = [ | TypeSig _  <- xs]

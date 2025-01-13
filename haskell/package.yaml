@@ -26,6 +26,8 @@ dependencies:
 - colour
 - hsluv-haskell
 - hint
+- syb
+- gloss
 
 # ghc-options:
 # - -Wall
@@ -70,3 +72,5 @@ tests:
     dependencies:
     - typeblocks
     - hint
+    - gloss
+    - GLUT
