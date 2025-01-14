@@ -30,7 +30,7 @@ Color (currently used to indicate what belongs to what, but imperfectly)
 animation (polymorphism?)
   This has now been implemented, but looks pretty bad
     (too small to see clearly
-    ,dramatic increase in power use
+    ,dramatic increase in power consumption
     ,whether something is being hovered over can now change without the mouse moving)
   one alternative is to substitue in all valid concrete types sequentially
     This makes sense with typeclasses - cycle through instances.
