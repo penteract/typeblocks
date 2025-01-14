@@ -22,6 +22,7 @@ library
       BoxTypesParsing
       CairoGraphics
       Colors
+      Graphics
       Lib
       Parsing
       Paths
@@ -45,12 +46,14 @@ library
 executable typeblocks-exe
   main-is: Main.hs
   other-modules:
+      GlossBackend
       Paths_typeblocks
   hs-source-dirs:
       app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      GLUT
+    , base >=4.7 && <5
     , cairo
     , colour
     , containers

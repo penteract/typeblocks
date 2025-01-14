@@ -16,6 +16,7 @@ draw = do
     let top = 119.05
     let bot = -33.33
     f <- fontHeight Roman
+    True <- return (abs (f+bot-top) < 0.02)
     -- print (abs (f+bot-top) < 0.01)
 
     return $ Pictures [Circle 80, Text "æ{<-}-xRł", Line [(0,0),(fromIntegral n,f/2 + bot)] ]) (const$ return ())

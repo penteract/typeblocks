@@ -20,7 +20,10 @@ import Paths
 
 type Field = String
 
-data DefnBox l = Defn l [(LHSBox l,HoleBox l)] | Builtin l (ExprBox l) | Lambda l (ExprBox l) deriving (Show,Functor, Foldable, Traversable,Generic)
+
+
+data DefnBox l = Defn l [(LHSBox l,HoleBox l)] -- | Builtin l (ExprBox l) | Lambda l (ExprBox l)
+      deriving (Show,Functor, Foldable, Traversable,Generic)
 data LHSBox l = Operator l [PatternBox l] deriving (Show,Functor,Foldable,Traversable,Generic)
 data PatternBox l = Var l [LHSAntiHoleBox l] | Constructor l [PatternBox l] deriving (Show,Functor,Foldable,Traversable,Generic)
 data LHSHoleBox l = LHSHole l [LHSAntiHoleBox l] deriving (Show,Functor,Foldable,Traversable,Generic)
@@ -50,11 +53,11 @@ class Ann box where
 
 instance Ann DefnBox where
     getAnn (Defn x _) = x
-    getAnn (Builtin x _) = x
-    getAnn (Lambda x _) = x
+    --getAnn (Builtin x _) = x
+    --getAnn (Lambda x _) = x
     modifyAnn f (Defn x b) = Defn (f x) b
-    modifyAnn f (Builtin x b) = Builtin (f x) b
-    modifyAnn f (Lambda x b) = Lambda (f x) b
+    --modifyAnn f (Builtin x b) = Builtin (f x) b
+    --modifyAnn f (Lambda x b) = Lambda (f x) b
 instance Ann LHSBox where
     getAnn (Operator x _) = x
     modifyAnn f (Operator x b) = Operator (f x) b
@@ -93,45 +96,46 @@ type HoleBD = HoleBox BoxData
 type ExprBD = ExprBox BoxData
 
 
-data TextBox = TextBox String Double deriving Show
+data TextBox = TextBox String Float deriving Show
 
 deriving instance Show TextExtents
 deriving instance Show FontExtents
 
+{-
 makeText :: String -> Render TextBox
 makeText s = do
   fex <- getFontMatrix
   ex <- textExtents s
   --liftIO (print (fex))
   return$ TextBox s (textExtentsXadvance ex)
-
+  -}
 setSourceCol :: Col -> Render ()
 setSourceCol (r,g,b) = setSourceRGB r g b
 
 type TypeName = String
 data Type = Base TypeName | Type :-> Type deriving (Show)
 
-data BoxData = Box {
-      texts :: [(Int, TextBox)]
-    , borderCol:: Col
-    , fillCol :: Col -- box col, border col
-    , outerShape :: BoxShape
-    , typ :: Maybe Type
+data BoxData = BD {
+      typ :: Maybe Type
     , scope :: Maybe Int -- how far up the tree to go to find parent. Nothing indicates global scope
     , argIndex :: Int -- Index within scope, always 0 if global scope.
-    , isFilled :: Bool
+
+    , texts :: [(Int, TextBox)]
+    , borderCol :: Col
+    , fillCol :: Col -- box col, border col
+    , outerShape :: BoxShape
     } deriving Show
 
 defaultData :: BoxData
-defaultData = Box {
-    texts=[]
+defaultData = BD {
+    typ = Nothing
+  , scope = Nothing
+  , argIndex = 0
+
+  , texts=[]
   , fillCol=white
   , borderCol=black
   , outerShape = rect
-  , typ = Nothing
-  , scope = Nothing
-  , argIndex = 0
-  , isFilled =False
 }
 
 
@@ -193,8 +197,8 @@ lhsAHtoExpr (LHSAntiHole xd hs) = Symbol xd (map lhsHtoH hs)
 addText :: Ann bx => (Int,String) -> bx BoxData -> bx BoxData
 addText (n,s) = modifyAnn (\xd -> xd{texts=(n,TextBox s (16*fromIntegral (length s))):texts xd})
 
-mkLocalDefn :: ExprBD -> DefnBD
-mkLocalDefn e = Lambda defaultData e
+--mkLocalDefn :: ExprBD -> DefnBD
+--mkLocalDefn e = Lambda defaultData e
 
 defnBox = Defn defaultData
 {-
