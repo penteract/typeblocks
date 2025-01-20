@@ -29,7 +29,7 @@ getExpr :: String -> Env ExprBD
 getExpr nm env = case lookup nm env of
                       Just (Local e) -> e
                       Just (Builtin e) -> e
-                      Just (DefnBox (Defn _ ((lhs,_):_))) -> lhsToExpr lhs
+                      Just (DefnBox (Defn _ (Line _ lhs _ :_))) -> lhsToExpr lhs
                       Just (x) -> error (show x)
                       Nothing -> error (show (nm,env))
 
@@ -100,9 +100,9 @@ toType other = error ("unknown toType:" ++ show (return () <$> other))
 defnToBox :: Maybe Type -> [Match l] -> Env DefnBD
 defnToBox t lines = defnBox <$> (mapM (lineToBox t) lines)
 
-lineToBox :: Maybe Type -> Match l -> Env (LHSBD,HoleBD)
+lineToBox :: Maybe Type -> Match l -> Env LineBD --(LHSBD,HoleBD)
 lineToBox (Just t) (InfixMatch _ l symb rs rhs w) env = undefined
-lineToBox (Just t) (Match _ symb args (UnGuardedRhs _ rhsExpr) w) env = (lhsWithName, rhsBox)
+lineToBox (Just t) (Match _ symb args (UnGuardedRhs _ rhsExpr) w) env = lineBox lhsWithName rhsBox
     where bx = typeToBoxLHS t
           (lhs, argTypes) = match args bx
           Operator xd vars = lhs

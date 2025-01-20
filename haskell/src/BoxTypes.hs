@@ -13,17 +13,20 @@ import Data.Typeable
 import Data.Data-}
 import GHC.Generics
 
-import Graphics.Rendering.Cairo
+--import Graphics.Rendering.Cairo
 
 import Colors
 import Paths
 
 type Field = String
 
+data T a = T a deriving (Functor, Foldable, Traversable)
 
-
-data DefnBox l = Defn l [(LHSBox l,HoleBox l)] -- | Builtin l (ExprBox l) | Lambda l (ExprBox l)
+-- Consider making lines of a definition being their own objects
+-- This would add a little complexity to everything that maps over
+data DefnBox l = Defn l [LineBox l] -- | Builtin l (ExprBox l) | Lambda l (ExprBox l)
       deriving (Show,Functor, Foldable, Traversable,Generic)
+data LineBox l = Line l (LHSBox l) (HoleBox l) deriving (Show,Functor, Foldable, Traversable,Generic)
 data LHSBox l = Operator l [PatternBox l] deriving (Show,Functor,Foldable,Traversable,Generic)
 data PatternBox l = Var l [LHSAntiHoleBox l] | Constructor l [PatternBox l] deriving (Show,Functor,Foldable,Traversable,Generic)
 data LHSHoleBox l = LHSHole l [LHSAntiHoleBox l] deriving (Show,Functor,Foldable,Traversable,Generic)
@@ -58,6 +61,9 @@ instance Ann DefnBox where
     modifyAnn f (Defn x b) = Defn (f x) b
     --modifyAnn f (Builtin x b) = Builtin (f x) b
     --modifyAnn f (Lambda x b) = Lambda (f x) b
+instance Ann LineBox where
+    getAnn (Line x _ _) = x
+    modifyAnn f (Line x l r) = Line (f x) l r
 instance Ann LHSBox where
     getAnn (Operator x _) = x
     modifyAnn f (Operator x b) = Operator (f x) b
@@ -88,6 +94,7 @@ instance Ann ExprBox where
     modifyAnn f (Setter x b1 b2 b3) = Setter (f x) b1 b2 b3
 
 type DefnBD = DefnBox BoxData
+type LineBD = LineBox BoxData
 type LHSBD = LHSBox BoxData
 type PatternBD = PatternBox BoxData
 type LHSHoleBD = LHSHoleBox BoxData
@@ -96,10 +103,10 @@ type HoleBD = HoleBox BoxData
 type ExprBD = ExprBox BoxData
 
 
-data TextBox = TextBox String Float deriving Show
+data TextBox = TextBox {tText::String, tLength::Float, tPos::(Float,Float)} deriving Show
 
-deriving instance Show TextExtents
-deriving instance Show FontExtents
+--deriving instance Show TextExtents
+--deriving instance Show FontExtents
 
 {-
 makeText :: String -> Render TextBox
@@ -109,8 +116,8 @@ makeText s = do
   --liftIO (print (fex))
   return$ TextBox s (textExtentsXadvance ex)
   -}
-setSourceCol :: Col -> Render ()
-setSourceCol (r,g,b) = setSourceRGB r g b
+--setSourceCol :: Col -> Render ()
+--setSourceCol (r,g,b) = setSourceRGB r g b
 
 type TypeName = String
 data Type = Base TypeName | Type :-> Type deriving (Show)
@@ -124,6 +131,8 @@ data BoxData = BD {
     , borderCol :: Col
     , fillCol :: Col -- box col, border col
     , outerShape :: BoxShape
+    , position :: (Float,Float) -- top left (unscoped boxes growing rightwards and downwards is reasonable
+    , dims :: (Float,Float) -- width, height (inc borders)
     } deriving Show
 
 defaultData :: BoxData
@@ -136,6 +145,10 @@ defaultData = BD {
   , fillCol=white
   , borderCol=black
   , outerShape = rect
+  -- Size and position get initialized in a discrete layout step (and recomputed on every event until I change that),
+  -- so they could be part of a separate type which would ensure everything is initialized as intended.
+  , position = undefined -- (0,0)
+  , dims = undefined -- (-1000,-1000) -- Hopefully this makes it obvious if I forget to initialize it
 }
 
 
@@ -195,12 +208,13 @@ lhsAHtoExpr (LHSAntiHole xd hs) = Symbol xd (map lhsHtoH hs)
 
 --TODO: calculate length properly
 addText :: Ann bx => (Int,String) -> bx BoxData -> bx BoxData
-addText (n,s) = modifyAnn (\xd -> xd{texts=(n,TextBox s (16*fromIntegral (length s))):texts xd})
+addText (n,s) = modifyAnn (\xd -> xd{texts=(n,TextBox s (16*fromIntegral (length s)) (0, 0)):texts xd})
 
 --mkLocalDefn :: ExprBD -> DefnBD
 --mkLocalDefn e = Lambda defaultData e
 
 defnBox = Defn defaultData
+lineBox = (.)(.)(.) (addText (1,"|->")) (Line defaultData)
 {-
 --TODO: calculate length properly
 addText :: (Int,String) -> BoxTree -> BoxTree

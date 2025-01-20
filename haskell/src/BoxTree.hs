@@ -23,13 +23,13 @@ makeText s = do
   --liftIO (print (fex))
   return$ TextBox s (textExtentsXadvance ex)
 
-setSourceCol :: Col -> Render ()
+setSourceCol :: (Double,Double,Double) -> Render ()
 setSourceCol (r,g,b) = setSourceRGB r g b
 
 data BoxData = Box {
       texts :: [(Int, TextBox)]
-    , borderCol:: Col
-    , fillCol :: Col -- box col, border col
+    , borderCol:: (Double,Double,Double)
+    , fillCol :: (Double,Double,Double) -- box col, border col
     , outerShape :: BoxShape
     , typ :: Maybe Type
     , scope :: Maybe Int -- how far up the tree to go to find parent. Nothing indicates global scope
@@ -40,8 +40,8 @@ data BoxData = Box {
 defaultData :: BoxData
 defaultData = Box {
     texts=[]
-  , fillCol=white
-  , borderCol=black
+  , fillCol=(1,1,1)
+  , borderCol=(0,0,0)
   , outerShape = rect
   , typ = Nothing
   , scope = Nothing

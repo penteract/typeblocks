@@ -17,14 +17,14 @@ main = do
   print mod
   (_,bxs ) <- moduleToBoxes mod Map.empty
   print (length bxs)
-  print bxs
+  --print bxs
 
 
-  mapM print (map (second (fmap texts)) bxs)
+  mapM print (map (second (fmap (map (tText.snd). texts))) bxs)
   runUI (bxs) Graphics.draw (\ e w -> do
     let w' = handleEvent e w
     w'' <- mapM (\(a,b) -> (,) a <$> calcTexts b) w'
-    return$ addSizes w'')
+    return$ Graphics.layout w'')
   --bxs' <-  bxs
 
   return ()
@@ -34,8 +34,8 @@ main = do
 calcTexts :: Traversable f => f BoxData -> IO (f BoxData)
 calcTexts bxds = traverse (\ d ->
   (\x -> d{texts=x}) <$>
-  mapM (\ (n,TextBox s _) ->
-    ((,) n . TextBox s) <$>
+  mapM (\ (n,TextBox s _ pos) ->
+    (\ l -> (n,TextBox s l pos)) <$>
     (textLength s))
     (texts d) )
   bxds

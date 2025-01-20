@@ -14,9 +14,9 @@ runUI ::  world                          -- ^ The initial world.
      -> IO ()
 runUI worldStart frameFun handleEvent = playIO (InWindow "typeBlocks" (200, 200) (10, 10)) white 60 -- 60 FPS
    (worldStart,0.0)
-   (\ (w,t) -> return $ frameFun w t)
-   (\ e (w,t) -> flip (,) t <$> handleEvent e w )
-   (\ dt (w,t) -> return (w,t + dt))
+   (\ (w,t) -> putStrLn "\n\ndr" >> (return $ frameFun w t))
+   (\ e (w,t) -> putStrLn "\n\nev" >> print e >> flip (,) t <$> handleEvent e w )
+   (\ dt (w,t) -> putStrLn "\n\ntick" >> return (w,t + dt))
 
 
 -- Get the length of a piece of text
