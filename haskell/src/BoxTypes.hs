@@ -12,6 +12,7 @@ import Data.Maybe(fromJust)
 import Data.Typeable
 import Data.Data-}
 import GHC.Generics
+import Utils
 
 --import Graphics.Rendering.Cairo
 
@@ -93,6 +94,10 @@ instance Ann ExprBox where
     modifyAnn f (Let x b1 b2) = Let (f x) b1 b2
     modifyAnn f (Setter x b1 b2 b3) = Setter (f x) b1 b2 b3
 
+-- Behold the monomorphism restriction
+setAnn :: Ann bx => a -> bx a -> bx a
+setAnn x = modifyAnn (const x)
+
 type DefnBD = DefnBox BoxData
 type LineBD = LineBox BoxData
 type LHSBD = LHSBox BoxData
@@ -135,20 +140,20 @@ data BoxData = BD {
     , dims :: (Float,Float) -- width, height (inc borders)
     } deriving Show
 
-defaultData :: BoxData
-defaultData = BD {
+defaultData :: String -> BoxData
+defaultData s = BD {
     typ = Nothing
   , scope = Nothing
   , argIndex = 0
 
-  , texts=[]
-  , fillCol=white
-  , borderCol=black
+  , texts = []
+  , fillCol = white
+  , borderCol = black
   , outerShape = rect
   -- Size and position get initialized in a discrete layout step (and recomputed on every event until I change that),
   -- so they could be part of a separate type which would ensure everything is initialized as intended.
-  , position = undefined -- (0,0)
-  , dims = undefined -- (-1000,-1000) -- Hopefully this makes it obvious if I forget to initialize it
+  , position = undefined --sup ("badpos"++s) (-123,123) -- (0,0)
+  , dims = undefined -- sup ("baddims"++s) (0.12,0.12) -- (-1000,-1000) -- Hopefully this makes it obvious if I forget to initialize it
 }
 
 
@@ -179,7 +184,7 @@ typeToAntihole = typeToBox LHSAntiHole typeToHole -- LHSAntiHole LHSHole
 
 typeToBox :: Ann a => (BoxData -> [a BoxData] -> b BoxData) -> (Type -> a BoxData) -> Type -> b BoxData
 typeToBox con chfn ty =let (args, base) = unpack ty in
-                        con defaultData{outerShape=getShape base,typ=Just ty, scope=Just 0}
+                        con (defaultData "bx"){outerShape=getShape base,typ=Just ty, scope=Just 0}
                             (numberBoxes$ map chfn args)
 
 getShape :: TypeName -> BoxShape
@@ -208,13 +213,13 @@ lhsAHtoExpr (LHSAntiHole xd hs) = Symbol xd (map lhsHtoH hs)
 
 --TODO: calculate length properly
 addText :: Ann bx => (Int,String) -> bx BoxData -> bx BoxData
-addText (n,s) = modifyAnn (\xd -> xd{texts=(n,TextBox s (16*fromIntegral (length s)) (0, 0)):texts xd})
+addText (n,s) = modifyAnn (\xd -> xd{texts=(n,TextBox s (sup "badtext" 16*fromIntegral (length s)) (0, 0)):texts xd})
 
 --mkLocalDefn :: ExprBD -> DefnBD
 --mkLocalDefn e = Lambda defaultData e
 
-defnBox = Defn defaultData
-lineBox = (.)(.)(.) (addText (1,"|->")) (Line defaultData)
+defnBox = Defn (defaultData "dfn")
+lineBox = (.)(.)(.) (addText (1,"|->")) (Line (defaultData "ln"))
 {-
 --TODO: calculate length properly
 addText :: (Int,String) -> BoxTree -> BoxTree

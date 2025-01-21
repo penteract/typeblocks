@@ -1,10 +1,17 @@
 import Language.Haskell.Interpreter
 import Graphics.Gloss.Interface.IO.Animate
 import Graphics.UI.GLUT.Fonts (stringWidth,fontHeight,StrokeFont(Roman))
+import Graphics.Gloss.Data.Picture
+import Graphics.Gloss.Data.Color
+import Graphics.Gloss
+
+
+p = Pictures [Translate 0.0 (-0.0) (Pictures [Pictures [Color (makeColor 0.0 0.0 0.0 1.0) (Line [(0.0,0.0),(121.90401,0.0),(121.90401,822.8521),(0.0,822.8521),(0.0,0.0)])],Translate 60.952003 (-60.952003) (Pictures [Pictures [Color (makeColor 0.0 0.0 0.0 1.0) (Line [(0.0,0.0),(1493.1361,0.0),(1493.1361,-761.9001),(0.0,-761.9001),(0.0,0.0)]),Translate 521.664 (-304.76) (Text "|->")],Translate 60.952003 (-182.85602) (Pictures [Pictures [Color (makeColor 0.0 0.0 0.0 1.0) (Line [(0.0,0.0),(399.76,0.0),(399.76,-396.188),(0.0,-396.188),(0.0,0.0)]),Translate 60.952003 (-121.904) (Text "f")],Translate 160.904 (-60.952003) (Pictures [Pictures [Color (makeColor 0.0 0.0 0.0 1.0) (Line [(0.0,0.0),(177.904,0.0),(177.904,-274.284),(0.0,-274.284),(0.0,0.0)]),Translate 60.952003 (-60.952003) (Text "x")]])]),Translate 788.61597 (-60.952003) (Pictures [Pictures [Color (makeColor 0.0 0.0 0.0 1.0) (Line [(0.0,0.0),(643.5681,0.0),(643.5681,-639.99603),(0.0,-639.99603),(0.0,0.0)])],Translate 60.952003 (-60.952003) (Pictures [Pictures [Color (makeColor 0.0 0.0 0.0 1.0) (Line [(0.0,0.0),(521.66406,0.0),(521.66406,-518.092),(0.0,-518.092),(0.0,0.0)]),Translate 60.952003 (-182.85599) (Text "f")],Translate 160.904 (-60.952003) (Pictures [Pictures [Color (makeColor 0.0 0.0 0.0 1.0) (Line [(0.0,0.0),(299.808,0.0),(299.808,-396.188),(0.0,-396.188),(0.0,0.0)])],Translate 60.952003 (-60.952003) (Pictures [Pictures [Color (makeColor 0.0 0.0 0.0 1.0) (Line [(0.0,0.0),(177.904,0.0),(177.904,-274.284),(0.0,-274.284),(0.0,0.0)]),Translate 60.952003 (-60.952003) (Text "x")]])])])])])])]
+
 
 main :: IO ()
 main = do
-  draw
+  display (InWindow "Nice Window" (1920, 1080) (10, 10)) white  p
 
 draw :: IO ()
 draw = do

@@ -24,6 +24,11 @@ main = do
   runUI (bxs) Graphics.draw (\ e w -> do
     let w' = handleEvent e w
     w'' <- mapM (\(a,b) -> (,) a <$> calcTexts b) w'
+    --let ((_,Defn x ((Line _ lhs (Filled _ f _)):_)):_) = w''
+    --print "unlaid"
+    --print f
+    --print "laid out"
+    --print (Graphics.layoutExpr Graphics.maxWidth f)
     return$ Graphics.layout w'')
   --bxs' <-  bxs
 

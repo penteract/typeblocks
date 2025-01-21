@@ -1,6 +1,7 @@
 module BoxTypesFolds where
 import BoxTypes
 import Control.Arrow
+import Utils
 
 incDepthsExpr :: ExprBD -> ExprBD
 incDepthsExpr e = incDepthsExprN 0 e
@@ -88,3 +89,108 @@ visitHoleVis  f v (Filled x arg args) =  let (c, arg') = onExpr v arg in
 -- | Visit visible nodes in a tree
 visitVis :: (a -> [c] -> (c,a)) -> BoxVisitor ((,) c) a a
 visitVis f = (visitTree f){onHole' = visitHoleVis f}
+
+scanner :: Monad m => (a -> m ()) -> (a -> [b] -> m (b,[b])) -> BoxVisitor m a b
+scanner stepIn f = BoxVisitor{
+    onDefn' = scanDefn stepIn f
+  , onLine' = scanLine stepIn f
+  , onLHS' = scanLHS stepIn f
+  , onPattern' = scanPattern stepIn f
+  , onLHSHole' = scanLHSHole stepIn f
+  , onLHSAntiHole' = scanLHSAntiHole stepIn f
+  , onHole' = scanHole stepIn f
+  , onExpr' = scanExpr stepIn f
+  }
+{-
+scanExpr :: Monad m => (a -> [b] -> m (b,[b])) -> BoxVisitor m a b -> ExprBox a -> m (ExprBox b)
+scanExpr f v (Symbol xd hs) = do
+  hs' <- traverse (onHole v) hs
+  (xd',xds) <- f xd (map getAnn hs')
+  return $ Symbol xd' (zipWith setAnn xds hs')-}
+
+
+-- The creation of these involved some copy and pasting. How should this be accomplished using TypeBlocks?
+-- It could probably be done using Generics intelligently, but that's a bit opaque and adds more details for me to worry about
+--   Some sort of macros that allow attempting evaluation of untyped terms?
+
+scanDefn :: Monad m => (a -> m ()) -> (a -> [b] -> m (b,[b])) -> BoxVisitor m a b -> DefnBox a -> m (DefnBox b)
+scanDefn stepIn f v (Defn xd hs) = do
+  stepIn xd
+  hs' <- traverse (onLine v) hs
+  (xd',xds) <- f xd (map getAnn hs')
+  return $ Defn xd' (zipWith setAnn xds hs')
+
+scanLine :: Monad m => (a -> m ()) -> (a -> [b] -> m (b,[b])) -> BoxVisitor m a b -> LineBox a -> m (LineBox b)
+scanLine stepIn f v (Line xd lhs rhs) = do
+  stepIn xd
+  lhs' <- onLHS v lhs
+  rhs' <- onHole v rhs
+  result <- f xd [getAnn lhs', getAnn rhs']
+  let (xd',[lxd,rxd]) = result
+  return $ Line xd' (setAnn lxd lhs') (setAnn rxd rhs')
+
+scanLHS :: Monad m => (a -> m ()) -> (a -> [b] -> m (b,[b])) -> BoxVisitor m a b -> LHSBox a -> m (LHSBox b)
+scanLHS stepIn f v (Operator xd hs) = do
+  stepIn xd
+  hs' <- traverse (onPattern v) hs
+  (xd',xds) <- f xd (map getAnn hs')
+  return $ Operator xd' (zipWith setAnn xds hs')
+
+scanPattern :: Monad m => (a -> m ()) -> (a -> [b] -> m (b,[b])) -> BoxVisitor m a b -> PatternBox a -> m (PatternBox b)
+scanPattern stepIn f v (Var xd hs) = do
+  stepIn xd
+  hs' <- traverse (onLHSAntiHole v) hs
+  (xd',xds) <- f xd (map getAnn hs')
+  return $ Var xd' (zipWith setAnn xds hs')
+
+scanLHSHole :: Monad m => (a -> m ()) -> (a -> [b] -> m (b,[b])) -> BoxVisitor m a b -> LHSHoleBox a -> m (LHSHoleBox b)
+scanLHSHole stepIn f v (LHSHole xd hs) = do
+  stepIn xd
+  hs' <- traverse (onLHSAntiHole v) hs
+  (xd',xds) <- f xd (map getAnn hs')
+  return $ LHSHole xd' (zipWith setAnn xds hs')
+
+scanLHSAntiHole :: Monad m => (a -> m ()) -> (a -> [b] -> m (b,[b])) -> BoxVisitor m a b -> LHSAntiHoleBox a -> m (LHSAntiHoleBox b)
+scanLHSAntiHole stepIn f v (LHSAntiHole xd hs) = do
+  stepIn xd
+  hs' <- traverse (onLHSHole v) hs
+  (xd',xds) <- f xd (map getAnn hs')
+  return $ LHSAntiHole xd' (zipWith setAnn xds hs')
+
+scanHole :: Monad m => (a -> m ()) -> (a -> [b] -> m (b,[b])) -> BoxVisitor m a b -> HoleBox a -> m (HoleBox b)
+scanHole stepIn f v (Hole xd hs) = do
+  stepIn xd
+  hs' <- traverse (onExpr v) hs
+  (xd',xds) <- f xd (map getAnn hs')
+  return $ Hole xd' (zipWith setAnn xds hs')
+scanHole stepIn f v (Filled xd h hs) = do
+  stepIn xd
+  r1 <- traverse (onExpr v) (h:hs)
+  let (h':hs') = r1
+  result <- f xd (map getAnn (h':hs'))
+  let (xd',hxd:xds) = result
+  return $ Filled xd' (setAnn hxd h') (zipWith setAnn xds hs')
+
+scanExpr :: Monad m => (a -> m ()) -> (a -> [b] -> m (b,[b])) -> BoxVisitor m a b -> ExprBox a -> m (ExprBox b)
+scanExpr stepIn f v (Symbol xd hs) = do
+  stepIn xd
+  hs' <- traverse (onHole v) hs
+  (xd',xds) <- f xd (map getAnn hs')
+  return $ Symbol xd' (zipWith setAnn xds hs')
+
+
+scanHoleVis :: Monad m => (a -> m ()) -> (a -> [a] -> m (a,[a])) -> BoxVisitor m a a -> HoleBox a -> m (HoleBox a)
+scanHoleVis stepIn f v (Hole xd hs) = do
+  stepIn xd
+  hs' <- traverse (onExpr v) hs
+  (xd',xds) <- f xd (map getAnn hs')
+  return $ Hole xd' (zipWith setAnn xds hs')
+scanHoleVis stepIn f v (Filled xd h hs) = do
+  stepIn xd
+  h' <- onExpr v h
+  result <- f xd [getAnn h']
+  let (xd',[hxd]) = result
+  return $ Filled xd' (setAnn hxd h') hs
+
+-- traverse only visible parts of the tree
+scannerVis stepIn f = (scanner stepIn f){onHole'=scanHoleVis stepIn f}

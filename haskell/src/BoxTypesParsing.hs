@@ -38,7 +38,8 @@ type ModCache = Map.Map String [(String,DefnBD)]
 moduleToBoxes :: Language.Haskell.Exts.Syntax.Module l -> ModCache -> IO (ModCache,[(String,DefnBD)])
 moduleToBoxes (Module _ _ _ imps ds) knownModules = do
     (c', env)<- getImps (preludeDecl:imps) knownModules []
-    return (c', dsToBoxes ds env)
+    return (c',
+        zipWith (\ n -> second (modifyAnn (\bx-> bx{position=(0,-20*n)})) ) [0..] (dsToBoxes ds env))
 
 preludeDecl = ImportDecl undefined (ModuleName undefined "Prelude") undefined undefined undefined undefined undefined undefined
 

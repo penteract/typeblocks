@@ -12,9 +12,9 @@ runUI ::  world                          -- ^ The initial world.
      -> (world -> Animation) -- ^ An action to convert the world to a picture at a particular time.
      -> (Event -> world -> IO world)   -- ^ A function to handle input events.
      -> IO ()
-runUI worldStart frameFun handleEvent = playIO (InWindow "typeBlocks" (200, 200) (10, 10)) white 60 -- 60 FPS
+runUI worldStart frameFun handleEvent = playIO (InWindow "typeBlocks" (200, 200) (10, 10)) white 1 -- 60 FPS
    (worldStart,0.0)
-   (\ (w,t) -> putStrLn "\n\ndr" >> (return $ frameFun w t))
+   (\ (w,t) -> putStrLn "dr" >> (return $ frameFun w t))
    (\ e (w,t) -> putStrLn "\n\nev" >> print e >> flip (,) t <$> handleEvent e w )
    (\ dt (w,t) -> putStrLn "\n\ntick" >> return (w,t + dt))
 

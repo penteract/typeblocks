@@ -26,6 +26,7 @@ library
       Lib
       Parsing
       Paths
+      Utils
   other-modules:
       Paths_typeblocks
   hs-source-dirs:
