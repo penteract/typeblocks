@@ -16,7 +16,7 @@ import Data.Function
 import Utils(sup,up)
 
 textDims :: TextBox -> (Float,Float)
-textDims (TextBox _ l _) = (l, actualTextHeight)
+textDims (TextBox _ l _) = (l, actualTextHeight - 2*spacingV)
 
 
 -- this scaling should really be part of GlossBackend, but that would be slightly ineffecient
@@ -36,7 +36,10 @@ type World = [(String, DefnBD)]
 
 
 layout :: World -> World
-layout w = map (second (layoutDefn maxWidth)) w
+layout w = let
+               w' = map (second (layoutDefn maxWidth)) w
+               hs = scanl' (\y -> (y-spacingV -).snd.dims.getAnn.snd) 0 w'
+           in zipWith (\ h d -> second (modifyAnn (\bd->bd{position=(0,h)})) d) hs w'
 
 
 
@@ -46,7 +49,7 @@ layoutDefn maxWidth (Defn xd lns) = Defn xd{dims=sz} laidLines
     sizedLines = map (layoutLine (maxWidth-2*paddingH)) lns
     szs = map (dims.getAnn) sizedLines
     ps = scanl' (\(x,y) (w,h) -> (x,y-h-spacingV)) (paddingH,-paddingV) szs
-    sz = (maximum (map fst szs), -snd (last ps)) + (2*paddingH,paddingV)
+    sz = (maximum (map fst szs), -snd (last ps) - spacingV) + (2*paddingH,paddingV)
     laidLines = zipWith (\ pos -> modifyAnn (\bx->bx{position=pos}) ) ps sizedLines
 
 newtype State s a  = State {runState :: (s-> (a,s))}
