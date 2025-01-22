@@ -19,7 +19,7 @@ import Graphics.Rendering.Cairo.Matrix(Matrix(..))
 import CairoGraphics
 import BoxTree
 import Paths
-import Parsing
+import OldParsing
 
 import Data.Tree
 import Language.Haskell.Exts
