@@ -1,5 +1,5 @@
-module BoxTypesFolds where
-import BoxTypes
+module Folds where
+import Types
 import Control.Arrow
 import Utils
 

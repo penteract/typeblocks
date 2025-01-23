@@ -4,8 +4,8 @@ module Graphics where
 --import Graphics.Gloss.Data.Picture
 -- Pictures, Events
 import Graphics.Gloss.Interface.Pure.Game hiding (Display(..),play )
-import BoxTypes
-import BoxTypesFolds
+import Types
+import Folds
 
 import Data.List
 import Data.Either

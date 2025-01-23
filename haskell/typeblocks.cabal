@@ -17,15 +17,15 @@ build-type:     Simple
 library
   exposed-modules:
       BoxTree
-      BoxTypes
-      BoxTypesFolds
-      BoxTypesParsing
       CairoGraphics
       Colors
+      Folds
       Graphics
       Lib
       OldParsing
+      Parsing
       Paths
+      Types
       Utils
   other-modules:
       Paths_typeblocks

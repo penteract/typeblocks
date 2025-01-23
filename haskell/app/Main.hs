@@ -4,8 +4,8 @@ import Control.Arrow
 import Language.Haskell.Exts
 
 import GlossBackend
-import BoxTypes
-import BoxTypesParsing
+import Types
+import Parsing
 import Graphics
 
 -- handleEvent :: Event -> [(String, DefnBD)] -> [(String, DefnBD)]

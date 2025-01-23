@@ -1,8 +1,8 @@
-module BoxTypesParsing where
+module Parsing where
 --import Data.Tree
-import BoxTypes
-import BoxTypesFolds
-import qualified BoxTypes as BX
+import Types
+import Folds
+import qualified Types as BX
 import Language.Haskell.Exts.Syntax hiding (Type)
 import qualified Language.Haskell.Exts.Syntax as HS
 import Language.Haskell.Exts.Parser
