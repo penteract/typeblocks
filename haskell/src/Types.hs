@@ -12,6 +12,7 @@ import Data.Maybe(fromJust)
 import Data.Typeable
 import Data.Data-}
 import GHC.Generics
+import Colors
 import Utils
 
 --import Graphics.Rendering.Cairo
@@ -133,8 +134,7 @@ data BoxData = BD {
     , argIndex :: Int -- Index within scope, always 0 if global scope.
 
     , texts :: [(Int, TextBox)]
-    , borderCol :: Col
-    , fillCol :: Col -- box col, border col
+    , cols :: (Col,Col) -- fill col, border col
     , outerShape :: BoxShape
     , position :: (Float,Float) -- top left (unscoped boxes growing rightwards and downwards is reasonable
     , dims :: (Float,Float) -- width, height (inc borders)
@@ -147,14 +147,15 @@ defaultData s = BD {
   , argIndex = 0
 
   , texts = []
-  , fillCol = white
-  , borderCol = black
+  , cols = (white, black) -- fillCol,borderCol
   , outerShape = rect
   -- Size and position get initialized in a discrete layout step (and recomputed on every event until I change that),
   -- so they could be part of a separate type which would ensure everything is initialized as intended.
   , position = undefined --sup ("badpos"++s) (-123,123) -- (0,0)
   , dims = undefined -- sup ("baddims"++s) (0.12,0.12) -- (-1000,-1000) -- Hopefully this makes it obvious if I forget to initialize it
 }
+borderCol = snd . cols
+fillCol = fst . cols
 
 
 
@@ -193,21 +194,23 @@ getShape nm = shapes !! (ord (head nm)`mod` length shapes)
 -- Functions to let you select things from
 -- Mostly boilerplate; may do more in the future (such as removing text and color)
 
+greys = (greyN 0.8,greyN 0.5)
+
 lhsVarToExpr :: PatternBD -> ExprBD
 lhsVarToExpr (Var xd args) = Symbol xd (map lhsAHtoH args)
 lhsVarToExpr _ = error "Not a variable"
 lhsAHtoH :: LHSAntiHoleBD -> HoleBD
-lhsAHtoH (LHSAntiHole xd hs) = Hole xd (map lhsHtoExpr hs)
+lhsAHtoH (LHSAntiHole xd hs) = Hole xd{cols=greys} (map lhsHtoExpr hs)
 lhsHtoExpr :: LHSHoleBD -> ExprBD
 lhsHtoExpr  (LHSHole xd ahs) = Symbol xd (map lhsAHtoH ahs)
 
 lhsToExpr :: LHSBD -> ExprBD
 lhsToExpr (Operator xd args) = Symbol xd (map lhsPatToH args) --consider stripping text from holes
 lhsPatToH :: PatternBD -> HoleBD
-lhsPatToH (Var xd args) = Hole xd (map lhsAHtoExpr args)
+lhsPatToH (Var xd args) = Hole xd{cols=greys} (map lhsAHtoExpr args)
 lhsPatToH (Constructor xd _) = lhsHtoH (typeToHole (fromJust (typ xd)))
 lhsHtoH :: LHSHoleBD -> HoleBD
-lhsHtoH (LHSHole xd ahs) = Hole xd (map lhsAHtoExpr ahs)
+lhsHtoH (LHSHole xd ahs) = Hole xd{cols=greys} (map lhsAHtoExpr ahs)
 lhsAHtoExpr :: LHSAntiHoleBD -> ExprBD
 lhsAHtoExpr (LHSAntiHole xd hs) = Symbol xd (map lhsHtoH hs)
 
@@ -220,10 +223,12 @@ addText (n,s) = modifyAnn (\xd -> xd{texts=(n,TextBox s (sup "badtext" 16*fromIn
 
 defnBox = Defn (defaultData "dfn")
 lineBox = (.)(.)(.) (addText (1,"|->")) (Line (defaultData "ln"))
+
 {-
 --TODO: calculate length properly
 addText :: (Int,String) -> BoxTree -> BoxTree
 addText (n,s) = modifyRoot (\b -> b{texts=(n,TextBox s (16*fromIntegral (length s))):texts b})
+
 
 
 -- I could enforce syntax rules at the type level, and use somthing like Language.Haskell.TH.Syntax.Exp or Language.Haskell.Exts.Syntax.Dec, but zippers over them would be a pain, and they would enforce the appearence of Haskell code too strongly.

@@ -149,10 +149,11 @@ drawDefn :: DefnBD -> Picture
 drawDefn = fst . onDefn (visitVis (\ x ps -> (uncurry translate (position x) (Pictures (drawBox x: ps)), x) ))
 
 drawBox :: BoxData -> Picture
-drawBox (BD{texts,dims,borderCol,fillCol,outerShape}) = Pictures (color borderCol (rectLR dims): map (drawText.snd) texts)
+drawBox (BD{texts,dims,cols,outerShape}) = Pictures (color (fst cols) (polygon$ rectLR dims):color (snd cols) (lineLoop $ rectLR dims): map (drawText.snd) texts)
 
-rectLR :: (Float,Float) -> Picture
-rectLR (w,h) = lineLoop $ [(0,0),(w,0),(w,-h),(0,-h)]
+
+rectLR :: (Float,Float) -> [(Float,Float)]
+rectLR (w,h) = [(0,0),(w,0),(w,-h),(0,-h)]
 
 drawText :: TextBox -> Picture
 drawText TextBox{tText,tPos} = uncurry translate tPos (text tText)

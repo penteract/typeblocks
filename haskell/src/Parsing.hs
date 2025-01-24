@@ -11,6 +11,8 @@ import Language.Haskell.Exts.Pretty
 import Data.List
 import Control.Arrow
 import qualified Data.Map as Map
+import Colors
+import Utils(hashStr)
 
 -- possibly I should use the GHC API, but that's a pain to use
 -- (I gave up after some error about platform constants not found)
@@ -54,7 +56,6 @@ getImps (dec:decs) cache env =
             getImps decs (Map.insert modName boxImps cache) (boxImps ++ env)
 
 
-
 loadImp :: String -> Interpreter [(String,Type)]
 loadImp importName = do
     exs <- get languageExtensions
@@ -71,13 +72,33 @@ getType (Fun nm) = parseTypeWithMode (defaultParseMode{extensions=[EnableExtensi
 getType (Class _ xs) = concat <$> mapM (getType . Fun) xs
 getType (Data _ xs) = concat <$> mapM (getType . Fun) xs
 
-
 -- x,y :: Int (multiple type signatures on one line is possible)
 
+type Colors = ((Color,Color),(Color,Color))
+
+setCols :: Colors -> BoxVisitor ((,) ()) BoxData BoxData
+setCols (c1,c2) = (recursingVisitor pure){
+    onLHS' = onLHS' (recursingVisitor (\d -> pure (d{cols=c2})))
+  , onLHSAntiHole' = onLHSAntiHole' (recursingVisitor (\d -> pure (d{cols=c2})))
+  , onLHSHole' = onLHSHole' (recursingVisitor (\d -> pure (d{cols=c1})))
+  , onExpr' = onExpr' (recursingVisitor (\d -> pure (d{cols=c2})))
+  , onHole' = onHole' (recursingVisitor (\d -> pure (d{cols=c1})))
+  , onPattern' = \ v pat -> case pat of
+        BX.Var _ _ -> onPattern' (recursingVisitor (\d -> pure (d{cols=c1}))) v pat
+        --BX.Var <$> xd <*> (traverse (onLHSAntiHole v) args)
+        _ -> onPattern' (recursingVisitor pure) v pat
+}
+--setColsLHSAH (c1,c2) = snd . onLHSAntiHole (setCols ((greyN 0.8,greyN 0.5),c2))
+setColsLHSAH cs = snd . onLHSAntiHole (setCols cs)
+setColsLHS cs = snd . onLHS (setCols cs)
+
+
 dsToBoxes :: [Decl l] -> Env [(String,DefnBD)]
-dsToBoxes ds env = [(name, defnToBox (typ . getAnn =<< lookup name typeSigs) clauses (map (second (Local . lhsAHtoExpr)) typeSigs ++ env)) | (name,clauses) <- defns]
+dsToBoxes ds env = [(name, defnToBox (nameCols name) (typ . getAnn =<< lookup name typeSigs) clauses (map (second (Local . lhsAHtoExpr)) typeSigs ++ env)) | (name,clauses) <- defns]
     where
-        typeSigs = [(prettyPrint n, addText (0,prettyPrint n) $ typeToAntihole (toType t)) | (TypeSig _ ns t) <- ds, n<-ns]
+        h n = 1000*(fromIntegral (hashStr n)) :: Double
+        nameCols n = ((hslToCol (h n,100,80), hslToCol (h n,50,50)) , (hslToCol (h n+180,100,80), hslToCol (h n+180,50,50)) )
+        typeSigs = [(n, setColsLHSAH (nameCols n) $ addText (0,n) $ typeToAntihole (toType t)) | (TypeSig _ ns t) <- ds, n<-map prettyPrint ns]
         defns = [ (getName (head ms), ms) | FunBind _ ms <- ds]
 
 
@@ -98,19 +119,19 @@ toType (TyList _ a) = toType a
 toType (TyTuple _ _ ts) = Base (ts>>=prettyPrint)
 toType other = error ("unknown toType:" ++ show (return () <$> other))
 
-defnToBox :: Maybe Type -> [Match l] -> Env DefnBD
-defnToBox t lines = defnBox <$> (mapM (lineToBox t) lines)
+defnToBox :: Colors -> Maybe Type -> [Match l] -> Env DefnBD
+defnToBox cols t lines = defnBox <$> (mapM (lineToBox cols t) lines)
 
-lineToBox :: Maybe Type -> Match l -> Env LineBD --(LHSBD,HoleBD)
-lineToBox (Just t) (InfixMatch _ l symb rs rhs w) env = undefined
-lineToBox (Just t) (Match _ symb args (UnGuardedRhs _ rhsExpr) w) env = lineBox lhsWithName rhsBox
-    where bx = typeToBoxLHS t
+lineToBox :: Colors -> Maybe Type -> Match l -> Env LineBD --(LHSBD,HoleBD)
+lineToBox cols (Just t) (InfixMatch _ l symb rs rhs w) env = undefined
+lineToBox cols (Just t) (Match _ symb args (UnGuardedRhs _ rhsExpr) w) env = lineBox lhsWithName rhsBox
+    where bx = setColsLHS cols $ typeToBoxLHS t
           (lhs, argTypes) = match args bx
           Operator xd vars = lhs
           --abc = lhs == _
           lhsWithName = addText (0,prettyPrint symb) lhs
           --rhsEmptyBox = typeToHole t
-          (newRHS,newBindings) = eatArgs args (Hole xd (map lhsVarToExpr vars)) -- TODO: make this work with patterns
+          (newRHS,newBindings) = eatArgs args (Hole xd (map (lhsVarToExpr) vars)) -- TODO: make this work with patterns
           rhsBox = addthings newRHS rhsExpr (newBindings ++ env)
 
 
@@ -169,5 +190,5 @@ match pats (Operator xd args) = (Operator xd argBoxes, typings)
     where
         addName nd (PVar _ (Ident _ s)) = (addText (0,s) nd)
         argBoxes =  zipWith (\ bx -> maybe bx (addName bx) ) args (map Just pats ++ repeat Nothing)
-        typings = zipWith (\ bx (PVar _ (Ident _ s)) -> (s, Local$ lhsVarToExpr bx)) args pats
+        typings = zipWith (\ bx (PVar _ (Ident _ s)) -> (s, Local$ (lhsVarToExpr) bx)) args pats
         -- unnamedArgs = drop (length pats) (map (\(Node Box{typ=Just ty} _)->ty) args)

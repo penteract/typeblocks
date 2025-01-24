@@ -47,12 +47,30 @@ onLHSAntiHole v = onLHSAntiHole' v v
 onHole v = onHole' v v
 onExpr v = onExpr' v v
 
+-- traverse, but it lets you overwrite individual parts
+recursingVisitor :: Applicative m => (a->m b) -> BoxVisitor m a b
+recursingVisitor f = BoxVisitor{
+    onDefn' = \ v (Defn xd args) -> Defn <$> f xd <*> (traverse (onLine v) args)
+  , onLine' = \ v (Line xd lhs rhs) -> Line <$> f xd <*> onLHS v lhs <*> onHole v rhs
+  , onLHS' = \ v (Operator xd args) -> Operator <$> f xd <*> (traverse (onPattern v) args)
+  , onPattern' = \ v pat -> case pat of
+      Var xd args -> Var <$> f xd <*> (traverse (onLHSAntiHole v) args)
+      Constructor xd args -> Constructor <$> f xd <*> (traverse (onPattern v) args)
+  , onLHSHole' = \ v (LHSHole xd args) -> LHSHole <$> f xd <*> (traverse (onLHSAntiHole v) args)
+  , onLHSAntiHole' = \ v (LHSAntiHole xd args) -> LHSAntiHole <$> f xd <*> (traverse (onLHSHole v) args)
+  , onHole' = \ v h -> case h of
+      Hole xd args -> Hole <$> f xd <*> (traverse (onExpr v) args)
+      Filled xd a args -> Filled <$> f xd <*> onExpr v a <*> (traverse (onExpr v) args)
+  , onExpr' = \ v (Symbol xd args) -> Symbol <$> f xd <*> (traverse (onHole v) args)
+}
+
+{-
 visitHoleReader :: BoxVisitor ((->) k) a a -> HoleBox a -> k -> HoleBox a
 visitHoleReader v (Filled x e chs) y = Filled x (onExpr v e y) (map (\ bx -> onExpr v bx y) chs)
 
 visitHole :: Applicative m => BoxVisitor m a a -> HoleBox a -> m (HoleBox a)
 visitHole v (Filled x e chs) = (Filled x <$> onExpr v e) <*> traverse (onExpr v) chs
-{-
+
 visitDefn :: Monad m => BoxVisitor m a b -> Defn a -> m (Defn b)
 visitDefn v d = return ()
 visitLine :: BoxVisitor m a b -> LineBox a -> m (LineBox b)
