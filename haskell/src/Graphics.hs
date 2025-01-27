@@ -72,12 +72,22 @@ layoutLine :: Float -> LineBD -> LineBD
 layoutLine maxWidth ln = fst$ runState (layoutLine' ln) [maxWidth]
 
 layoutLine' :: LineBD -> State [Float] LineBD
-layoutLine' = onLine$ scannerVis (const (peek >>= push.(subtract (2*paddingH)))) (\ xd chs -> do
+layoutLine' = onLine$ (setFilled layoutVisitorFilled' layoutVisitor')
+
+layoutVisitor' = scannerVis (const (peek >>= push.(subtract (2*paddingH)))) (\ xd chs -> do
   pop
   maxWidth <- peek
   let (txts,bxs,sz) = layoutThings maxWidth (texts xd) chs
   return$ (xd{texts=txts,dims=sz},bxs)
   )
+layoutVisitorFilled' v (Filled xd e rs)= do
+  -- don't need to interact with the stack beyond a peek
+  maxWidth <- peek
+  --let (txts,bxs,sz) = layoutThings maxWidth (texts xd) chs
+  -- shouldn't have any text in
+  --return$ (Filled xd{dims=sz})
+  e' <- onExpr v e
+  return$ Filled xd{dims=dims (getAnn e')}  (modifyAnn (\d->d{position=(0,0)}) e') rs
 --layoutLine = onLine (scannerVis () )
 {-layoutLine :: Float -> LineBD -> LineBD
 layoutLine maxWidth (BoxTypes.Line xd l r) = BoxTypes.Line xd{texts=laidTexts,dims=sz} (setAnn l' l)  (setAnn r' r)
@@ -146,7 +156,17 @@ draw :: World -> Float -> Picture
 draw w t = up$ pictures (map (drawDefn.snd) w)
 
 drawDefn :: DefnBD -> Picture
-drawDefn = fst . onDefn (visitVis (\ x ps -> (uncurry translate (position x) (Pictures (drawBox x: ps)), x) ))
+drawDefn = fst . onDefn drawVisitor
+
+drawVisitor' = visitVis (\ x ps -> (uncurry translate (position x) (Pictures (drawBox x: ps)), x) )
+
+drawHole :: BoxVisitor ((,) Picture) BoxData BoxData -> HoleBD -> (Picture,HoleBD)
+drawHole v (Filled xd e rs) = let (p, e') = onExpr v e in
+              (uncurry translate (position xd) p, Filled xd e' rs)  -- don't draw the hole
+drawHole v x = onHole' drawVisitor' v x
+drawVisitor = drawVisitor'{
+  onHole' = drawHole
+}
 
 drawBox :: BoxData -> Picture
 drawBox (BD{texts,dims,cols,outerShape}) = Pictures (color (fst cols) (polygon$ rectLR dims):color (snd cols) (lineLoop $ rectLR dims): map (drawText.snd) texts)

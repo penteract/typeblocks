@@ -37,6 +37,10 @@ data BoxVisitor m a b = BoxVisitor {
     onHole' :: BoxVisitor m a b -> HoleBox a -> m (HoleBox b),
     onExpr' :: BoxVisitor m a b -> ExprBox a -> m (ExprBox b)
 }
+setFilled onHoleFilled bv = bv{onHole' = \ v h -> case h of
+  (Filled xd h hs) -> onHoleFilled v (Filled xd h hs)
+  other -> onHole' bv v other
+}
 
 onDefn v = onDefn' v v
 onLine v = onLine' v v
