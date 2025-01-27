@@ -17,8 +17,9 @@
 #
 # resolver: ./custom-snapshot.yaml
 # resolver: https://example.com/snapshots/2018-01-01.yaml
-resolver: #ghc-9.6.1
-  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/20/20.yaml
+resolver:  nightly-2025-01-27
+  #url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/23/5.yaml
+  #url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/20/20.yaml
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -38,6 +39,7 @@ packages:
 extra-deps:
 - sdl2-cairo-0.2
 - hsluv-haskell-0.1.0.0
+- sdl2-2.5.5.0
 # - colour-2.3.6
 # #- cairo-0.13.8.2
 # - gtk2hs-buildtools-0.13.8.3
@@ -134,3 +136,4 @@ flags: {}
 #
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor
+allow-newer: true

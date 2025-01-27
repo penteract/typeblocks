@@ -18,10 +18,16 @@ packages:
       size: 474
   original:
     hackage: hsluv-haskell-0.1.0.0
+- completed:
+    hackage: sdl2-2.5.5.0@sha256:8226fe90c517a9ec52da011a98d3e5523c8e0759c9c28d45d12dfe9178c5fe31,12150
+    pantry-tree:
+      sha256: b0c76dc4833869433f3c1978de2e7301a26699f2c605122e51bf12c7bceed45f
+      size: 6641
+  original:
+    hackage: sdl2-2.5.5.0
 snapshots:
 - completed:
-    sha256: 126fa33ceb11f5e85ceb4e86d434756bd9a8439e2e5776d306a15fbc63b01e89
-    size: 650041
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/20/20.yaml
-  original:
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/20/20.yaml
+    sha256: 09a902cd4a00ef9b3ad70451572ef099c1d4a5536c8b7d4aa8aa66e06f02cea6
+    size: 631517
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2025/1/27.yaml
+  original: nightly-2025-01-27
