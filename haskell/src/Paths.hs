@@ -1,12 +1,14 @@
 module Paths where
-import Graphics.Rendering.Cairo
-import Graphics.Rendering.Cairo.Matrix(Matrix(Matrix))
+--import Graphics.Rendering.Cairo
+--import Graphics.Rendering.Cairo.Matrix(Matrix(Matrix))
+import Graphics.Gloss.Data.Picture
+import Graphics.Gloss.Data.Color(Color)
 import Data.Fixed(mod')
 
-type Pt = (Double,Double)
---data Path = M Pt | L Pt | C Pt Pt Pt | A Pt Double Double Double | A' Pt Double Double Double
+--type Point = (Float,Float)
+--data Path = M Point | L Point | C Point Point Point | A Point Double Double Double | A' Point Double Double Double
 
-pi = 3.14159265359
+-- pi = 3.14159265359
 
 -- Edge description format:
 -- describe a path from -4,0 to 4,0 not leaving the box -4,-4 -- 4,4 which could be the top edge for a box
@@ -14,7 +16,7 @@ pi = 3.14159265359
 -- Corner description:
 -- corners go from 0,4 to 4,0 not leaving the box -4,-4 -- 4,4
 
-
+--type Path = [Point]
 type Corner = Path
 type Edge = Path
 
@@ -25,30 +27,42 @@ symmetric :: Corner -> Edge -> BoxShape
 symmetric c e = BoxShape c e c e c e c e
 
 straight :: Edge
-straight = [LineTo (-4) 0,LineTo 4 0]
+straight = [(-4, 0),(4, 0)]
 sqEdge :: Edge
-sqEdge = [LineTo (-4) 0, LineTo (-2) 0, LineTo (-2) (-4), LineTo 2 (-4), LineTo 2 0,LineTo 4 0]
+sqEdge = [(-4, 0), (-2, 0), (-2, -4), (2, -4), (2, 0),(4, 0)]
 hat :: Edge
-hat = [LineTo (-4) 0, LineTo 0 (-4), LineTo 4 0]
+hat = [(-4, 0), (0, -4), (4, 0)]
 spike :: Edge
-spike = [LineTo (-4) 0, LineTo (-2) 0, LineTo 0 (-4), LineTo 2 0, LineTo 4 0]
+spike = [(-4, 0), (-2, 0), (0, -4), (2, 0), (4, 0)]
 
-zigzag = [LineTo (-4) 0, LineTo 0 (-4), LineTo 0 4, LineTo 4 0]
+zigzag :: Edge
+zigzag = [(-4, 0), (0, -4), (0, 4), (4, 0)]
 --https://math.stackexchange.com/a/1671684
-lump = [LineTo (-4) 0, CurveTo (-4) (-16/3) 4 (-16/3) 4 0]
+-- lump = [(-4, 0), curveTo (-4) (-16/3) 4 (-16/3) 4 0]
+--
+
+-- take n samples, evenly spaced from 0 to 1 (including each endpoint
+sample :: Integer -> (Float -> Point) -> Path
+sample n f = [f (fromInteger i/fromInteger n)  | i <- [0..n] ]
+circ :: Float -> Float -> Point
+circ r t = (-r*cos (t*pi), r*sin (t*pi))
+
+lump :: Edge
+lump = sample 10 (circ 4)   --[(-4, 0), curveTo (-4) (-16/3) 4 (-16/3) 4 0]
+
 
 j2 :: Edge
-j2 = [LineTo (-4) 3, LineTo (-2) (4), LineTo (-2) (-4), LineTo 2 (-4), LineTo 2 4,LineTo 4 3]
+j2 = [(-4, 3), (-2, 4), (-2, -4), (2, -4), (2, 4),(4, 3)]
 
-
+{-
 intshape :: Edge
-intshape = LineTo (-4) 0: pts ++ [LineTo 4 0]
+intshape = (-4, 0): pts ++ [(4, 0)]
   where
       n = 3
-      pts = map (\ x -> (\k -> LineTo k ((((x-1)`mod'`2)*2-1)*(abs k-4))) (4*x/n) ) [-n..n]
-
+      pts = map (\ x -> (\k -> (k, ()(((x-1)`mod'`2)*2-1)*(abs k-4))) (4*x/n) ) [-n..n]
+      -}
 square :: Corner
-square = [LineTo 0 4, LineTo 0 0, LineTo 4 0]
+square = [(0, -4), (0, 0), (4, 0)]
 
 simple :: Edge -> BoxShape
 simple = symmetric square
@@ -56,8 +70,8 @@ simple = symmetric square
 rect :: BoxShape
 rect = simple straight
 r2 = BoxShape square j2 square spike square zigzag square lump
-
-drawBox :: Pt -> BoxShape -> Render ()
+{-
+drawBox :: Point -> BoxShape -> Render ()
 drawBox (w,h) (BoxShape tl top tr right br bottom bl left) = do
     newPath
     appendPath tl
@@ -76,6 +90,43 @@ drawBox (w,h) (BoxShape tl top tr right br bottom bl left) = do
     translate (h/2) 0
     appendPath left
     transform (Matrix 0 1 (-1) 0 (h/2) 0)-- return to original CTM
-    closePath
+    closePath-}
+translatePath :: Point -> Path -> Path
+translatePath (dx,dy) = map (\(x,y)->(x+dx, y+dy))
+
+rotatePath :: Integer -> Path -> Path -- rotate clockwise by a multiple of 90 degrees
+rotatePath 0 = id
+rotatePath 1 = map (\(x,y)->(y, -x))
+rotatePath 2 = map (\(x,y)->(-x, -y))
+rotatePath 3 = map (\(x,y)->(-y, x))
+
+-- flip horizontally; vertically.
+flipH = reverse . map (\(x,y) -> (-x,y) )
+flipV = reverse . map (\(x,y) -> (x,-y) )
+
+
+
+drawBox :: (Color,Color) -> (Float,Float) -> BoxShape -> Picture
+drawBox cols (w,h) sh = let pth =  mkPath (max 16 w, max 16 h) sh
+                          in
+                          (if min w h < 16 then scale (min 1 (16/w)) (min 1 (16/w)) else id)
+                           (Pictures [color (fst cols) (polygon pth) ,color (snd cols) (lineLoop pth)])
+
+mkPath :: (Float,Float) -> BoxShape -> Path
+mkPath (w,h) (BoxShape tl top tr right br bottom bl left) =
+  let mx = w/2
+      my = h/2
+  in
+     concat$ zipWith ($) [
+      id,
+        translatePath (mx,0),
+          translatePath (w,0).flipH,
+            translatePath (w,-my) . rotatePath 1,
+              translatePath (w,-h) . rotatePath 2,
+                translatePath (mx,-h) . rotatePath 2,
+                  translatePath (0,-h) . flipV,
+                    translatePath (0,-my) . rotatePath 3
+      ] [tl,top,tr,right,br,bottom,bl,left]
+
 
 shapes = map simple [sqEdge,hat,spike,zigzag,lump]

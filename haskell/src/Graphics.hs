@@ -6,6 +6,7 @@ module Graphics where
 import Graphics.Gloss.Interface.Pure.Game hiding (Display(..),play )
 import Types
 import Folds
+import Paths(drawBox)
 
 import Data.List
 import Data.Either
@@ -158,7 +159,7 @@ draw w t = up$ pictures (map (drawDefn.snd) w)
 drawDefn :: DefnBD -> Picture
 drawDefn = fst . onDefn drawVisitor
 
-drawVisitor' = visitVis (\ x ps -> (uncurry translate (position x) (Pictures (drawBox x: ps)), x) )
+drawVisitor' = visitVis (\ x ps -> (uncurry translate (position x) (Pictures (drawBoxData x: ps)), x) )
 
 drawHole :: BoxVisitor ((,) Picture) BoxData BoxData -> HoleBD -> (Picture,HoleBD)
 drawHole v (Filled xd e rs) = let (p, e') = onExpr v e in
@@ -168,9 +169,13 @@ drawVisitor = drawVisitor'{
   onHole' = drawHole
 }
 
-drawBox :: BoxData -> Picture
-drawBox (BD{texts,dims,cols,outerShape}) = Pictures (color (fst cols) (polygon$ rectLR dims):color (snd cols) (lineLoop $ rectLR dims): map (drawText.snd) texts)
+drawBoxData :: BoxData -> Picture
+drawBoxData (BD{texts,dims,cols,outerShape}) = let bx= drawBox cols dims outerShape in
+  Pictures (bx: map (drawText.snd) texts)
 
+drawBoxData' :: BoxData -> Picture
+drawBoxData' (BD{texts,dims,cols,outerShape}) = let bx= color (snd cols)$polygon (rectLR dims) in
+  Pictures (bx: map (drawText.snd) texts)
 
 rectLR :: (Float,Float) -> [(Float,Float)]
 rectLR (w,h) = [(0,0),(w,0),(w,-h),(0,-h)]

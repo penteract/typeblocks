@@ -14,7 +14,7 @@ runUI ::  world                          -- ^ The initial world.
      -> IO ()
 runUI worldStart frameFun handleEvent = playIO (InWindow "typeBlocks" (200, 200) (10, 10)) white 1 -- 60 FPS
    (worldStart,0.0)
-   (\ (w,t) -> putStrLn "dr" >> ((raiseText.negate) <$> fontOffset <*> (return$ translate (-960) 540 $ scale 0.125 0.125 $ frameFun w t)))
+   (\ (w,t) -> putStrLn "dr" >> ((raiseText.negate) <$> fontOffset <*> (return$ {-translate (-960) 540 $-} scale 0.125 0.125 $ frameFun w t)))
    (\ e (w,t) -> putStrLn "\n\nev" >> print e >> flip (,) t <$> handleEvent e w )
    (\ dt (w,t) -> putStrLn "\n\ntick" >> return (w,t + dt))
 
