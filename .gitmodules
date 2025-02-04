@@ -1,0 +1,3 @@
+[submodule "haskell/gloss"]
+        path = haskell/gloss
+        url = git@github.com:penteract/gloss.git

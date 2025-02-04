@@ -139,22 +139,10 @@ setPos pos = bimap (\ tb -> tb{tPos=pos}) (\bd->bd{position=pos})
 
 both2 :: (a->b->c)->(a,a)->(b,b)->(c,c)
 both2 f (x1,y1) (x2,y2)  = (f x1 x2, f y1 y2)
-instance (Eq a, Eq b, Num a, Num b) => Num (a,b) where
-  (a,b) + (w,x) = (a+w,b+x)
-  (a,b) * (w,x) = (a*w,b*x)
-  negate v = (-1,-1) * v
-  abs v = v
-  signum (0,0) = 0 -- highest common factor would also satisfy the laws here and could be useful
-  signum _ = 1
-  fromInteger n = (fromInteger n , fromInteger n) -- Monomorphism restriction! consider enforcing a=b for efficiency
 
-instance (Eq a, Eq b, Fractional a, Fractional b) =>  Fractional (a,b)  where
-  fromRational r = (fromRational r,fromRational r)
-  (x,y) / (a,b) = (x/a,y/b)
-  recip (x,y) = (recip x,recip y)
 
 draw :: World -> Float -> Picture
-draw w t = up$ pictures (map (drawDefn.snd) w)
+draw w t = {-up$-} pictures (map (drawDefn.snd) w)
 
 drawDefn :: DefnBD -> Picture
 drawDefn = fst . onDefn drawVisitor
@@ -170,7 +158,7 @@ drawVisitor = drawVisitor'{
 }
 
 drawBoxData :: BoxData -> Picture
-drawBoxData (BD{texts,dims,cols,outerShape}) = let bx= drawBox cols dims outerShape in
+drawBoxData (BD{texts,dims,cols,outerShape}) = let bx= scale unitScale unitScale $ drawBox cols (dims/(unitScale,unitScale)) outerShape in
   Pictures (bx: map (drawText.snd) texts)
 
 drawBoxData' :: BoxData -> Picture
@@ -182,3 +170,6 @@ rectLR (w,h) = [(0,0),(w,0),(w,-h),(0,-h)]
 
 drawText :: TextBox -> Picture
 drawText TextBox{tText,tPos} = uncurry translate tPos (text tText)
+
+
+

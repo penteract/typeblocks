@@ -4,6 +4,22 @@ module Paths where
 import Graphics.Gloss.Data.Picture
 import Graphics.Gloss.Data.Color(Color)
 import Data.Fixed(mod')
+import Data.Bits(xor)
+
+
+instance (Eq a, Eq b, Num a, Num b) => Num (a,b) where
+  (a,b) + (w,x) = (a+w,b+x)
+  (a,b) * (w,x) = (a*w,b*x)
+  negate v = (-1,-1) * v
+  abs v = v
+  signum (0,0) = 0 -- highest common factor would also satisfy the laws here and could be useful
+  signum _ = 1
+  fromInteger n = (fromInteger n , fromInteger n) -- Monomorphism restriction! consider enforcing a=b for efficiency
+
+instance (Eq a, Eq b, Fractional a, Fractional b) =>  Fractional (a,b)  where
+  fromRational r = (fromRational r,fromRational r)
+  (x,y) / (a,b) = (x/a,y/b)
+  recip (x,y) = (recip x,recip y)
 
 --type Point = (Float,Float)
 --data Path = M Point | L Point | C Point Point Point | A Point Double Double Double | A' Point Double Double Double
@@ -104,8 +120,6 @@ rotatePath 3 = map (\(x,y)->(-y, x))
 flipH = reverse . map (\(x,y) -> (-x,y) )
 flipV = reverse . map (\(x,y) -> (x,-y) )
 
-
-
 drawBox :: (Color,Color) -> (Float,Float) -> BoxShape -> Picture
 drawBox cols (w,h) sh = let pth =  mkPath (max 16 w, max 16 h) sh
                           in
@@ -130,3 +144,29 @@ mkPath (w,h) (BoxShape tl top tr right br bottom bl left) =
 
 
 shapes = map simple [sqEdge,hat,spike,zigzag,lump]
+
+
+inBox :: (Float,Float) -> (Float,Float) -> BoxShape -> Bool
+inBox pos sz sh = inRect pos (-4) (sz+4) && case drawBox undefined sz sh of
+                                                 Scale sx sy (Pictures (Color _ (Polygon pth):_)) -> (pos / (sx,sy)) `inside` pth
+                                                 Pictures (Color _ (Polygon pth) : _) -> pos `inside` pth
+
+inRect (x,y) (x1,y1) (x2,y2) = x>=x1 && y>=y1 && x<=x2 && y<=y2
+-- | Determine if a point is inside a polygon
+--     even-odd fill rule, if clockwise and point is on boundary, count it.
+--       In the edge case of overlapping horizontal edges, this will not count a point on both edges.
+inside :: (Float,Float) -> [(Float,Float)] -> Bool
+inside pt (x:xs) = foldl' xor False $ zipWith (leftOf pt) (x:xs) (xs++[x])
+
+-- determine if a point is to the left of a line segment in 2D (half open, includes start, not end)
+-- if point is on the line, count it if the line is going down, don't count it if the line is going up
+--   if line is horizontal, count it if and only if the point is on the line segment
+leftOf :: (Float,Float) -> (Float,Float) -> (Float,Float) -> Bool
+leftOf (x,y) (x1,y1) (x2,y2) = case compare y1 y2 of
+  -- going up
+  LT -> if y<y1 || y>=y2 then False else (x-x1)*(y2-y1) < (x2-x1)*(y-y1)
+  -- going down
+  GT -> if y<=y2 || y>y1 then False else (x-x1)*(y2-y1) >= (x2-x1)*(y-y1)
+  -- horizontal
+  EQ -> if y/=y1 then False else if x1<x2 then x>=x1 && x<x2 else x>x2 && x<=x1
+

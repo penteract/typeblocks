@@ -1,8 +1,8 @@
-don't show borders for filled holes
+-- don't show borders for filled holes
 
 Event Handling
 
-Box shapes
+-- Box shapes
 
 Evaluation
 
