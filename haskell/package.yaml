@@ -19,14 +19,11 @@ description:         A block-based editor for a subset of Haskell
 
 dependencies:
 - base >= 4.7 && < 5
-- containers
-- rosezipper
-- cairo
 - haskell-src-exts
+- containers
 - colour
 - hsluv-haskell
 - hint
-- syb
 - gloss
 
 # ghc-options:
