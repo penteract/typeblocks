@@ -21,6 +21,7 @@ library
       Colors
       Folds
       Graphics
+      Interact
       Lib
       OldParsing
       Parsing

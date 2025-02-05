@@ -51,7 +51,7 @@ onLHSAntiHole v = onLHSAntiHole' v v
 onHole v = onHole' v v
 onExpr v = onExpr' v v
 
--- traverse, but it lets you overwrite individual parts
+-- traverse, but you can partially overwrite it's behavior
 recursingVisitor :: Applicative m => (a->m b) -> BoxVisitor m a b
 recursingVisitor f = BoxVisitor{
     onDefn' = \ v (Defn xd args) -> Defn <$> f xd <*> (traverse (onLine v) args)

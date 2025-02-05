@@ -7,10 +7,7 @@ import GlossBackend
 import Types
 import Parsing
 import Graphics
-
--- handleEvent :: Event -> [(String, DefnBD)] -> [(String, DefnBD)]
--- TODO: Implement this
-handleEvent e w = w
+import Interact(handleEvent)
 
 main = do
   ParseOk mod <- parseFile "test/Sample.hs"

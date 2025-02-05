@@ -146,8 +146,8 @@ mkPath (w,h) (BoxShape tl top tr right br bottom bl left) =
 shapes = map simple [sqEdge,hat,spike,zigzag,lump]
 
 
-inBox :: (Float,Float) -> (Float,Float) -> BoxShape -> Bool
-inBox pos sz sh = inRect pos (-4) (sz+4) && case drawBox undefined sz sh of
+inShape :: (Float,Float) -> (Float,Float) -> BoxShape -> Bool
+inShape pos sz sh = inRect pos (-4) (sz+4) && case drawBox undefined sz sh of
                                                  Scale sx sy (Pictures (Color _ (Polygon pth):_)) -> (pos / (sx,sy)) `inside` pth
                                                  Pictures (Color _ (Polygon pth) : _) -> pos `inside` pth
 
