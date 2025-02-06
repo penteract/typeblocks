@@ -1,20 +1,40 @@
 {-# LANGUAGE RankNTypes #-}
 module Interact where
 
-import Graphics.Gloss.Interface.Pure.Game (Event(..),Key(..),SpecialKey(..),MouseButton(..))
+import Graphics.Gloss.Interface.Pure.Game hiding (Picture(..))
 
 import Paths
+import Graphics
 import Folds
 import Types
 import Control.Monad.Trans.Reader
+import Control.Arrow
+import Data.Functor.Identity
+import GlobalTransform
+
+--import Utils
+--import Control.Monad(Identity)
 
 
 handleEvent :: Event -> [(String, DefnBD)] -> [(String, DefnBD)]
 -- TODO: Implement this
+handleEvent (EventKey (MouseButton LeftButton) Down _ pos) w = let pos' = gInvert pos in
+  map (second (\d -> case pos' `inBox` getAnn d of
+   Just pos'' -> runIdentity$ runReaderT (onDefn (withClicked makeRed) d) pos''
+   Nothing -> d) ) w
+handleEvent (EventKey (MouseButton LeftButton) Up _ pos) w = let pos' = gInvert pos in
+  map (second (\d -> runIdentity $ onDefn makeWhite d) ) w
 handleEvent e w = w
 
+makeRed :: BoxVisitor Identity BoxData BoxData
+makeRed = recursingVisitor (\ xd -> return xd{cols=(makeColor 0.9 0.1 0.1 1,makeColor 0.6 0.0 0.0 1)})
+makeWhite :: BoxVisitor Identity BoxData BoxData
+makeWhite= recursingVisitor (\ xd -> return xd{cols=(makeColor 0.9 0.9 0.9 1,makeColor 0.6 0.0 0.0 1)})
+
+
 inBD :: (Float,Float) -> BoxData -> Bool
-inBD pt xd = inShape pt (dims xd) (outerShape xd)
+inBD pt xd = inRect (fst pt,-snd pt) ((-4)*(unitScale,unitScale)) (dims xd + 4*(unitScale,unitScale)) &&  inFirstPicture pt (drawBoxData xd)
+  --(inShape pt (dims xd) (outerShape xd))
 
 first4 :: (a->e) -> (a,b,c,d) -> (e,b,c,d)
 first4  f (a,b,c,d) = (f a,b,c,d)
@@ -112,6 +132,22 @@ withClicked onClicked = BoxVisitor{
 }
 
  -}
+-- | specify behaviour on lines and filled holes
+allCasesCommonFold :: (forall c d.
+    a->(d->a)->[d]->(d->m d)->(BoxVisitor n a a -> c -> n c)->(a->[d]->c)-> m c) ->
+  (BoxVisitor m a a -> LineBox a -> m (LineBox a)) ->
+  (BoxVisitor m a a -> HoleBox a -> m (HoleBox a))
+    -> BoxVisitor m a a
+allCasesCommonFold f onLn onH = commonCaseFold f (BoxVisitor{
+    onLine' = onLn
+  , onHole' = onH
+  , onExpr' = undefined
+  , onDefn' = undefined
+  , onPattern' = undefined
+  , onLHS' = undefined
+  , onLHSHole' = undefined
+  , onLHSAntiHole' = undefined
+  })
 
 -- Visit nodes that consist entirely of a a list
 -- Does not cover lines, filled holes, or fancy expressions
@@ -134,7 +170,13 @@ commonCaseFold f vv = vv{
 {-
 f1 ::Monad mm => BoxVisitor mm BoxData BoxData -> BoxData->(d->BoxData)->[d]->(d->ReaderT (Float,Float) mm d)->(BoxVisitor mm BoxData BoxData -> c -> mm c)->(BoxData->[d]->c)-> ReaderT (Float,Float) mm c
 f1 onClicked xd gt args recurse onThing construct = construct xd <$> (traverse recurse args) -}
-withClicked' :: Functor mm => BoxVisitor mm BoxData BoxData -> BoxData->(d->BoxData)->[d]->(d-> ReaderT (Float,Float) mm d)->(BoxVisitor mm BoxData BoxData -> c -> mm c)->(BoxData->[d]->c)-> ReaderT (Float,Float) mm c
+withClicked' :: Functor mm => BoxVisitor mm BoxData BoxData
+  -> BoxData
+  ->(d->BoxData)
+  ->[d]
+  ->(d-> ReaderT (Float,Float) mm d)
+  ->(BoxVisitor mm BoxData BoxData -> c -> mm c)->(BoxData->[d]->c)
+    -> ReaderT (Float,Float) mm c
 withClicked' onClicked xd gt args recurse onThing construct = ReaderT (\ pt -> case inBoxes pt gt args of
       Nothing -> onThing onClicked (construct xd args)
       Just (ls,bx,pt',rs) -> runReaderT (construct xd . (\ x -> ls++(x:rs)) <$> recurse bx) pt'

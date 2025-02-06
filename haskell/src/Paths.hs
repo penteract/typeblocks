@@ -7,6 +7,8 @@ import Data.Fixed(mod')
 import Data.Bits(xor)
 
 
+--import Utils
+
 instance (Eq a, Eq b, Num a, Num b) => Num (a,b) where
   (a,b) + (w,x) = (a+w,b+x)
   (a,b) * (w,x) = (a*w,b*x)
@@ -77,6 +79,8 @@ intshape = (-4, 0): pts ++ [(4, 0)]
       n = 3
       pts = map (\ x -> (\k -> (k, ()(((x-1)`mod'`2)*2-1)*(abs k-4))) (4*x/n) ) [-n..n]
       -}
+{-square :: Corner
+square = [(0, -4), (4, 0)] -}
 square :: Corner
 square = [(0, -4), (0, 0), (4, 0)]
 
@@ -145,12 +149,21 @@ mkPath (w,h) (BoxShape tl top tr right br bottom bl left) =
 
 shapes = map simple [sqEdge,hat,spike,zigzag,lump]
 
+-- | checks if a point is inside the first polygon of a picture
+--   Assumes that the first thing is actually a polygon
+inFirstPicture :: (Float,Float) -> Picture-> Bool
+inFirstPicture pos (Color _ pic) = inFirstPicture pos pic
+inFirstPicture (x,y) (Translate dx dy pic ) = inFirstPicture (x-dx,y-dy) pic
+inFirstPicture (x,y) (Scale sx sy pic) = inFirstPicture (x/sx,y/sy) pic
+inFirstPicture pos (Pictures (h:t)) = inFirstPicture pos h
+inFirstPicture pos (Polygon path) = pos `inside` path
 
+{-
 inShape :: (Float,Float) -> (Float,Float) -> BoxShape -> Bool
-inShape pos sz sh = inRect pos (-4) (sz+4) && case drawBox undefined sz sh of
+inShape pos sz sh = inRect (fst pos,-snd pos) (-4) (sz+4) && case drawBox undefined sz sh of
                                                  Scale sx sy (Pictures (Color _ (Polygon pth):_)) -> (pos / (sx,sy)) `inside` pth
-                                                 Pictures (Color _ (Polygon pth) : _) -> pos `inside` pth
-
+                                                 Pictures (Color _ (Polygon pth) : _) -> up pos `inside` up pth
+                                                 -}
 inRect (x,y) (x1,y1) (x2,y2) = x>=x1 && y>=y1 && x<=x2 && y<=y2
 -- | Determine if a point is inside a polygon
 --     even-odd fill rule, if clockwise and point is on boundary, count it.

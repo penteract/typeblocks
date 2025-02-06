@@ -13,8 +13,9 @@ import Data.Either
 import Control.Arrow
 import Data.Bifunctor(bimap)
 import Data.Function
+import GlobalTransform
 
-import Utils(sup,up)
+--import Utils(sup,up)
 
 textDims :: TextBox -> (Float,Float)
 textDims (TextBox _ l _) = (l, actualTextHeight - 2*spacingV)
@@ -142,7 +143,7 @@ both2 f (x1,y1) (x2,y2)  = (f x1 x2, f y1 y2)
 
 
 draw :: World -> Float -> Picture
-draw w t = {-up$-} pictures (map (drawDefn.snd) w)
+draw w t = {-up$-} gTransform $ pictures (map (drawDefn.snd) w)
 
 drawDefn :: DefnBD -> Picture
 drawDefn = fst . onDefn drawVisitor

@@ -18,6 +18,7 @@ library
   exposed-modules:
       Colors
       Folds
+      GlobalTransform
       Graphics
       Interact
       Lib
