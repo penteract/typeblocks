@@ -123,7 +123,7 @@ flipV = reverse . map (\(x,y) -> (x,-y) )
 drawBox :: (Color,Color) -> (Float,Float) -> BoxShape -> Picture
 drawBox cols (w,h) sh = let pth =  mkPath (max 16 w, max 16 h) sh
                           in
-                          (if min w h < 16 then scale (min 1 (16/w)) (min 1 (16/w)) else id)
+                          (if min w h < 16 then scale (min 1 (w/16)) (min 1 (w/16)) else id)
                            (Pictures [color (fst cols) (polygon pth) ,color (snd cols) (lineLoop pth)])
 
 mkPath :: (Float,Float) -> BoxShape -> Path
