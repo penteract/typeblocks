@@ -13,7 +13,6 @@ import Data.Functor.Identity
 import GlobalTransform
 
 --import Utils
---import Control.Monad(Identity)
 
 
 handleEvent :: Event -> [(String, DefnBD)] -> [(String, DefnBD)]
@@ -34,7 +33,6 @@ makeWhite= recursingVisitor (\ xd -> return xd{cols=(makeColor 0.9 0.9 0.9 1,mak
 
 inBD :: (Float,Float) -> BoxData -> Bool
 inBD pt xd = inRect (fst pt,-snd pt) ((-4)*(unitScale,unitScale)) (dims xd + 4*(unitScale,unitScale)) &&  inFirstPicture pt (drawBoxData xd)
-  --(inShape pt (dims xd) (outerShape xd))
 
 first4 :: (a->e) -> (a,b,c,d) -> (e,b,c,d)
 first4  f (a,b,c,d) = (f a,b,c,d)
@@ -52,21 +50,6 @@ inBoxes pt getBD (bx:bxs) = let xd = getBD bx in
       (\pt' -> Just ([],bx, pt',bxs))
       (pt `inBox` xd)
 inBoxes pt getBD [] = Nothing
-
-{-
-withClickedDefn :: Functor m => BoxVisitor m BoxData BoxData -> (Float,Float) -> DefnBox BoxData -> m (DefnBox BoxData)
-withClickedDefn onClicked pt (Defn xd args) = case inBoxes pt getAnn args of
-      Nothing -> onDefn onClicked (Defn xd args)
-      Just (ls,bx,pt',rs) -> Defn xd . (\ x -> ls ++ (x:rs)) <$> withClickedLine onClicked pt' bx
-
-withClickedLine onClicked pt (Line xd lhs rhs) = case inBox pt (getAnn lhs) of
-    Just pt' -> (\ l' -> Line xd l' rhs) <$> withClickedHole onClicked pt' lhs
-    Nothing -> case inBox pt (getAnn rhs) of
-        Just pt' -> Line xd lhs <$> withClickedExpr onClicked pt' rhs
-        Nothing -> onLine onClicked (Line xd lhs rhs)
-withClickedHole = undefined
-withClickedExpr = undefined
--}
 
 withClicked :: Applicative m => BoxVisitor m BoxData BoxData -> BoxVisitor (ReaderT (Float,Float) m) BoxData BoxData
 withClicked onClicked = commonCaseFold (withClicked' onClicked) (BoxVisitor{
@@ -87,51 +70,7 @@ withClicked onClicked = commonCaseFold (withClicked' onClicked) (BoxVisitor{
   , onLHSHole' = undefined
   , onLHSAntiHole' = undefined
   })
-{-
--- Do something with the particular node being clicked on
-withClicked :: Applicative m => BoxVisitor m a a -> BoxVisitor (ReaderT (Float,Float) m) a a
-withClicked onClicked = BoxVisitor{
-    onDefn' = \ v (Defn xd args) -> reader (\pt -> case inBoxes pt getAnn args of
-      Nothing -> onDefn onClicked (Defn xd args)
-      Just (ls,bx,pt',rs) -> runReader (Defn xd . (\ x -> ls++ (x:rs)) <$> onLine v bx) pt'
-      )
-  , onLine' = \ v (Line xd lhs rhs) -> reader (\ pt -> case inBox pt (getAnn lhs) of
-      Just pt' -> (\ l' -> Line xd l' rhs) <$> runReader (onLHS v lhs) pt'
-      Nothing -> case inBox pt (getAnn rhs) of
-          Just pt' -> runReader (Line xd lhs <$> onExpr v rhs) pt'
-          Nothing -> onLine onClicked (Line xd lhs rhs)
-          )
-  , onLHS' = \ v (Operator xd args) -> reader (\pt -> case inBoxes pt getAnn args of
-      Nothing -> onLHS onClicked (Operator xd args)
-      Just (ls,bx,pt',rs) -> runReader (Operator xd . (\ x -> ls++(x:rs)) <$> onPattern v bx) pt'
-      )
-  , onPattern' = \ v pat -> case pat of
-      Var xd args -> reader (\pt -> case inBoxes pt getAnn args of
-        Nothing -> onPattern onClicked (Var xd args)
-        Just (ls,bx,pt',rs) -> runReader (Var xd . (\ x -> ls++(x:rs)) <$> onLHSAntiHole v bx) pt'
-        )
-      Constructor xd args -> reader (\pt -> case inBoxes pt getAnn args of
-        Nothing -> onPattern onClicked (Constructor xd args)
-        Just (ls,bx,pt',rs) -> runReader (Constructor xd . (\ x -> ls++(x:rs)) <$> onPattern v bx) pt'
-        )
-  , onLHSHole' = \ v (LHSHole xd args) -> reader (\pt -> case inBoxes pt getAnn args of
-        Nothing -> onLHSHole onClicked (LHSHole xd args)
-        Just (ls,bx,pt',rs) -> runReader (LHSHole xd . (\ x -> ls++(x:rs)) <$> onLHSAntiHole v bx) pt'
-        )
-  , onLHSAntiHole' = \ v (LHSAntiHole xd args) -> reader (\pt -> case inBoxes pt getAnn args of
-        Nothing -> onLHSAntiHole onClicked (LHSAntiHole xd args)
-        Just (ls,bx,pt',rs) -> runReader (LHSAntiHole xd . (\ x -> ls++(x:rs)) <$> onLHSHole v bx) pt'
-        )
-  , onHole' = \ v h -> case h of
-      Hole xd args -> reader (\pt -> case inBoxes pt getAnn args of
-        Nothing -> onLHSHole onClicked (Hole xd args)
-        Just (ls,bx,pt',rs) -> runReader (Hole xd . (\ x -> ls++(x:rs)) <$> onExpr v bx) pt'
-        )
-      Filled xd a args -> Filled <$> f xd <*> onExpr v a <*> (traverse (onExpr v) args)
-  , onExpr' = \ v (Symbol xd args) -> Symbol <$> f xd <*> (traverse (onHole v) args)
-}
 
- -}
 -- | specify behaviour on lines and filled holes
 allCasesCommonFold :: (forall c d.
     a->(d->a)->[d]->(d->m d)->(BoxVisitor n a a -> c -> n c)->(a->[d]->c)-> m c) ->
@@ -167,9 +106,7 @@ commonCaseFold f vv = vv{
       (Symbol xd args) -> f xd getAnn args (onHole v) onExpr Symbol
       other -> onExpr' vv v other
 }
-{-
-f1 ::Monad mm => BoxVisitor mm BoxData BoxData -> BoxData->(d->BoxData)->[d]->(d->ReaderT (Float,Float) mm d)->(BoxVisitor mm BoxData BoxData -> c -> mm c)->(BoxData->[d]->c)-> ReaderT (Float,Float) mm c
-f1 onClicked xd gt args recurse onThing construct = construct xd <$> (traverse recurse args) -}
+
 withClicked' :: Functor mm => BoxVisitor mm BoxData BoxData
   -> BoxData
   ->(d->BoxData)
@@ -181,5 +118,3 @@ withClicked' onClicked xd gt args recurse onThing construct = ReaderT (\ pt -> c
       Nothing -> onThing onClicked (construct xd args)
       Just (ls,bx,pt',rs) -> runReaderT (construct xd . (\ x -> ls++(x:rs)) <$> recurse bx) pt'
       )
--- test :: Functor m => BoxVisitor m BoxData BoxData -> BoxVisitor (ReaderT (Float,Float) m) BoxData BoxData
--- test onClicked = commonCaseFold undefined (f2 onClicked)

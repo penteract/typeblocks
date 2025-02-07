@@ -85,18 +85,9 @@ layoutVisitor' = scannerVis (const (peek >>= push.(subtract (2*paddingH)))) (\ x
 layoutVisitorFilled' v (Filled xd e rs)= do
   -- don't need to interact with the stack beyond a peek
   maxWidth <- peek
-  --let (txts,bxs,sz) = layoutThings maxWidth (texts xd) chs
   -- shouldn't have any text in
-  --return$ (Filled xd{dims=sz})
   e' <- onExpr v e
   return$ Filled xd{dims=dims (getAnn e')}  (modifyAnn (\d->d{position=(0,0)}) e') rs
---layoutLine = onLine (scannerVis () )
-{-layoutLine :: Float -> LineBD -> LineBD
-layoutLine maxWidth (BoxTypes.Line xd l r) = BoxTypes.Line xd{texts=laidTexts,dims=sz} (setAnn l' l)  (setAnn r' r)
-  where
-    xds = [getAnn $ layoutLHS (maxWidth-2*paddingH) l, getAnn $ layoutHole (maxWidth-2*paddingH) r]
-    (laidTexts, [l',r'], sz) = layoutThings maxWidth (texts xd) xds
-    -}
 
 
 layoutThings :: Float -> [(Int,TextBox)] -> [BoxData] -> ([(Int,TextBox)], [BoxData],(Float,Float))
@@ -111,7 +102,7 @@ layoutThings maxWidth txts bxs = (zip (map fst txts) tbs, bxs'  , sz)
             then ((x+prevWidth,y), (w+spacingH,max lineheight h))
             else ((paddingH, y - lineheight - spacingV), (w,h)) -- new line
         positions = map fst (tail $ scanl' mrg ((paddingH,-paddingV),(0,0)) partDims)
-        --lns :: [[((Float,Float),Either TextBox (bx BoxData) )]]
+        -- lns :: [[((Float,Float),Either TextBox (bx BoxData) )]]
         lns = groupBy ((==) `on` (snd . fst)) (zip positions parts)
         heights :: [Float]
         heights = map (maximum .(0:). map (snd.getDims.snd)) lns
@@ -120,7 +111,6 @@ layoutThings maxWidth txts bxs = (zip (map fst txts) tbs, bxs'  , sz)
           lns heights
         sz = foldr (both2 max) (0,0) (map (\bx-> (1,-1)*getPos bx + getDims bx  ) positionedBoxes) + (paddingH,paddingV)
         (tbs,bxs') = partitionEithers positionedBoxes
-        --newBoxes = zipWith setPos (map (map snd) lines)
 
 
 

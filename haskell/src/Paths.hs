@@ -90,27 +90,8 @@ simple = symmetric square
 rect :: BoxShape
 rect = simple straight
 r2 = BoxShape square j2 square spike square zigzag square lump
-{-
-drawBox :: Point -> BoxShape -> Render ()
-drawBox (w,h) (BoxShape tl top tr right br bottom bl left) = do
-    newPath
-    appendPath tl
-    translate (w/2) 0
-    appendPath top
-    transform (Matrix 0 1 (-1) 0 (w/2) 0)
-    appendPath tr
-    translate (h/2) 0
-    appendPath right
-    transform (Matrix 0 1 (-1) 0 (h/2) 0)
-    appendPath br
-    translate (w/2) 0
-    appendPath bottom
-    transform (Matrix 0 1 (-1) 0 (w/2) 0)
-    appendPath bl
-    translate (h/2) 0
-    appendPath left
-    transform (Matrix 0 1 (-1) 0 (h/2) 0)-- return to original CTM
-    closePath-}
+
+
 translatePath :: Point -> Path -> Path
 translatePath (dx,dy) = map (\(x,y)->(x+dx, y+dy))
 
