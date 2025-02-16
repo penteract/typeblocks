@@ -14,6 +14,7 @@ import Control.Arrow
 import Data.Bifunctor(bimap)
 import Data.Function
 import GlobalTransform
+import Data.Foldable(toList)
 
 --import Utils(sup,up)
 
@@ -34,15 +35,21 @@ spacingV = spacingH
 paddingV = spacingV
 
 
-type World = [(String, DefnBD)]
+type World = (Maybe (Pickable,(Float,Float)), [(String, DefnBD)])
+-- (Maybe Pickable,[(String, DefnBD)])
 
 
 layout :: World -> World
-layout w = let
+layout (dragging, w) = let
                w' = map (second (layoutDefn maxWidth)) w
                hs = scanl' (\y -> (y-spacingV -).snd.dims.getAnn.snd) 0 w'
-           in zipWith (\ h d -> second (modifyAnn (\bd->bd{position=(0,h)})) d) hs w'
+           in (
+             layoutPickable <$> dragging
+           , zipWith (\ h d -> second (modifyAnn (\bd->bd{position=(0,h)})) d) hs w'
+           )
 
+layoutPickable (PickDefn d,off) = (PickDefn (layoutDefn maxWidth d),off)
+layoutPickable (PickExpr e,off) = (PickExpr (layoutExpr maxWidth e),off)
 
 
 layoutDefn :: Float -> DefnBD -> DefnBD
@@ -71,10 +78,15 @@ peek :: State [a] a
 peek = State (\ (x:xs) -> (x,x:xs))
 
 layoutLine :: Float -> LineBD -> LineBD
-layoutLine maxWidth ln = fst$ runState (layoutLine' ln) [maxWidth]
+layoutLine maxWidth ln = fst$ runState (onLine layoutVisitor ln) [maxWidth]
 
-layoutLine' :: LineBD -> State [Float] LineBD
-layoutLine' = onLine$ (setFilled layoutVisitorFilled' layoutVisitor')
+--layoutLine' :: LineBD -> State [Float] LineBD
+--layoutLine' = onLine$ (setFilled layoutVisitorFilled' layoutVisitor')
+
+layoutExpr :: Float -> ExprBD -> ExprBD
+layoutExpr maxWidth e = fst$runState (onExpr layoutVisitor e) [maxWidth]
+
+layoutVisitor = setFilled layoutVisitorFilled' layoutVisitor'
 
 layoutVisitor' = scannerVis (const (peek >>= push.(subtract (2*paddingH)))) (\ xd chs -> do
   pop
@@ -133,10 +145,14 @@ both2 f (x1,y1) (x2,y2)  = (f x1 x2, f y1 y2)
 
 
 draw :: World -> Float -> Picture
-draw w t = {-up$-} gTransform $ pictures (map (drawDefn.snd) w)
+draw (mp,w) t = {-up$-} gTransform $ pictures ([pictures (map (drawDefn.snd) w)] ++ map drawPickable (toList mp))
 
 drawDefn :: DefnBD -> Picture
 drawDefn = fst . onDefn drawVisitor
+
+drawPickable :: (Pickable,a) -> Picture
+drawPickable (PickDefn d,_) = fst $ onDefn drawVisitor d
+drawPickable (PickExpr e,_) = fst $ onExpr drawVisitor e
 
 drawVisitor' = visitVis (\ x ps -> (uncurry translate (position x) (Pictures (drawBoxData x: ps)), x) )
 

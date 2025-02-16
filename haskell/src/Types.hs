@@ -136,6 +136,7 @@ data BoxData = BD {
     , texts :: [(Int, TextBox)]
     , cols :: (Col,Col) -- fill col, border col
     , outerShape :: BoxShape
+    , marked :: Bool
     , position :: (Float,Float) -- top left (unscoped boxes growing rightwards and downwards is reasonable
     , dims :: (Float,Float) -- width, height (inc borders)
     } deriving Show
@@ -149,6 +150,7 @@ defaultData s = BD {
   , texts = []
   , cols = (white, black) -- fillCol,borderCol
   , outerShape = rect
+  , marked = False
   -- Size and position get initialized in a discrete layout step (and recomputed on every event until I change that),
   -- so they could be part of a separate type which would ensure everything is initialized as intended.
   , position = undefined --sup ("badpos"++s) (-123,123) -- (0,0)
@@ -256,3 +258,8 @@ setArgIndex n = modifyRoot (\bx->bx{argIndex=n})
 mkLine :: BoxTree -> BoxTree -> BoxTree
 mkLine l r = addText (1,"↦") (Node defaultData [l,r])
 -}
+
+
+
+-- UI state stuff
+data Pickable = PickExpr ExprBD | PickDefn DefnBD deriving Show

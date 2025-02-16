@@ -9,6 +9,8 @@ import Parsing
 import Graphics
 import Interact(handleEvent)
 
+mapSnd f (a,b) = fmap ((,) a) (f b)
+
 main = do
   ParseOk mod <- parseFile "test/Sample.hs"
   print mod
@@ -18,9 +20,10 @@ main = do
 
 
   mapM print (map (second (fmap (map (tText.snd). texts))) bxs)
-  runUI (bxs) Graphics.draw (\ e w -> do
+  runUI (Nothing,bxs) Graphics.draw (\ e w -> do
     let w' = handleEvent e w
-    w'' <- mapM (\(a,b) -> (,) a <$> calcTexts b) w'
+    print (fst w')
+    w'' <- mapSnd (mapM (\(a,b) -> (,) a <$> calcTexts b)) w'
     --let ((_,Defn x ((Line _ lhs (Filled _ f _)):_)):_) = w''
     --print "unlaid"
     --print f
