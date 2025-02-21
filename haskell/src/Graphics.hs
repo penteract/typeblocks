@@ -145,7 +145,7 @@ both2 f (x1,y1) (x2,y2)  = (f x1 x2, f y1 y2)
 
 
 draw :: World -> Float -> Picture
-draw (mp,w) t = {-up$-} gTransform $ pictures ([pictures (map (drawDefn.snd) w)] ++ map drawPickable (toList mp))
+draw (mp,w) t = {-up$-} gTransform $ pictures (reverse $ map drawPickable (toList mp) ++ map (drawDefn.snd) w)
 
 drawDefn :: DefnBD -> Picture
 drawDefn = fst . onDefn drawVisitor

@@ -30,6 +30,7 @@ dependencies:
 ghc-options:
 - -Wno-unused-matches
 - -Wno-unused-local-binds
+- -Wno-x-partial
 # - -Wall
 # - -Wcompat
 # - -Widentities

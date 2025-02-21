@@ -10,16 +10,23 @@ import Folds
 import Types
 import Control.Monad.Trans.Reader
 import Control.Monad.Trans.Writer
+import Control.Monad.Trans.Maybe
 import Control.Arrow
 import Data.Functor.Identity
 import Data.Monoid
 import Control.Applicative
+import Data.Maybe
+import Control.Monad
+import Data.Tuple
 
 --import Utils
 
 
 mark :: BoxData -> BoxData
 mark xd = xd{marked=True}
+
+unmark :: BoxData -> BoxData
+unmark xd = xd{marked=False}
 
 pickup :: (Float,Float) -> BoxVisitor (WriterT (First (Pickable,(Float,Float))) Maybe) BoxData BoxData
 pickup off = BoxVisitor {
@@ -33,21 +40,55 @@ pickup off = BoxVisitor {
   , onLHSAntiHole' = \v bx -> empty
   }
 
+-- 'Nothing' means stop;  Just Nothing means look up a level
+droop :: ExprBD -> (Float,Float) -> BoxVisitor (MaybeT Maybe) BoxData BoxData
+droop e _ = BoxVisitor {
+    onLine' = \v bx -> empty
+  , onHole' = \v bx -> empty -- TODO: allow dropping expressions into holes
+  , onExpr' = \v bx -> empty
+  , onDefn' = \ v bx -> empty
+  , onPattern' = \v bx -> empty
+  , onLHS' = \v bx -> empty
+  , onLHSHole' = \v bx -> empty
+  , onLHSAntiHole' = \v bx -> empty
+  }
+
+withFirstClicked :: (DefnBD -> (Float,Float) -> Maybe (a,DefnBD)) -> (Float,Float) -> [(String,DefnBD)] -> (Maybe a,[(String,DefnBD)])
+withFirstClicked fn pos ((n,d):ds) = case (pos `inBox` getAnn d) of
+  Just pos' -> maybe (Nothing, (n,d):ds) (Just *** ((:ds) . (,) n)) (fn d pos')
+  Nothing -> second ((n,d):) $ withFirstClicked fn pos ds
+withFirstClicked fn pos [] = (Nothing,[])
+
+--TODO: only do something once if there are multiple overlapping defns
 handleEvent :: Event -> (Maybe (Pickable,(Float,Float)), [(String, DefnBD)]) -> (Maybe (Pickable,(Float,Float)), [(String, DefnBD)])
-handleEvent (EventKey (MouseButton LeftButton) Down _ pos) (Nothing, ds) = handleEvent (EventMotion pos) $ first (getFirst)$ let pos' = gInvert pos in
-  mapM (\(n,d) ->
+handleEvent (EventKey (MouseButton LeftButton) Down _ pos) (Nothing, ds) =
+  handleEvent (EventMotion pos) $
+  second (filter (not.marked.getAnn.snd)) $
+  let pos' = gInvert pos in
+      withFirstClicked (\ d -> ((\(d,First mx) -> (flip (,) d  <$> mx)) =<<) . runWriterT . runReaderT (onDefn (withClicked' pickup) d)) pos' ds
+
+  {- mapM (\(n,d) ->
     case (pos' `inBox` getAnn d) >>= (runWriterT . runReaderT (onDefn (withClicked' pickup) d)) of
          Just (a,b) -> (b, (n,a))
          Nothing -> (mempty, (n,d)) ) ds
---handleEvent (EventKey (MouseButton LeftButton) Up _ pos) w = let pos' = gInvert pos in
---  map (second (\d -> runIdentity $ onDefn makeWhite d) ) w
+         -}
 handleEvent (EventMotion pos) (Just (pk,off), ds) = let pos' = gInvert pos in
   (Just (setPickablePos (pos'-off) pk, off),  ds)
--- TODO: carefully consider whether the cursor should be at the corner of a box (making it easier to see where it's being placed) or retain the relative offset when the cursor was picked up (making the dragging motion more intuitiveand less jumpy; substantially clearer when no distance of drag is initBackendState)
-  -- (Just (setPickablePos pos' pk, off),  ds)
+-- TODO: carefully consider whether the cursor should be at the corner of a box (making it easier to see where it's being placed) or retain the relative offset when the cursor was picked up (making the dragging motion more intuitive and less jumpy; substantially clearer when dragged zero distance)
+handleEvent (EventKey (MouseButton LeftButton) Up _ pos) (Just (PickExpr e,_), ds) = let pos' = gInvert pos in
+     case withFirstClicked (\ defn pos'' -> (,) () <$> (join $ runMaybeT (runReaderT (onDefn (withClicked' (droop e)) defn) pos'')) ) pos' ds of
+          (Nothing,ds') -> (Nothing, map (second (runIdentity . onDefn (recursingVisitor (return . unmark)))) ds)
+          (Just _,ds') -> (Nothing,ds') -- Drop succeeded
+{-
+  map (\(n,d) ->
+    case (pos' `inBox` getAnn d) >>= runMaybeT . runReaderT (onDefn (withClicked' (droop e)) d) of
+         Just (Just x) -> (n,x)
+         _ -> (n,d) ) ds) -}
+handleEvent (EventKey (MouseButton LeftButton) Up _ pos) (Just (PickDefn d,off), ds) = (Nothing,(getName d,d) : ds)
 handleEvent e w = w
 
-
+getName :: DefnBD -> String
+getName (Defn _ (Line _ (Operator xd _) _:_)) = tText $ snd (head (texts xd))
 
 modAnnP f (PickDefn d) = PickDefn (modifyAnn f d)
 modAnnP f (PickExpr d) = PickExpr (modifyAnn f d)
