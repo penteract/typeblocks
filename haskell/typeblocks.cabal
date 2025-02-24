@@ -17,6 +17,7 @@ build-type:     Simple
 library
   exposed-modules:
       Colors
+      Filling
       Folds
       GlobalTransform
       Graphics

@@ -131,7 +131,7 @@ lineToBox cols (Just t) (Match _ symb args (UnGuardedRhs _ rhsExpr) w) env = lin
           --abc = lhs == _
           lhsWithName = addText (0,prettyPrint symb) lhs
           --rhsEmptyBox = typeToHole t
-          (newRHS,newBindings) = eatArgs args (Hole xd (map (lhsVarToExpr) vars)) -- TODO: make this work with patterns
+          (newRHS,newBindings) = eatArgs args (lhsToHole lhs) -- TODO: make this work with patterns
           rhsBox = addthings newRHS rhsExpr (newBindings ++ env)
 
 

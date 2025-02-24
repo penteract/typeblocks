@@ -128,6 +128,9 @@ makeText s = do
 type TypeName = String
 data Type = Base TypeName | Type :-> Type deriving (Show)
 
+data MarkState = Unmarked | Marked | BelowMarked deriving (Eq,Show)
+-- Marked indicates that the node is currently being picked up;
+-- BelowMarked indicates that a higher node in the box tree has been picked up
 data BoxData = BD {
       typ :: Maybe Type
     , scope :: Maybe Int -- how far up the tree to go to find parent. Nothing indicates global scope
@@ -136,7 +139,7 @@ data BoxData = BD {
     , texts :: [(Int, TextBox)]
     , cols :: (Col,Col) -- fill col, border col
     , outerShape :: BoxShape
-    , marked :: Bool
+    , mark :: MarkState
     , position :: (Float,Float) -- top left (unscoped boxes growing rightwards and downwards is reasonable
     , dims :: (Float,Float) -- width, height (inc borders)
     } deriving Show
@@ -150,7 +153,7 @@ defaultData s = BD {
   , texts = []
   , cols = (white, black) -- fillCol,borderCol
   , outerShape = rect
-  , marked = False
+  , mark = Unmarked
   -- Size and position get initialized in a discrete layout step (and recomputed on every event until I change that),
   -- so they could be part of a separate type which would ensure everything is initialized as intended.
   , position = undefined --sup ("badpos"++s) (-123,123) -- (0,0)
@@ -165,6 +168,8 @@ unpack :: Type -> ([Type],TypeName)
 unpack (Base s) = ([],s)
 unpack (a :-> b) = first (a:) $ unpack b
 
+baseType :: BoxData -> Maybe TypeName
+baseType xd = snd <$> unpack <$> (typ xd)
 
 typeToBoxLHS :: Type -> LHSBD
 typeToBoxLHS = modifyAnn (\xd->xd{scope=Nothing}) . typeToBox Operator (typeToBox Var typeToAntihole)
@@ -198,6 +203,8 @@ getShape nm = shapes !! (ord (head nm)`mod` length shapes)
 
 greys = (greyN 0.8,greyN 0.5)
 
+lhsToHole  :: LHSBD -> HoleBD
+lhsToHole (Operator xd vars) = Hole xd{cols=greys} (map (lhsVarToExpr) vars)
 lhsVarToExpr :: PatternBD -> ExprBD
 lhsVarToExpr (Var xd args) = Symbol xd (map lhsAHtoH args)
 lhsVarToExpr _ = error "Not a variable"

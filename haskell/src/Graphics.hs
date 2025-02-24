@@ -5,6 +5,7 @@ module Graphics where
 -- Pictures, Events
 import Graphics.Gloss.Interface.Pure.Game hiding (Display(..),play )
 import Types
+import Colors
 import Folds
 import Paths(drawBox)
 
@@ -163,9 +164,13 @@ drawHole v x = onHole' drawVisitor' v x
 drawVisitor = drawVisitor'{
   onHole' = drawHole
 }
+markCols :: MarkState -> (Col,Col) -> (Col,Col)
+markCols Unmarked cs = cs
+markCols Marked _ = (makeColor 0.9 0.1 0.1 1,makeColor 0.6 0.0 0.0 1)
+markCols _ _  =(makeColor 0.9 0.9 0.9 1,makeColor 0.6 0.0 0.0 1)
 
 drawBoxData :: BoxData -> Picture
-drawBoxData (BD{texts,dims,cols,outerShape}) = let bx= scale unitScale unitScale $ drawBox cols (dims/(unitScale,unitScale)) outerShape in
+drawBoxData (BD{texts,dims,cols,outerShape,mark}) = let bx= scale unitScale unitScale $ drawBox (markCols mark cols) (dims/(unitScale,unitScale)) outerShape in
   Pictures (bx: map (drawText.snd) texts)
 
 drawBoxData' :: BoxData -> Picture

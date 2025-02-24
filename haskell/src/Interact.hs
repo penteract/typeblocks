@@ -8,6 +8,7 @@ import Paths
 import Graphics
 import Folds
 import Types
+import Filling
 import Control.Monad.Trans.Reader
 import Control.Monad.Trans.Writer
 import Control.Monad.Trans.Maybe
@@ -22,29 +23,45 @@ import Data.Tuple
 --import Utils
 
 
-mark :: BoxData -> BoxData
-mark xd = xd{marked=True}
+
+-- mark :: BoxData -> BoxData
+-- mark xd = xd{marked=True}
+
+setMark :: Monad m => (BoxVisitor m BoxData BoxData,BoxVisitor m BoxData BoxData)
+setMark = (recursingVisitor (\ xd -> return xd{mark=Marked}), recursingVisitor (\ xd -> return xd{mark=BelowMarked}))
 
 unmark :: BoxData -> BoxData
-unmark xd = xd{marked=False}
+unmark xd = xd{mark=Unmarked}
 
 pickup :: (Float,Float) -> BoxVisitor (WriterT (First (Pickable,(Float,Float))) Maybe) BoxData BoxData
 pickup off = BoxVisitor {
     onLine' = \v bx -> empty
   , onHole' = \v bx -> empty
-  , onExpr' = \v bx -> tell (First$Just$ (PickExpr bx,off)) >> return (modifyAnn mark bx)
-  , onDefn' = \ v bx -> tell (First$Just$ (PickDefn bx,off)) >> return (modifyAnn mark bx)
+  , onExpr' = \v bx -> tell (First$Just$ (PickExpr bx,off)) >>  uncurry onExpr' setMark bx
+  , onDefn' = \ v bx -> tell (First$Just$ (PickDefn bx,off)) >> uncurry onDefn' setMark bx --return (modifyAnn mark bx)
   , onPattern' = \v bx -> empty -- TODO (Allow altering constructors and moving variables into appropriate scopes)
   , onLHS' = \v bx -> empty -- TODO (make expr from LHS)
   , onLHSHole' = \v bx -> empty
   , onLHSAntiHole' = \v bx -> empty
   }
 
--- 'Nothing' means stop;  Just Nothing means look up a level
+-- Drop an expression into an unmarked hole
+doDrop :: ExprBD -> HoleBD -> MaybeT Maybe HoleBD
+doDrop e (Filled xd arg rest) =
+  if mark (getAnn arg) == Marked
+    then pure (Hole xd (e:rest))
+    else empty
+doDrop e h = case tryToFill h e of
+                  Just x -> return x
+                  Nothing -> MaybeT Nothing
+
+-- 'Nothing' means stop;  Just Nothing (empty) means look up a level
 droop :: ExprBD -> (Float,Float) -> BoxVisitor (MaybeT Maybe) BoxData BoxData
 droop e _ = BoxVisitor {
     onLine' = \v bx -> empty
-  , onHole' = \v bx -> empty -- TODO: allow dropping expressions into holes
+  , onHole' = \v bx -> case mark (getAnn bx) of
+      Unmarked -> doDrop e bx
+      BelowMarked -> empty
   , onExpr' = \v bx -> empty
   , onDefn' = \ v bx -> empty
   , onPattern' = \v bx -> empty
@@ -63,7 +80,7 @@ withFirstClicked fn pos [] = (Nothing,[])
 handleEvent :: Event -> (Maybe (Pickable,(Float,Float)), [(String, DefnBD)]) -> (Maybe (Pickable,(Float,Float)), [(String, DefnBD)])
 handleEvent (EventKey (MouseButton LeftButton) Down _ pos) (Nothing, ds) =
   handleEvent (EventMotion pos) $
-  second (filter (not.marked.getAnn.snd)) $
+  second (filter ((==Unmarked).mark.getAnn.snd)) $
   let pos' = gInvert pos in
       withFirstClicked (\ d -> ((\(d,First mx) -> (flip (,) d  <$> mx)) =<<) . runWriterT . runReaderT (onDefn (withClicked' pickup) d)) pos' ds
 
