@@ -61,14 +61,19 @@ droop e _ = BoxVisitor {
     onLine' = \v bx -> empty
   , onHole' = \v bx -> case mark (getAnn bx) of
       Unmarked -> doDrop e bx
+      AboveMarked n -> doDrop e bx
       BelowMarked -> empty
-  , onExpr' = \v bx -> empty
+  , onExpr' = \v bx -> empty -- drop into the containing hole
   , onDefn' = \ v bx -> empty
   , onPattern' = \v bx -> empty
   , onLHS' = \v bx -> empty
   , onLHSHole' = \v bx -> empty
   , onLHSAntiHole' = \v bx -> empty
   }
+
+postClick :: Applicative m => BoxVisitor m BoxData BoxData
+postClick = idVis {-{onHole' = \ v h -> case h of
+  Hole xd hs -> xd{mark= max (get) -}
 
 withFirstClicked :: (DefnBD -> (Float,Float) -> Maybe (a,DefnBD)) -> (Float,Float) -> [(String,DefnBD)] -> (Maybe a,[(String,DefnBD)])
 withFirstClicked fn pos ((n,d):ds) = case (pos `inBox` getAnn d) of
@@ -82,7 +87,7 @@ handleEvent (EventKey (MouseButton LeftButton) Down _ pos) (Nothing, ds) =
   handleEvent (EventMotion pos) $
   second (filter ((==Unmarked).mark.getAnn.snd)) $
   let pos' = gInvert pos in
-      withFirstClicked (\ d -> ((\(d,First mx) -> (flip (,) d  <$> mx)) =<<) . runWriterT . runReaderT (onDefn (withClicked' pickup) d)) pos' ds
+      withFirstClicked (\ d -> ((\(d,First mx) -> (flip (,) d  <$> mx)) =<<) . runWriterT . runReaderT (onDefn (withClicked' pickup `thenVis` postClick) d)) pos' ds
 
   {- mapM (\(n,d) ->
     case (pos' `inBox` getAnn d) >>= (runWriterT . runReaderT (onDefn (withClicked' pickup) d)) of

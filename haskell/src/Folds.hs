@@ -13,11 +13,11 @@ incDepthsExprN n (Symbol xd hs) = Symbol (incDepth n xd) (map (incDepthsHoleN (n
 incDepthsExprN _ _ = error "TODO: add support for more programs"
 
 incDepthsHoleN :: Int -> HoleBD -> HoleBD
-incDepthsHoleN n (Hole xd chs) = Hole (incDepth n xd) (map (incDepthsExprN (n+1)) chs)
-incDepthsHoleN n (Filled xd c chs) = Filled (incDepth n xd) (incDepthsExprN (n+1) c) (map (incDepthsExprN (n+1)) chs)
+incDepthsHoleN n (Hole xd chs) = Hole xd (map (incDepthsExprN (n)) chs)
+incDepthsHoleN n (Filled xd c chs) = Filled xd (incDepthsExprN (n) c) (map (incDepthsExprN (n)) chs)
 
 incDepth :: Int -> BoxData -> BoxData
-incDepth n d = d{scope = fmap (\sc -> if sc<=n then sc+1 else sc) (scope d) }
+incDepth n d = d{scope = fmap (\sc -> if sc>=n then sc+1 else sc) (scope d) }
 
 --     where incDepthsN :: Int -> BoxTree -> BoxTree
 --           incDepthsN n (Node lab chs) = let newScope= fmap (\sc -> if sc<=n then sc+1 else sc) (scope lab)
@@ -37,6 +37,36 @@ data BoxVisitor m a b = BoxVisitor {
     onHole' :: BoxVisitor m a b -> HoleBox a -> m (HoleBox b),
     onExpr' :: BoxVisitor m a b -> ExprBox a -> m (ExprBox b)
 }
+
+idVis :: Applicative m => BoxVisitor m a a
+idVis = let f = \ v bx -> pure bx in BoxVisitor f f f f f f f f
+
+-- run vis1, running vis2 from each node after vis1 visits it.
+thenVis :: Monad m => BoxVisitor m a b -> BoxVisitor m b b -> BoxVisitor m a b
+v1 `thenVis` v2 = BoxVisitor{
+    onDefn' = \ v bx -> onDefn' v1 v bx >>= (onDefn' v2 v2)
+  , onLine' = \ v bx -> onLine' v1 v bx >>= (onLine' v2 v2)
+  , onLHS' = \ v bx -> onLHS' v1 v bx >>= (onLHS' v2 v2)
+  , onPattern' = \ v bx -> onPattern' v1 v bx >>= (onPattern' v2 v2)
+  , onLHSHole' = \ v bx -> onLHSHole' v1 v bx >>= (onLHSHole' v2 v2)
+  , onLHSAntiHole' = \ v bx -> onLHSAntiHole' v1 v bx >>= (onLHSAntiHole' v2 v2)
+  , onHole' = \ v bx -> onHole' v1 v bx >>= (onHole' v2 v2)
+  , onExpr' = \ v bx -> onExpr' v1 v bx >>= (onExpr' v2 v2)
+  }
+
+-- run vis1, running vis2 from each node before vis1 visits it.
+priorVis :: Monad m => BoxVisitor m a a -> BoxVisitor m a b -> BoxVisitor m a b
+v2 `priorVis` v1 = BoxVisitor{
+    onDefn' = \ v bx -> (onDefn' v2 v2 bx) >>= onDefn' v1 v
+  , onLine' = \ v bx -> (onLine' v2 v2 bx) >>= onLine' v1 v
+  , onLHS' = \ v bx -> (onLHS' v2 v2 bx) >>= onLHS' v1 v
+  , onPattern' = \ v bx -> (onPattern' v2 v2 bx) >>= onPattern' v1 v
+  , onLHSHole' = \ v bx -> (onLHSHole' v2 v2 bx) >>= onLHSHole' v1 v
+  , onLHSAntiHole' = \ v bx -> (onLHSAntiHole' v2 v2 bx) >>= onLHSAntiHole' v1 v
+  , onHole' = \ v bx -> (onHole' v2 v2 bx) >>= onHole' v1 v
+  , onExpr' = \ v bx -> (onExpr' v2 v2 bx) >>= onExpr' v1 v
+  }
+
 setFilled onHoleFilled bv = bv{onHole' = \ v h -> case h of
   (Filled xd h hs) -> onHoleFilled v (Filled xd h hs)
   other -> onHole' bv v other

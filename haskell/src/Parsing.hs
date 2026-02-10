@@ -8,7 +8,6 @@ import qualified Language.Haskell.Exts.Syntax as HS
 import Language.Haskell.Exts.Parser
 import Language.Haskell.Exts.Extension
 import Language.Haskell.Exts.Pretty
-import Data.List
 import Control.Arrow
 import qualified Data.Map as Map
 import Colors
@@ -99,7 +98,10 @@ dsToBoxes ds env = [(name, defnToBox (nameCols name) (typ . getAnn =<< lookup na
         h n = 1000*(fromIntegral (hashStr n)) :: Double
         nameCols n = ((hslToCol (h n,100,80), hslToCol (h n,50,50)) , (hslToCol (h n+180,100,80), hslToCol (h n+180,50,50)) )
         typeSigs = [(n, setColsLHSAH (nameCols n) $ addText (0,n) $ typeToAntihole (toType t)) | (TypeSig _ ns t) <- ds, n<-map prettyPrint ns]
-        defns = [ (getName (head ms), ms) | FunBind _ ms <- ds]
+        fnDefns = [ (getName (head ms), ms) | FunBind _ ms <- ds]
+
+        pDefns = [ (getName (head ms), ms) |  PatBind l (PVar _ n) r bs  <- ds, ms <-[[Match l n [] r bs]]]
+        defns = pDefns++fnDefns
 
 
 getName :: Match l -> String

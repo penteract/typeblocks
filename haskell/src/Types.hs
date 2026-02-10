@@ -128,7 +128,7 @@ makeText s = do
 type TypeName = String
 data Type = Base TypeName | Type :-> Type deriving (Show)
 
-data MarkState = Unmarked | Marked | BelowMarked deriving (Eq,Show)
+data MarkState = Unmarked | BelowMarked | Marked | AboveMarked Int deriving (Eq,Show,Ord)
 -- Marked indicates that the node is currently being picked up;
 -- BelowMarked indicates that a higher node in the box tree has been picked up
 data BoxData = BD {

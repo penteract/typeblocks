@@ -19,7 +19,7 @@ main = do
   --print bxs
 
 
-  mapM print (map (second (fmap (map (tText.snd). texts))) bxs)
+  mapM print (map (second (fmap (\ bx -> (map (tText.snd) (texts bx),(scope bx)) ) )) bxs)
   runUI (Nothing,bxs) Graphics.draw (\ e w -> do
     let w' = handleEvent e w
     print (fst w')
