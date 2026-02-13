@@ -21,6 +21,7 @@ class TyVar{
     this.ufds=this
     this.scope=scope
     this.vname=name
+    this.tmps=[]
   }
 }
 function getCanon(tv){
@@ -39,18 +40,25 @@ function canonize(ty){
   if(isPolyVar(ty))return getCanon(ty.var)
   return ty
 }
+function merge(tv,ty){// unify something known to be a type variable
+  if(tv==ty) return true;
+  if(occurs(tv,ty)) {console.log(tv,ty); return false}
+  while(isFn(ty)){
+    let a = createArg(tv)
+    if(!unify(a.var,ty.args[0])) return false;
+    ty=canonize(ty.args[1])
+  }
+  tv.ufds=ty
+  return true;
+}
 function unify(t1,t2){
   t1 = canonize(t1)
   t2 = canonize(t2)
   if(t1 instanceof TyVar){
-    if(t1!==t2){
-      if(occurs(t1,t2)) {console.log(t1,t2); return false}
-      t1.ufds=t2
-    }
+    return merge(t1,t2)
   }
   else if (t2 instanceof TyVar){
-    if(occurs(t2,t1)) {console.log(t2,t1); return false}
-    t2.ufds=t1
+    return merge(t2,t1)
   }
   else{
     if(t1.name!==t2.name) {return false}
@@ -183,7 +191,7 @@ function tryToUnify(t1,t2){
 }
 function initTypeScope(scope){
   scope.tyVars={}
-  scope.tmpCount=0//Numbr of temporary type variables that have ever been created
+  scope.tmpCount=0//Number of temporary type variables that have ever been created
 }
 function freshTmpVar(scope){
   let t = "t-"+(scope.tmpCount++)
@@ -207,6 +215,7 @@ function createArg(tv,visited,handled){
   if(visited.has(tv))return;
   visited.add(tv)
   let freshVar = freshTmpVar(scope)
+  tv.tmps.push(freshVar)
   for(let g of tv.uses){
     let conn = g.parentElement?.filled===g?g.parentElement:g.filled
     if(conn){
@@ -289,7 +298,10 @@ function disconnectTypes(atype, htype){
       if (k.name!==ty.name) throw "Bad component"
     }
     k??=tv
-    for(let v of tvparts){v.ufds=k}
+    for(let v of tvparts){
+      v.ufds=k
+      for(let g of v.uses) dirty.push(g)
+    }
     if(ot.var){
       tvparts = new Set([ot.var])
       nontvParts.clear()
@@ -305,7 +317,10 @@ function disconnectTypes(atype, htype){
         if (k.name!==v.name) throw "Bad component"
       }
       k??=ot.var
-      for(let v of tvparts){v.ufds=k}
+      for(let v of tvparts){
+        v.ufds=k
+        for(let g of v.uses) dirty.push(g)
+      }
     }
   }
   // If the other type is in the component anyway, no action is necessary

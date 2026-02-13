@@ -73,12 +73,10 @@ function matches(lhs, t) {
 function replace(term, newTerm) {
   let newHole = term.parentElement
   detach(newTerm)
-  newHole.insertBefore(newTerm, term)
   if (isArg(term)) {
-    newHole.classList.add("filled")
-    newHole.filled = newTerm
-    newTerm.classList.add("filling")
+    dofill(newTerm,newHole)
   }
+  newHole.insertBefore(newTerm, term)
   newTerm.setPos(term.xPos, term.yPos)
   deleteAll(term)
 }
@@ -86,6 +84,7 @@ function replace(term, newTerm) {
 function subst(hole, term) {
   console.log("starting subst")
   let h = hole.duplicate() // really, we should do stuff during duplicate, but this is easier for now
+
   h.mapsto = [...term.boxes()] // We need to index into this
   replaceWithin(h)
   let filling
