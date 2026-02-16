@@ -428,6 +428,15 @@ g:hover>path{
   position: absolute;
   top:0px;
 }
+#manual{
+  position:absolute;
+  right:0%;
+  text-align:right;
+  max-width:50%;
+  color:grey;
+  pointer-events: none;
+  padding-right: 5px;
+}
 /*Awaiting feature support
 g{
   z-index: 0
@@ -438,11 +447,18 @@ g{
 </style>
 </head>
 <body>
+<div id="manual">
+Click and drag to move terms into holes with the same type (same shape of border) <br />
+Ctrl+click and drag to copy terms <br />
+Right click to delete nodes <br />
+Left click to force terms into holes or snap them out <br />
+Use the boxes at the top left to make a new constant with a particular type.
+</div>
 <svg  viewBox="-10 -30 300 40" preserveAspectRatio="xMinYMin">
 
 <text id="testtext" fill="none" font-size="10"> hello </text>
 <g id="svg" pointer-events="bounding-box">
- <rect x="-10000" y="-10000" width="20000" height="20000" fill="white" />
+ <rect x="-10000" y="-10000" width="20000" height="20000" fill="#FFF0" />
  <!-- If I implement zooming out and this isn't big enough, that might get hard to debug.
       The only reason I don't just use the svg is that that doesn't support .getCTM()-->
 </g>
